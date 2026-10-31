@@ -20,6 +20,15 @@ const Job = require("../models/Jobs");
 const Group = require("../models/Group");
 const { groups: demoGroups } = require("./demoGroups");
 
+// Demo accounts share a public password, so they must never exist on a
+// deployed instance. Refuse to run instead of trusting an operator to remember.
+if (process.env.NODE_ENV === "production") {
+	console.error(
+		"Refusing to seed demo data: NODE_ENV=production. Demo accounts share a public password and must not exist on a deployed instance."
+	);
+	process.exit(1);
+}
+
 const MONGO_URI = process.env.MONGO_URI || process.env.mongoURI_PROD;
 const DEMO_PASSWORD = "alumni123#";
 

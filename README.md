@@ -213,8 +213,9 @@ cd server
 MONGO_URI=mongodb://127.0.0.1:27017/alumniconnect npm run seed
 ```
 
-The script is idempotent (users matched by email, posts by heading, groups by
-name), so it is safe to re-run. Re-running also refreshes the demo timestamps
+The script refuses to run when `NODE_ENV=production`, because every demo
+account shares a public password. It is idempotent (users matched by email,
+posts by heading, groups by name), so it is safe to re-run locally. Re-running also refreshes the demo timestamps
 (post and comment dates, event times and job deadlines), so the feed and the
 7-day AI briefing stay relative to today. It seeds 38 feed posts plus 9 group
 discussions and the comment threads behind them: a
@@ -242,6 +243,12 @@ from real people. Every seeded account uses the password `alumni123#`:
 
 The separately provisioned head admin (`iiita.alumniconnect@gmail.com`) is
 created by the server on first boot.
+
+> **Demo credentials are local-only.** In production the server does **not**
+> create an admin from the demo password: it requires `ADMIN_EMAIL` and
+> `ADMIN_PASSWORD`, and it skips the bootstrap (with a warning) when they are
+> missing. `seedDemo` exits immediately when `NODE_ENV=production`. Never deploy
+> with these accounts or the `alumni123#` password.
 
 ---
 

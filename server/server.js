@@ -14,6 +14,16 @@ const eventQuestionsRoutes = require("./routes/api/eventQuestions");
 const http = require("http").createServer(app);
 const PORT = process.env.PORT || 5001;
 
+// Refuse to start without a signing secret instead of failing later with
+// "jwt must be provided" on the first authenticated request.
+const JWT_SECRET = process.env.ACCESS_TOKEN_SECRET || process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+	console.error(
+		"No JWT secret configured. Set JWT_SECRET (or ACCESS_TOKEN_SECRET) before starting the API."
+	);
+	process.exit(1);
+}
+
 // Basic hardening that does not require another dependency.
 app.disable("x-powered-by");
 app.use((req, res, next) => {
@@ -128,10 +138,7 @@ io.use((socket, next) => {
 	const token = socket.handshake.auth && socket.handshake.auth.token;
 	if (!token) return next(new Error("unauthorized"));
 	try {
-		const decoded = jwt.verify(
-			token,
-			process.env.ACCESS_TOKEN_SECRET || process.env.JWT_SECRET
-		);
+		const decoded = jwt.verify(token, JWT_SECRET);
 		socket.userId = String(decoded.user.id);
 		next();
 	} catch (err) {

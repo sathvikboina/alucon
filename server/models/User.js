@@ -236,38 +236,52 @@ const adminData = new mongoose.model("user", UserSchema);
 // }
 
 // 	fun();
-	const fun = async () => {
+// The first head admin is created from environment variables. Local
+// development falls back to the shared demo password; production must set
+// ADMIN_EMAIL and ADMIN_PASSWORD explicitly, otherwise no admin is created.
+// This stops a deployed instance from ever having a known-password account.
+const ADMIN_EMAIL =
+	process.env.ADMIN_EMAIL || "iiita.alumniconnect@gmail.com";
+const ADMIN_PASSWORD =
+	process.env.ADMIN_PASSWORD ||
+	(process.env.NODE_ENV === "production" ? null : "alumni123#");
 
- const existingAdmin = await adminData.findOne({
-   email: "iiita.alumniconnect@gmail.com"
- });
+const fun = async () => {
+	const existingAdmin = await adminData.findOne({ email: ADMIN_EMAIL });
 
- if (existingAdmin) {
-   console.log("Admin already exists");
-   return;
- }
+	if (existingAdmin) {
+		console.log("Admin already exists");
+		return;
+	}
 
- const salt = await bcrypt.genSalt(10);
- const pass = await bcrypt.hash("alumni123#", salt);
+	const salt = await bcrypt.genSalt(10);
+	const pass = await bcrypt.hash(ADMIN_PASSWORD, salt);
 
- const admin = new adminData({
-   email: "iiita.alumniconnect@gmail.com",
-   password: pass,
-   isAdmin: true,
-   adminType: "head",
-   name: "AlumniConnect",
-   role: "Admin"
- });
+	const admin = new adminData({
+		email: ADMIN_EMAIL,
+		password: pass,
+		isAdmin: true,
+		adminType: "head",
+		name: "AlumniConnect",
+		role: "Admin",
+	});
 
- await admin.save();
- console.log("Admin created");
-}
+	await admin.save();
+	console.log(`Admin created for ${ADMIN_EMAIL}`);
+};
 
-// The default head admin is only bootstrapped outside the test runner. Keeping
-// this side effect out of unit tests avoids a buffered Mongo query when no
-// database connection is opened.
+// The bootstrap is skipped in tests (avoids a buffered Mongo query with no
+// connection) and in production unless an admin password was supplied.
 if (process.env.NODE_ENV !== "test") {
-  fun().catch((err) => console.error("Admin bootstrap skipped:", err.message));
+	if (ADMIN_PASSWORD) {
+		fun().catch((err) =>
+			console.error("Admin bootstrap skipped:", err.message)
+		);
+	} else {
+		console.warn(
+			"Admin bootstrap skipped: set ADMIN_EMAIL and ADMIN_PASSWORD to create the first head admin."
+		);
+	}
 }
 	
 	UserSchema.index({ "$**": "text" });

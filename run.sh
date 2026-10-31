@@ -251,8 +251,8 @@ cat <<EOF
   API log    ${API_LOG}
   Client log ${CLIENT_LOG}
 
-  Demo login sathvik.boina@iiita.ac.in / alumni123#
-  Admin      iiita.alumniconnect@gmail.com / alumni123#
+  Demo login sathvik.boina@iiita.ac.in / alumni123#   (local demo only)
+  Admin      iiita.alumniconnect@gmail.com / alumni123#   (local demo only)
 
   Press Ctrl+C to stop both processes.
 

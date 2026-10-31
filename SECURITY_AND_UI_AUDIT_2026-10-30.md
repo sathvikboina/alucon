@@ -11,6 +11,9 @@
 | Severity | Issue | Fix | Evidence |
 | --- | --- | --- | --- |
 | Critical | `POST /api/profile/` had auth commented out and trusted `req.body.userID`, allowing anyone to overwrite any member's profile. | Added `auth`; identity now comes only from `req.user.id`. | Unauthenticated write → `401`; authenticated write → `200`. |
+| Critical | `server/models/User.js` created a head admin with the hardcoded demo password on every non-test boot, including production. | The bootstrap now requires `ADMIN_EMAIL` / `ADMIN_PASSWORD` in production; without a password it skips creation and warns. The demo password applies only outside production. | Production boot without `ADMIN_PASSWORD` created 0 users and the demo admin login returned `400`; with `ADMIN_PASSWORD` the env admin logged in `200`. |
+| High | `seedDemo` would create the full demo account set with the shared `alumni123#` password in any environment. | The script exits with code 1 when `NODE_ENV=production`. | `NODE_ENV=production node scripts/seedDemo.js` → exit 1, no database writes. |
+| Low | A missing JWT secret was only discovered on the first authenticated request. | The server now exits at boot with a clear message when neither `JWT_SECRET` nor `ACCESS_TOKEN_SECRET` is set. | Boot with both secrets unset → exit 1. |
 | High | Bcrypt password hashes were returned by login (`user_data`), `GET /api/users/me` and `GET /api/users/search/:query`. | `password` is now `select: false`; login/reset opt in with `.select("+password")`; login returns a password-free copy. | Login, `/me` and `/search/all` contain no `password` field. |
 | High | Notifications could be read, created and marked read without a token, using an arbitrary `userID`. | Read/mark-read require `auth`; creation requires `authAdmin`; identity comes from the token. | No-token calls → `401`. |
 | High | Anyone could create/delete events and jobs and trigger a mass email to every member. Delete trusted client-supplied `userID`/`userRole`. | Added `auth`; actor loaded from MongoDB; creation limited to non-students/admins; ownership from the token; deletes authorised by DB ownership or `isAdmin`. | Unauthenticated create → `401`. |
@@ -80,6 +83,8 @@
 - `server/models/User.js`
 - `server/models/Event.js`
 - `server/server.js`
+- `server/scripts/seedDemo.js`
+- `server/.env.example`
 - `server/routes/api/auth.js`
 - `server/routes/api/profile.js`
 - `server/routes/api/users.js`
