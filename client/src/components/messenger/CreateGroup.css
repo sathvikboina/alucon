@@ -1,0 +1,264 @@
+/* ===========================
+   WRAPPER
+   =========================== */
+
+.create-group-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 2rem 1rem;
+  min-height: 100%;
+  background: #f3f4f6;
+  font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', sans-serif;
+}
+
+/* ===========================
+   CARD
+   =========================== */
+
+.create-group-card {
+  background: #ffffff;
+  width: 100%;
+  max-width: 560px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  padding: 2rem;
+  box-shadow: 0 4px 14px rgba(15, 31, 61, 0.07);
+}
+
+/* ===========================
+   HEADER
+   =========================== */
+
+.create-group-title {
+  margin: 0 0 4px 0;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #0f1f3d;
+  letter-spacing: 0.01em;
+}
+
+.create-group-subtitle {
+  color: #6b7280;
+  font-size: 0.87rem;
+  margin-bottom: 1.5rem;
+  line-height: 1.4;
+}
+
+/* ===========================
+   FORM
+   =========================== */
+
+.form-group {
+  margin-bottom: 1.4rem;
+}
+
+.form-label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #1a2f54;
+  margin-bottom: 6px;
+  letter-spacing: 0.02em;
+}
+
+.required {
+  color: #dc2626;
+}
+
+.form-input {
+  width: 100%;
+  padding: 9px 12px;
+  border-radius: 4px;
+  border: 1px solid #d1d5db;
+  font-size: 0.9rem;
+  font-family: inherit;
+  background: #f9fafb;
+  outline: none;
+  transition: border 0.2s, background 0.2s;
+  box-sizing: border-box;
+}
+
+.form-input:focus {
+  border-color: #1a2f54;
+  background: #ffffff;
+}
+
+/* ===========================
+   MEMBERS SECTION
+   =========================== */
+
+.form-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.selected-count {
+  font-size: 0.78rem;
+  color: #6b7280;
+  font-weight: 600;
+  background: #e8edf5;
+  padding: 2px 8px;
+  border-radius: 99px;
+}
+
+.members-list {
+  max-height: 240px;
+  overflow-y: auto;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  padding: 5px;
+  background: #f9fafb;
+}
+
+.member-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 10px;
+  margin-bottom: 4px;
+  border-radius: 4px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.member-item:last-child {
+  margin-bottom: 0;
+}
+
+.member-item:hover {
+  border-color: #b0bec5;
+  background: #f0f4fb;
+}
+
+.member-item.selected {
+  background: #e8edf5;
+  border-color: #1a2f54;
+}
+
+.member-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.member-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.member-name {
+  font-weight: 600;
+  font-size: 0.88rem;
+  color: #1a1a2e;
+}
+
+/* ===========================
+   CHECKBOX
+   =========================== */
+
+.checkbox {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid #d1d5db;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, border-color 0.15s;
+  flex-shrink: 0;
+}
+
+.checkbox.checked {
+  background: #1a2f54;
+  border-color: #1a2f54;
+}
+
+.checkbox i {
+  color: #ffffff;
+  font-size: 0.65rem;
+}
+
+/* ===========================
+   BUTTON
+   =========================== */
+
+.create-btn {
+  width: 100%;
+  padding: 11px;
+  background: #1a2f54;
+  color: #ffffff;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.92rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  transition: background 0.2s;
+}
+
+.create-btn:hover:not(.disabled) {
+  background: #0f1f3d;
+}
+
+.create-btn.disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+}
+
+/* ===========================
+   EMPTY TEXT
+   =========================== */
+
+.empty-text {
+  text-align: center;
+  color: #9ca3af;
+  padding: 1.5rem 0;
+  font-size: 0.85rem;
+}
+
+/* ===========================
+   SCROLLBAR
+   =========================== */
+
+.members-list::-webkit-scrollbar {
+  width: 5px;
+}
+
+.members-list::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 10px;
+}
+
+/* ===========================
+   RESPONSIVE
+   =========================== */
+
+@media (max-width: 640px) {
+  .create-group-card {
+    padding: 1.25rem;
+  }
+
+  .create-group-title {
+    font-size: 1.2rem;
+  }
+
+  .members-list {
+    max-height: 200px;
+  }
+}
+
+@media (max-width: 400px) {
+  .create-group-wrapper {
+    padding: 1rem 0.5rem;
+  }
+}

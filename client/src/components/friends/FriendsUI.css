@@ -1,0 +1,130 @@
+/* ===== BASE ===== */
+.friends-container {
+  background: #f0f2f5;
+  min-height: 100vh;
+  padding: 20px 8%;
+  font-family: 'Segoe UI', 'Inter', sans-serif;
+}
+
+/* ===== HEADER ===== */
+.friends-header {
+  margin-bottom: 20px;
+}
+
+.friends-header h2 {
+  font-size: 24px;
+  color: #1a2a4a;
+  margin-bottom: 4px;
+}
+
+.friends-header p {
+  font-size: 15px;
+  color: #6b7280;
+}
+
+/* ===== GRID ===== */
+.friends-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 18px;
+}
+
+/* ===== CARD ===== */
+.friend-card {
+  background: #fff;
+  border: 1px solid #d8dde6;
+  border-radius: 10px;
+  padding: 16px;
+
+  display: flex;
+  gap: 12px;
+  align-items: center;
+
+  transition: 0.2s;
+}
+
+.friend-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 18px rgba(26,42,74,0.08);
+}
+
+/* ===== AVATAR ===== */
+.friend-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid #d8dde6;
+}
+
+/* ===== INFO ===== */
+.friend-info {
+  flex: 1;
+}
+
+.friend-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a2a4a;
+}
+
+.friend-meta {
+  font-size: 14px;
+  color: #6b7280;
+  margin-top: 2px;
+}
+
+/* ===== ACTIONS ===== */
+.friend-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* ===== BUTTON BASE ===== */
+.friend-btn {
+  padding: 8px 12px;
+  font-size: 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  color: #374151;
+  transition: 0.15s;
+}
+
+.friend-btn:hover {
+  background: #1a2a4a;
+  color: #fff;
+  border-color: #1a2a4a;
+}
+
+/* ===== PRIMARY ===== */
+.friend-btn.primary {
+  background: #1a2a4a;
+  color: #fff;
+  border: none;
+}
+
+.friend-btn.primary:hover {
+  background: #243d6b;
+}
+
+/* ===== DANGER ===== */
+.friend-btn.danger {
+  background: #f8d7da;
+  color: #842029;
+  border: 1px solid #f1aeb5;
+}
+
+.friend-btn.danger:hover {
+  background: #dc3545;
+  color: #fff;
+}
+
+/* ===== EMPTY ===== */
+.no-data {
+  text-align: center;
+  font-size: 15px;
+  color: #9ca3af;
+  grid-column: 1 / -1;
+}

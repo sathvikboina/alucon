@@ -1,0 +1,313 @@
+/* ============================================================
+   MESSENGER — navy / white / grey theme
+   Academic social platform — clean, professional, functional
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+
+:root {
+  /* ── Palette ── */
+  --navy-950: #060d1f;
+  --navy-900: #0d1b35;
+  --navy-800: #1a2f54;
+  --navy-700: #1e3a6e;
+  --navy-600: #25468a;
+  --navy-400: #4a6fa5;
+  --navy-200: #c2d0e8;
+  --navy-100: #e8edf5;
+  --navy-50:  #f0f4fb;
+
+  --grey-800: #1f2937;
+  --grey-600: #4b5563;
+  --grey-500: #6b7280;
+  --grey-400: #9ca3af;
+  --grey-300: #d1d5db;
+  --grey-200: #e5e7eb;
+  --grey-100: #f3f4f6;
+  --grey-50:  #f9fafb;
+  --white:    #ffffff;
+
+  --sent-bg:      #1a2f54;
+  --sent-text:    #ffffff;
+  --recv-bg:      #f0f4fb;
+  --recv-text:    #1a1a2e;
+
+  --online-green: #22c55e;
+  --danger:       #dc2626;
+  --warning:      #f59e0b;
+
+  /* ── Spacing ── */
+  --sidebar-w: 380px;
+  --header-h:  58px;
+  --input-h:   64px;
+
+  /* ── Font ── */
+  --font: 'DM Sans', 'Segoe UI', sans-serif;
+  --font-mono: 'DM Mono', monospace;
+
+  /* ── Radius ── */
+  --r-sm: 4px;
+  --r-md: 8px;
+  --r-lg: 12px;
+  --r-xl: 18px;
+
+  /* ── Shadow ── */
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.10);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.14);
+}
+
+/* ============================================================
+   WRAPPER
+   ============================================================ */
+
+.messenger-wrapper {
+  display: flex;
+  height: calc(100vh - 60px); /* adjust if your navbar differs */
+  background: var(--grey-100);
+  overflow: hidden;
+  font-family: var(--font);
+}
+
+/* ============================================================
+   SIDEBAR
+   ============================================================ */
+
+.messenger-sidebar {
+  width: var(--sidebar-w);
+  min-width: 300px;
+  background: var(--white);
+  border-right: 1px solid var(--grey-200);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+
+/* ── Sidebar Header ── */
+.messenger-sidebar-header {
+  height: var(--header-h);
+  padding: 0 16px;
+  background: var(--navy-900);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.messenger-sidebar-header h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--white);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-family: var(--font);
+}
+
+/* ── Sidebar Nav ── */
+.messenger-sidebar-nav {
+  display: flex;
+  gap: 6px;
+  padding: 7px 8px;
+  background: var(--navy-950);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+
+  overflow-x: auto;     /* 🔥 enables scroll */
+  white-space: nowrap;
+}
+.messenger-sidebar-nav::-webkit-scrollbar {
+  display: none;
+}
+
+.messenger-sidebar-nav-item {
+  padding: 6px 8px;
+  border-radius: var(--r-sm);
+  text-decoration: none;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--navy-200);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-family: var(--font);
+  flex: 0 0 auto;   /* 🔥 prevents shrinking */
+  justify-content: center;
+}
+
+.nav-icon { flex-shrink: 0; }
+.nav-label { }
+
+.messenger-sidebar-nav-item:hover {
+  background: rgba(255,255,255,0.08);
+  color: var(--white);
+}
+
+.messenger-sidebar-nav-item.active {
+  background: var(--navy-700);
+  color: var(--white);
+}
+
+.nav-badge {
+  width: 6px;
+  height: 6px;
+  background: var(--danger);
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ── Sidebar Content (scrollable) ── */
+.messenger-sidebar-content {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.messenger-sidebar-content::-webkit-scrollbar { width: 4px; }
+.messenger-sidebar-content::-webkit-scrollbar-thumb {
+  background: var(--grey-300);
+  border-radius: 10px;
+}
+
+/* ============================================================
+   MAIN AREA
+   ============================================================ */
+
+.messenger-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--white);
+  min-width: 0;
+}
+
+/* Empty state */
+.messenger-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 14px;
+  color: var(--grey-400);
+  user-select: none;
+}
+
+.messenger-empty-icon {
+  width: 72px;
+  height: 72px;
+  background: var(--navy-100);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  color: var(--navy-600);
+}
+
+.messenger-empty h4 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--grey-600);
+}
+
+.messenger-empty p {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--grey-400);
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+@media (max-width: 768px) {
+  .messenger-wrapper {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .messenger-sidebar {
+    width: 100% !important;
+    min-width: unset !important;
+    max-width: unset !important;
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    z-index: 20;
+    height: 100%;
+    transition: transform 0.28s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  .messenger-sidebar.hidden {
+    transform: translateX(-100%);
+    pointer-events: none;
+  }
+
+  .messenger-main {
+    width: 100%;
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    transition: transform 0.28s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  .messenger-main.hidden {
+    transform: translateX(100%);
+    pointer-events: none;
+  }
+
+  .messenger-resize-handle {
+    display: none;
+  }
+
+  /* Icon-only nav on mobile */
+  .nav-label {
+    display: none;
+  }
+
+  .messenger-sidebar-nav-item {
+    padding: 7px 4px;
+    font-size: 1rem;
+    flex: 1;
+  }
+}
+/* ============================================================
+   RESIZE HANDLE
+   ============================================================ */
+
+.messenger-resize-handle {
+  width: 5px;
+  flex-shrink: 0;
+  cursor: col-resize;
+  background: transparent;
+  position: relative;
+  z-index: 10;
+  transition: background 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.messenger-resize-handle:hover,
+.messenger-resize-handle:active {
+  background: var(--navy-100);
+}
+
+.messenger-resize-grip {
+  width: 3px;
+  height: 40px;
+  border-radius: 99px;
+  background: var(--navy-400);
+  opacity: 0;
+  transition: opacity 0.2s;
+  pointer-events: none;
+}
+
+.messenger-resize-handle:hover .messenger-resize-grip,
+.messenger-resize-handle:active .messenger-resize-grip {
+  opacity: 1;
+}
