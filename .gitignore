@@ -1,0 +1,20 @@
+node_modules/
+client/node_modules/
+server/node_modules/
+
+# Build output
+client/build/
+
+# Local environment and secrets
+.env
+.env.local
+.env.*.local
+
+# Runtime logs and PID files
+.run/
+*.log
+npm-debug.log*
+
+# OS noise
+.DS_Store
+Thumbs.db
