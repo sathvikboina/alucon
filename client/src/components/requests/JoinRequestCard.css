@@ -1,0 +1,118 @@
+/* ============================================
+   JOIN REQUEST CARD
+   ============================================ */
+
+.join-request-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 0;
+}
+
+/* ── Info list ── */
+.join-request-card-info {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.join-request-card-info li {
+  font-size: 0.85rem;
+  color: #374151;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.join-request-card-info li strong {
+  color: #0f2044;
+  font-weight: 600;
+  min-width: 120px;
+  font-size: 0.8rem;
+}
+
+/* Role badge */
+.role-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: capitalize;
+  background: #dce8f7;
+  color: #1e4d8c;
+}
+
+/* Email value */
+.value {
+  color: #4b5563;
+  font-size: 0.85rem;
+}
+
+/* ── Action buttons ── */
+.action-buttons-request-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.action-button-request-card {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 110px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: none;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.approve-button {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.approve-button:hover {
+  background: #16a34a;
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.reject-button {
+  background: #fee2e2;
+  color: #ef4444;
+}
+
+.reject-button:hover {
+  background: #ef4444;
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+/* ── Responsive ── */
+@media (max-width: 500px) {
+  .join-request-card {
+    flex-direction: column;
+  }
+
+  .action-buttons-request-card {
+    flex-direction: row;
+    width: 100%;
+  }
+
+  .action-button-request-card {
+    flex: 1;
+  }
+}

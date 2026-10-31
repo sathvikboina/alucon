@@ -1,0 +1,41 @@
+.user-modal-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  background: #fff;
+  border: 1px solid #d8dde6;
+  border-radius: 10px;
+  padding: 14px;
+
+  transition: 0.2s;
+}
+
+.user-modal-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(26,42,74,0.08);
+}
+
+.user-modal-left img {
+  width: 50px !important;
+  height: 50px !important;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.user-modal-content {
+  flex: 1;
+  text-align: left;
+}
+
+.user-modal-content h3 {
+  margin: 0;
+  font-size: 15px;
+  color: #1a2a4a;
+}
+
+.user-modal-text {
+  font-size: 13px;
+  color: #6b7280;
+  margin-top: 2px;
+}

@@ -1,0 +1,12 @@
+.delete-all-wrapper {
+  margin-bottom: 20px;   /* space below button */
+}
+
+.delete-all-wrapper button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  padding: 10px 14px;
+  border-radius: 8px;
+}

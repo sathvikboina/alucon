@@ -1,0 +1,237 @@
+/* ============================================
+   ANALYTICS DASHBOARD
+   Navy · White · Grey — Academic style
+   ============================================ */
+
+.analytics-page {
+  background: #f0f5fb;
+  min-height: 100vh;
+  padding: 0 0 48px;
+  box-sizing: border-box;
+}
+
+/* ── Hero ── */
+.analytics-hero {
+  background: #1a3a6b;
+  padding: 22px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28px;
+}
+
+.analytics-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 3px;
+}
+
+.analytics-subtitle {
+  font-size: 0.8rem;
+  color: rgba(255,255,255,0.55);
+  margin: 0;
+  letter-spacing: 0.04em;
+}
+
+.hero-badge {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+  color: #ffffff;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 5px 14px;
+  border-radius: 999px;
+  letter-spacing: 0.06em;
+}
+
+.hero-badge-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #4ade80;
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(74,222,128,0.5); }
+  50%       { box-shadow: 0 0 0 5px rgba(74,222,128,0); }
+}
+
+/* ── Stat Cards Row ── */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  padding: 0 32px;
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 20px 16px;
+  text-align: center;
+  border: 1px solid #e8edf5;
+  box-shadow: 0 1px 4px rgba(15,32,68,0.07);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(15,32,68,0.11);
+}
+
+.stat-icon {
+  font-size: 1.6rem;
+  margin-bottom: 8px;
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #0f2044;
+  line-height: 1;
+  margin-bottom: 5px;
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* ── Charts Row ── */
+.charts-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  padding: 0 32px;
+  margin-bottom: 24px;
+}
+
+.chart-card {
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #e8edf5;
+  box-shadow: 0 1px 4px rgba(15,32,68,0.07);
+  padding: 20px 20px 16px;
+}
+
+.chart-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f0f4fb;
+}
+
+.chart-card-icon {
+  font-size: 1.15rem;
+}
+
+.chart-card-header h3 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0f2044;
+  margin: 0;
+}
+
+.chart-wrap {
+  width: 100%;
+}
+
+/* ── Members Section ── */
+.members-section {
+  margin: 0 32px;
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #e8edf5;
+  box-shadow: 0 1px 4px rgba(15,32,68,0.07);
+  overflow: hidden;
+}
+
+.members-section-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 18px 20px 14px;
+  border-bottom: 1px solid #f0f4fb;
+}
+
+.members-section-header h3 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0f2044;
+  margin: 0;
+}
+
+/* ── Loading ── */
+.analytics-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 50vh;
+  gap: 16px;
+  color: #6b7280;
+}
+
+.loading-spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid #dce8f7;
+  border-top-color: #2563b0;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Access Denied ── */
+.analytics-denied {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 50vh;
+  gap: 10px;
+  text-align: center;
+  color: #374151;
+}
+
+.denied-icon { font-size: 3rem; }
+
+.analytics-denied h2 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #0f2044;
+  margin: 0;
+}
+
+.analytics-denied p {
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+/* ── Responsive ── */
+@media (max-width: 1024px) {
+  .stats-row { grid-template-columns: repeat(2, 1fr); }
+  .charts-row { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 640px) {
+  .analytics-hero { padding: 16px 16px; flex-wrap: wrap; gap: 10px; }
+  .stats-row { grid-template-columns: repeat(2, 1fr); padding: 0 14px; gap: 12px; }
+  .charts-row { padding: 0 14px; }
+  .members-section { margin: 0 14px; }
+  .stat-value { font-size: 1.6rem; }
+}

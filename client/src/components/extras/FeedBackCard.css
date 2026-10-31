@@ -1,0 +1,116 @@
+/* Card */
+.feedback-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+
+  background: #9fa8b3; /* light blue */
+  border: 1px solid #dbeafe;
+
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+
+  width: 100%;
+  max-width: 700px;
+
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transition: 0.2s ease;
+}
+
+.feedback-card:hover {
+  transform: translateY(-3px);
+}
+
+/* Content */
+.feedback-content {
+  flex: 1;
+}
+.feedback-content {
+  padding-right: 100px; /* space for button */
+}
+
+/* Rows */
+.feedback-row {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+  font-size: 15px;
+  color: #1f2937;
+}
+
+/* Labels */
+.label {
+  font-weight: 600;
+  color: #111827;
+}
+
+/* Feedback message box */
+.feedback-message {
+  margin-top: 12px;
+}
+
+.feedback-message p {
+  margin-top: 6px;
+  padding: 12px;
+
+  background: #e0f2fe;
+  border-radius: 8px;
+
+  font-size: 14px;
+  color: #1f2937;
+}
+
+/* Text helpers */
+.capitalize {
+  text-transform: capitalize;
+}
+
+/* Actions */
+.feedback-actions {
+  margin-left: 20px;
+}
+
+/* Button */
+.delete-btn {
+  background: #ef4444;
+  color: white;
+  border: none;
+
+  padding: 10px 14px;
+  border-radius: 10px;
+
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  transition: 0.2s;
+}
+
+.delete-btn:hover {
+  background: #dc2626;
+  transform: scale(1.05);
+}
+
+.delete-btn:hover {
+  background: #dc2626;
+}
+.feedback-card {
+  position: relative; /* ✅ IMPORTANT */
+}
+.feedback-actions {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+}
+.feedback-actions {
+  position: absolute;
+  top: 0;        /* push to top edge */
+  right: 0;      /* push to right edge */
+
+  padding: 10px; /* small spacing from edge */
+}

@@ -1,0 +1,134 @@
+/* ===== GLOBAL FIX ===== */
+* {
+  font-family: 'Segoe UI', 'Inter', sans-serif;
+}
+
+/* ===== BASE ===== */
+.polls-container {
+  max-width: 850px;
+  margin: 40px auto;
+  padding: 20px;
+  background: #f0f2f5;
+  min-height: 100vh;
+}
+
+/* ===== TITLE ===== */
+.polls-title {
+  text-align: center;
+  margin-bottom: 25px;
+  font-size: 26px;
+  font-weight: 600;
+  color: #1a2a4a;
+}
+
+/* ===== CARD ===== */
+.poll-card {
+  background: #ffffff;
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 18px;
+
+  border: 1px solid #d8dde6;
+  transition: 0.2s;
+}
+
+.poll-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 18px rgba(26,42,74,0.08);
+}
+
+/* ===== QUESTION ===== */
+.poll-question {
+  margin-bottom: 12px;
+  font-size: 17px;
+  font-weight: 600;
+  color: #1a2a4a;
+}
+
+/* ===== OPTION ===== */
+.option-wrapper {
+  margin-bottom: 12px;
+}
+
+/* ===== BUTTON ===== */
+.option-btn {
+  width: 100%;
+  padding: 10px 14px;
+
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+
+  background: #ffffff;
+  color: #374151;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  font-size: 14px;
+  cursor: pointer;
+  transition: 0.15s;
+}
+
+.option-btn:hover {
+  background: #1a2a4a;
+  color: #fff;
+  border-color: #1a2a4a;
+}
+
+/* ===== VOTE COUNT ===== */
+.vote-count {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+/* ===== PROGRESS ===== */
+.progress-bar {
+  height: 8px;
+  background: #e5e7eb;
+  border-radius: 5px;
+  margin-top: 6px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: #1a2a4a;
+  border-radius: 5px;
+  transition: width 0.3s ease;
+}
+
+/* ===== DELETE ===== */
+.delete-poll-btn {
+  margin-top: 14px;
+
+  background: #f8d7da;
+  color: #842029;
+
+  padding: 8px 14px;
+  border: 1px solid #f1aeb5;
+  border-radius: 6px;
+
+  font-size: 14px;
+  cursor: pointer;
+  transition: 0.15s;
+}
+
+.delete-poll-btn:hover {
+  background: #dc3545;
+  color: #fff;
+}
+
+/* ===== EMPTY ===== */
+.no-data {
+  text-align: center;
+  font-size: 15px;
+  color: #9ca3af;
+}
+
+/* ===== MOBILE ===== */
+@media (max-width: 768px) {
+  .polls-container {
+    padding: 15px;
+  }
+}

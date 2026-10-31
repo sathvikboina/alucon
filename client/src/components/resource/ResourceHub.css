@@ -1,0 +1,211 @@
+/* ===== BASE ===== */
+.resource-container {
+  background: #f0f2f5;
+  min-height: 100vh;
+  font-family: 'Inter', 'Segoe UI', sans-serif;
+}
+
+/* ===== HEADER ===== */
+.resource-header {
+  background: #1a2a4a;
+  padding: 10px 8%;
+  margin-bottom: 10px;
+}
+
+.resource-title {
+  font-size: 26px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.resource-subtitle {
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.7);
+  margin-top: 6px;
+}
+
+/* ===== FORM ===== */
+.resource-form {
+  background: #fff;
+  border: 1px solid #d8dde6;
+  border-radius: 10px;
+  padding: 18px 22px;
+  margin: 0 8% 20px;
+
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+.resource-form input,
+.resource-form select {
+  flex: 1;
+  min-width: 160px;
+
+  font-size: 14px;
+  padding: 10px 14px;
+
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #fff;
+  color: #374151;
+
+  outline: none;
+}
+
+.resource-form input:focus,
+.resource-form select:focus {
+  border-color: #1a2a4a;
+}
+
+/* BUTTON */
+.resource-form button {
+  padding: 10px 20px;
+  border-radius: 6px;
+
+  border: none;
+  background: #1a2a4a;
+  color: #fff;
+
+  font-size: 14px;
+  cursor: pointer;
+  transition: 0.15s;
+}
+
+.resource-form button:hover {
+  background: #243d6b;
+}
+
+/* ===== FILTER ===== */
+.resource-filter {
+  margin: 0 8% 16px;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+/* ===== GRID ===== */
+.resource-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+  padding: 0 8% 48px;
+}
+
+/* ===== CARD ===== */
+.resource-card {
+  background: #fff;
+  border: 1px solid #d8dde6;
+  border-radius: 10px;
+  padding: 18px;
+
+  display: flex;
+  flex-direction: column;
+
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.resource-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 18px rgba(26, 42, 74, 0.08);
+}
+
+/* ===== MEDIA ===== */
+.resource-image {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+
+.pdf-box {
+  height: 160px;
+  border-radius: 8px;
+  background: #f0f3f8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 14px;
+  color: #1a2a4a;
+  margin-bottom: 12px;
+}
+
+/* ===== CONTENT ===== */
+.resource-card h3 {
+  font-size: 17px;
+  font-weight: 600;
+  color: #1a2a4a;
+  margin-bottom: 6px;
+}
+
+.resource-card p {
+  font-size: 14px;
+  color: #374151;
+  line-height: 1.4;
+}
+
+/* ===== ACTIONS ===== */
+.resource-actions {
+  margin-top: auto;
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+}
+
+.view-btn,
+.download-btn {
+  flex: 1;
+  text-align: center;
+
+  padding: 8px;
+  border-radius: 6px;
+
+  border: 1px solid #d1d5db;
+  color: #374151;
+  text-decoration: none;
+
+  font-size: 14px;
+  transition: 0.15s;
+}
+
+.view-btn:hover,
+.download-btn:hover {
+  background: #1a2a4a;
+  color: #fff;
+  border-color: #1a2a4a;
+}
+
+/* DELETE */
+.delete-btn {
+  background: #f8d7da;
+  border: 1px solid #f1aeb5;
+  color: #842029;
+
+  padding: 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.delete-btn:hover {
+  background: #dc3545;
+  color: #fff;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .resource-header {
+    padding: 18px 5%;
+  }
+
+  .resource-form {
+    margin: 0 5% 20px;
+    flex-direction: column;
+  }
+
+  .resource-grid {
+    padding: 0 5% 40px;
+  }
+}

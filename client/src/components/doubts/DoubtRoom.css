@@ -1,0 +1,52 @@
+/* ===== MAIN ===== */
+.doubt-room {
+  background: #f0f2f5;
+  min-height: 100vh;
+  font-family: 'Inter', 'Segoe UI', sans-serif;
+}
+
+/* ===== HEADER ===== */
+.doubt-room-header {
+  background: #1a2a4a;
+  padding: 10px 8%;
+  margin-bottom: 10px;
+}
+
+.doubt-room-header h1 {
+  font-size: 26px;
+  color: #fff;
+  margin: 0;
+}
+
+.doubt-subtext {
+  font-size: 15px;
+  color: rgba(255,255,255,0.7);
+  margin-top: 6px;
+}
+
+/* ===== FORM CONTAINER ===== */
+.doubt-form-container {
+  margin: 0 8% 20px;
+}
+
+/* ===== DIVIDER ===== */
+.doubt-divider {
+  border: none;
+  border-top: 1px solid #e5e7eb;
+  margin: 20px 8%;
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .doubt-room-header {
+    padding: 18px 5%;
+  }
+
+  .doubt-form-container {
+    margin: 0 5% 20px;
+  }
+
+  .doubt-divider {
+    margin: 20px 5%;
+  }
+}

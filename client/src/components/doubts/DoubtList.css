@@ -1,0 +1,105 @@
+/* ===== WRAPPER ===== */
+.doubt-room-wrapper {
+  background: #f0f2f5;
+  min-height: 100vh;
+  font-family: 'Inter', 'Segoe UI', sans-serif;
+}
+
+/* ===== FILTERS ===== */
+.doubt-filters {
+  background: #fff;
+  border: 1px solid #d8dde6;
+  border-radius: 10px;
+
+  padding: 18px 22px;
+  margin: 0 8% 20px;
+
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.doubt-filters input,
+.doubt-filters select {
+  flex: 1;
+  min-width: 160px;
+
+  padding: 10px 14px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+
+  font-size: 14px;
+}
+
+/* ===== LIST ===== */
+.doubt-list {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 0 8% 40px;
+}
+
+/* ===== CARD ===== */
+.doubt-card {
+  background: #fff;
+  border: 1px solid #d8dde6;
+  border-radius: 10px;
+  padding: 18px;
+
+  transition: 0.2s;
+}
+
+.doubt-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(26, 42, 74, 0.08);
+}
+
+/* ===== HEADER ===== */
+.doubt-header {
+  display: flex;
+  justify-content: space-between;
+}
+
+/* ===== META ===== */
+.doubt-meta {
+  display: flex;
+  gap: 12px;
+}
+
+.doubt-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid #d8dde6;
+}
+
+/* TEXT */
+.doubt-question {
+  font-size: 17px;
+  font-weight: 600;
+  color: #1a2a4a;
+}
+
+.doubt-info {
+  font-size: 14px;
+  color: #9ca3af;
+  margin-top: 4px;
+}
+
+/* ===== BUTTON ===== */
+.btn-upvote {
+  padding: 8px 14px;
+  border-radius: 6px;
+
+  border: 1px solid #d1d5db;
+  background: #fff;
+  color: #374151;
+
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.btn-upvote:hover {
+  background: #1a2a4a;
+  color: #fff;
+}

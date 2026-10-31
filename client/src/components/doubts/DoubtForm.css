@@ -1,0 +1,61 @@
+/* ===== DOUBT FORM ===== */
+.doubt-form {
+  background: #fff;
+  border: 1px solid #d8dde6;
+  border-radius: 10px;
+
+  padding: 18px 22px;
+  margin: 0 8% 20px;
+
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+
+/* INPUT + SELECT */
+.doubt-form input,
+.doubt-form select {
+  flex: 1;
+  min-width: 160px;
+
+  padding: 10px 14px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+
+  font-size: 14px;
+  font-family: 'Inter', 'Segoe UI', sans-serif;
+  color: #374151;
+  outline: none;
+}
+
+.doubt-form input:focus,
+.doubt-form select:focus {
+  border-color: #1a2a4a;
+}
+
+/* BUTTON */
+.doubt-form button {
+  padding: 10px 20px;
+  border-radius: 6px;
+
+  border: none;
+  background: #1a2a4a;
+  color: #fff;
+
+  font-size: 14px;
+  cursor: pointer;
+  transition: 0.15s;
+}
+
+.doubt-form button:hover {
+  background: #243d6b;
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .doubt-form {
+    margin: 0 5% 20px;
+    flex-direction: column;
+  }
+}
