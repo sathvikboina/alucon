@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { connect } from "react-redux";
-import { getJoinRequests, getPostRequests } from "../../actions/request";
+import { getJoinRequests } from "../../actions/request";
 import { getFeedbacks } from "../../actions/extras";
 import { Link, useLocation } from "react-router-dom";
 import JoinRequestCard from "../requests/JoinRequestCard";
@@ -176,6 +176,5 @@ const mapStateToProps = (state) => ({
 
 export default connect(mapStateToProps, {
   getJoinRequests,
-  getPostRequests,
   getFeedbacks,
 })(AdminDash);

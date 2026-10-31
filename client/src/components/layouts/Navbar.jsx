@@ -158,23 +158,6 @@ const Navbar = ({
 
       {learningDropdown}
 
-      {(authUser?.isAdmin || authUser?.userType === "alumni") && (
-        <li className="dropdown">
-          <span className="navbar-link" onClick={() => toggleDropdown("polls")}>
-            Polls ▾
-          </span>
-          <ul className={`dropdown-menu ${activeDropdown === "polls" ? "show" : ""}`}>
-            <li><Link to="/polls" onClick={closeMobile}>View Polls</Link></li>
-            {authUser?.isAdmin && (
-              <>
-                <li><Link to="/create-poll" onClick={closeMobile}>Create Poll</Link></li>
-                <li><Link to="/poll-analytics" onClick={closeMobile}>Poll Analytics</Link></li>
-              </>
-            )}
-          </ul>
-        </li>
-      )}
-
       <li>
         <Link to="/profiles?search=" className="navbar-link" onClick={closeMobile}>
           Members

@@ -97,7 +97,6 @@ app.use("/api/extras", require("./routes/api/extras"));
 app.use("/api/conversations", require("./routes/api/conversations"));
 app.use("/api/messages", require("./routes/api/messages"));
 app.use("/api/channels", require("./routes/api/channel"));
-app.use("/api/poll", require("./routes/api/poll"));
 app.use("/api/job", require("./routes/api/jobs"));
 app.use("/api/event", require("./routes/api/event"));
 app.use("/api/notifications", require("./routes/api/notifications"));

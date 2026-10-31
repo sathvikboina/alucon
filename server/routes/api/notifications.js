@@ -8,8 +8,6 @@ const User = require("../../models/User");
 const Filter = require("bad-words");
 const { check, validationResult } = require("express-validator");
 var mongoose = require("mongoose");
-const PostRequest = require("../../models/PostRequest");
-const Setting = require("../../models/Setting");
 const Notification = require("../../models/Notifications");
 
 router.post("/getNotifications", auth, async (req, res) => {

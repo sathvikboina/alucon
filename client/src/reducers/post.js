@@ -8,8 +8,6 @@ import {
 	CREATE_POST,
 	ADD_COMMENT,
 	CLEAR_POSTS,
-	SET_POST_SETTING,
-	GET_POST_SETTING,
 	REMOVE_COMMENT,
 } from "../actions/types";
 
@@ -18,9 +16,6 @@ const initialState = {
 	post: null,
 	loading: true,
 	error: {},
-	settings: {
-		requireApproval: null,
-	},
 };
 
 export default function postReducer(state = initialState, action) {
@@ -100,20 +95,6 @@ export default function postReducer(state = initialState, action) {
 				post: null,
 				loading: false,
 			};
-		case SET_POST_SETTING:
-			console.log("inside reducers  set setting");
-			return {
-				...state,
-				settings: { ...state.settings, requireApproval: payload },
-				loading: false,
-			};
-		case GET_POST_SETTING:
-			return {
-				...state,
-				settings: { ...state.settings, requireApproval: payload },
-				loading: false,
-			};
-
 		case REMOVE_COMMENT:
 			return {
 				...state,

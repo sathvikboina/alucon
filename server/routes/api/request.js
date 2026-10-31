@@ -3,7 +3,6 @@ const router = express.Router();
 const authAdmin = require("../../middleware/authAdmin");
 const JoinRequest = require("../../models/JoinRequest");
 const User = require("../../models/User");
-const PostRequest = require("../../models/PostRequest");
 const { check, validationResult } = require("express-validator");
 const gravatar = require("gravatar");
 var mongoose = require("mongoose");
@@ -33,30 +32,6 @@ router.get("/join", authAdmin, async (req, res) => {
 // 		return res.status(500).send("Server Error");
 // 	}
 // });
-
-router.get("/post", authAdmin, async (req, res) => {
-	try {
-		const postRequests = await PostRequest.find();
-		res.json(postRequests);
-	} catch (err) {
-		console.error(err.message);
-		return res.status(500).send("Server Error");
-	}
-});
-
-// role based filter
-router.get("/post/:filter", authAdmin, async (req, res) => {
-	try {
-		const postRequests = await PostRequest.find({
-			role: req.params.filter,
-		});
-		res.json(postRequests);
-	} catch (err) {
-		console.error(err.message);
-		return res.status(500).send("Server Error");
-	}
-});
-
 
 // router.get("/join/:id/approve", authAdmin, async (req, res) => {
 //   try {
@@ -331,75 +306,5 @@ router.get("/join/:id/reject", authAdmin, async (req, res) => {
 		return res.status(500).send("Server Error");
 	}
 });	
-
-router.get("/post/:id/approve", authAdmin, async (req, res) => {
-	try {
-		console.log("Approve post request recieved " + req.params.id);
-		const request = await JoinRequest.findById(req.params.id);
-		const { heading, text, avatar, user, date, name, visibility, channel, images } =
-			request;
-
-		const result_channel = await Channel.find({ name: channel });
-
-		if (!result_channel) {
-			return res
-				.status(400)
-				.json({ errors: [{ msg: "Channel does not exists" }] });
-		}
-
-		const post = new Post({
-			user,
-			heading,
-			text,
-			avatar,
-			date,
-			name,
-			visibility,
-			channel,
-			images
-		});
-
-		const saved_post = await post.save();
-
-		const post_id = saved_post._id;
-
-		await Channel.findOneAndUpdate(
-			{ name: channel },
-			{
-				$push: { posts: post_id },
-			}
-		);
-
-		await PostRequest.findOneAndDelete(req.params.id);
-
-		const postuser = await User.findById(user).select("-password");
-
-		const options = {
-			subject: "Post Accepted",
-			text: "Congratulations! Your post has been approved. You can now view this post.",
-			to: postuser.email,
-			from: {
-				name: "AlumniConnect",
-				address: process.env.EMAIL,
-			},
-		};
-
-		sendEmail(options);
-		res.json({ id: req.params.id });
-	} catch (err) {
-		console.error(err.message);
-		return res.status(500).send("Server Error in approve post");
-	}
-});
-
-router.get("/post/:id/reject", authAdmin, async (req, res) => {
-	try {
-		await PostRequest.findOneAndDelete(req.params.id);
-		res.json({ id: req.params.id });
-	} catch (err) {
-		console.error(err.message);
-		return res.status(500).send("Server Error in reject post");
-	}
-});
 
 module.exports = router;

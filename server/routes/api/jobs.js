@@ -11,8 +11,6 @@ const sendEmail = require("../../middleware/utils/sendEmail");
 const Filter = require("bad-words");
 const { check, validationResult } = require("express-validator");
 var mongoose = require("mongoose");
-const PostRequest = require("../../models/PostRequest");
-const Setting = require("../../models/Setting");
 const Channel = require("../../models/Channel");
 
 router.get("/get/getjob", async (req, res) => {

@@ -1,38 +1,13 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import PropTypes from "prop-types";
 import { Modal, Box } from "@mui/material";
 import { connect } from "react-redux";
-import {
-  setRequirePostApproval,
-  getRequirePostApproval,
-} from "../../actions/post";
 import { createChannel } from "../../actions/channel";
 import "./Settings.css";
 
-const Settings = ({
-  setRequirePostApproval,
-  getRequirePostApproval,
-  createChannel,
-  post: {
-    settings: { requireApproval },
-  },
-}) => {
-  const [postApproval, setPostApproval] = useState(requireApproval);
+const Settings = ({ createChannel }) => {
   const [open, setOpen] = useState(false);
   const [newChannelName, setChannelName] = useState("");
-
-  useEffect(() => {
-    getRequirePostApproval();
-  }, []);
-
-  useEffect(() => {
-    setPostApproval(requireApproval);
-  }, [requireApproval]);
-
-  const handleToggle = async () => {
-    await setRequirePostApproval(!postApproval);
-    setPostApproval(!postApproval);
-  };
 
   const handleNewChannelSubmit = () => {
     if (!newChannelName.trim()) return;
@@ -56,22 +31,6 @@ const Settings = ({
   return (
     <div className="settings-container">
       <h2 className="settings-title">Admin Settings</h2>
-
-      {/* Post Approval Toggle */}
-      {/* <div className="settings-card">
-        <div className="settings-row">
-          <span>Require Approval for Posts</span>
-
-          <label className="switch">
-            <input
-              type="checkbox"
-              checked={postApproval}
-              onChange={handleToggle}
-            />
-            <span className="slider round"></span>
-          </label>
-        </div>
-      </div> */}
 
       {/* Create Channel */}
       <div className="settings-card">
@@ -106,18 +65,7 @@ const Settings = ({
 };
 
 Settings.propTypes = {
-  setRequirePostApproval: PropTypes.func.isRequired,
-  getRequirePostApproval: PropTypes.func.isRequired,
-  post: PropTypes.object.isRequired,
   createChannel: PropTypes.func.isRequired,
 };
 
-const mapStateToProps = (state) => ({
-  post: state.post,
-});
-
-export default connect(mapStateToProps, {
-  setRequirePostApproval,
-  getRequirePostApproval,
-  createChannel,
-})(Settings);
+export default connect(null, { createChannel })(Settings);

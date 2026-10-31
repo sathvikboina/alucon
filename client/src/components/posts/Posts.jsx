@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import PropTypes from "prop-types";
-import { getPosts, createPost, createPostRequest, getRequirePostApproval } from "../../actions/post";
+import { getPosts, createPost } from "../../actions/post";
 import { connect } from "react-redux";
 import PostCard from "./PostCard";
 import { Link, useLocation } from "react-router-dom";
@@ -149,9 +149,7 @@ const Posts = ({
   getAllChannels,
   createChannel,
   createPost,
-  createPostRequest,
-  getRequirePostApproval,
-  post: { posts, loading, settings },
+  post: { posts, loading },
   auth: { authUser },
   extras: { channels },
   match,
@@ -247,7 +245,6 @@ const Posts = ({
   useEffect(() => {
     closeSideNav();
     getAllChannels();
-    getRequirePostApproval();
   }, []);
 
   // Empty channel means "all posts" now, matching the prototype home feed.
@@ -443,9 +440,7 @@ const Posts = ({
 
     const ok = await (async () => {
       try {
-        return settings?.requireApproval
-          ? await createPostRequest(payload)
-          : await createPost(payload);
+        return await createPost(payload);
       } catch (err) {
         return 0;
       }
@@ -655,9 +650,7 @@ const Posts = ({
 
               <div className="composer-actions">
                 <span className="composer-hint">
-                  {settings?.requireApproval
-                    ? "Posts are reviewed by an admin before publishing."
-                    : "Shared with the selected audience."}
+                  Shared with the selected audience.
                 </span>
                 <div className="composer-buttons">
                   <button
@@ -926,8 +919,6 @@ Posts.propTypes = {
   getAllChannels: PropTypes.func.isRequired,
   createChannel: PropTypes.func.isRequired,
   createPost: PropTypes.func.isRequired,
-  createPostRequest: PropTypes.func.isRequired,
-  getRequirePostApproval: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = (state) => ({
@@ -942,6 +933,4 @@ export default connect(mapStateToProps, {
   getAllChannels,
   createChannel,
   createPost,
-  createPostRequest,
-  getRequirePostApproval,
 })(Posts);

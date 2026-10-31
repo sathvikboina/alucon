@@ -52,10 +52,6 @@ import InternshipMatches from "../matching/InternshipMatches";
 import MentorMatches from "../matching/MentorMatches";
 import ResourceHub from "../resource/ResourceHub";
 
-import CreatePoll from "../poll/CreatePoll";
-import PollAnalytics from "../poll/PollAnalytics";
-import Polls from "../poll/Polls";
-
 import AnalyticsDashboard from "../admin/AnalyticsDashboard.jsx";
 import Event from "../Event/event.jsx";
 import CreateEvent from "../Event/createEvent.jsx";
@@ -88,10 +84,6 @@ const Routes = () => {
 				<Route exact path="/forgotPassword" component={ForgotPassword} />
 				<Route exact path="/resetPassword/:user_id/:reset_token" component={ResetPassword} />
 				<Route exact path="/help" component={Help} />
-
-				<Route exact path="/create-poll" component={CreatePoll} />
-				<Route exact path="/polls" component={Polls} />
-				<Route exact path="/poll-analytics" component={PollAnalytics} />
 
 				<PrivateRoute exact path="/userprofile" component={Dashboard} />
 				<PrivateRoute exact path="/add-experience" component={AddExperience} />
