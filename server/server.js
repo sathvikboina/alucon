@@ -41,7 +41,6 @@ app.use((req, res, next) => {
 const achievementsRouter = require("./routes/achievement/achievements");
 const categoriesRouter = require("./routes/achievement/categories");
 const featuredRouter = require("./routes/achievement/featured");
-const aiHelpRoutes = require("./routes/aiHelpRoutes.js");
 // app.use(express.json({ extended: false }));
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
@@ -115,7 +114,6 @@ app.use("/api/support", require("./routes/api/support"));
 app.use("/api/groups", require("./routes/api/groups"));
 
 //ai help
-app.use("/api/ai", aiHelpRoutes);
 app.use("/api/ai/insights", require("./routes/api/aiInsights"));
 // app.use("/api/showcase", require("./routes/api/showcase"));
 

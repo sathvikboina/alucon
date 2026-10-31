@@ -574,9 +574,9 @@ const Posts = ({
                   + Channel
                 </button>
               )}
-              <Link to="/create-post" className="create-btn">
+              <button type="button" className="create-btn" onClick={openComposer}>
                 New Post
-              </Link>
+              </button>
               <form className="search-box" onSubmit={handleSearch}>
                 <input
                   type="text"
@@ -660,9 +660,6 @@ const Posts = ({
                     : "Shared with the selected audience."}
                 </span>
                 <div className="composer-buttons">
-                  <Link to="/create-post" className="composer-link">
-                    Full composer
-                  </Link>
                   <button
                     className="create-btn"
                     type="submit"

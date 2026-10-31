@@ -18,7 +18,6 @@ import ResetPassword from "../auth/ResetPassword";
 import AdminDash from "../dashboard/AdminDash.jsx";
 import GeneralDashboard from "../dashboard/Dashboard.jsx";
 import Posts from "../posts/Posts";
-import PostForm from "../posts/PostForm";
 import PostDisplay from "../posts/PostDisplay";
 import Groups from "../groups/Groups";
 import GroupDetail from "../groups/GroupDetail";
@@ -99,7 +98,6 @@ const Routes = () => {
 				<PrivateRoute exact path="/add-education" component={AddEducation} />
 				<PrivateRoute exact path="/feed" component={Posts} />
 				<PrivateRoute exact path="/feed/topic/:channel_name" component={Posts} />
-				<PrivateRoute exact path="/create-post" component={PostForm} />
 				<PrivateRoute exact path="/posts/:id" component={PostDisplay} />
 				<PrivateRoute exact path="/groups" component={Groups} />
 				<PrivateRoute exact path="/groups/:id" component={GroupDetail} />

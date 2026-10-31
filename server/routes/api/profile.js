@@ -173,36 +173,6 @@ router.get("/all", auth, async (req, res) => {
 	}
 });
 
-// @route    GET api/profile/user/:user_id
-// @desc     get user by id
-// @access   Public
-
-router.get("/:user_id", async (req, res) => {
-	try {
-		console.log("User id = ", req.params.user_id)
-		const user = await Profile.findById(req.params.user_id).select(
-			"-password"
-		);
-
-		if (!user) {
-
-			return res.status(400).json({ msg: "User profile not found!" });
-		}
-
-		res.json(user);
-	} catch (error) {
-		console.error(error.message);
-		if (error.kind == "ObjectId") {
-			return res
-				.status(400)
-				.json({ msg: "catch block: Profile not found!" });
-		}
-		res.status(500).json({
-			msg: "Server Error in catch block get user by id",
-		});
-	}
-});
-
 // @route    DELETE api/profile
 // @desc     delete profile, user, posts
 // @access   Private
