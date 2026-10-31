@@ -38,7 +38,7 @@ const FriendsList = () => {
 	useEffect(() => {
 		const fetchFriends = async () => {
 			try {
-				const res = await axios.get(`/api/friends/list`);
+				const res = await axios.get(`/api/users/following`);
 				setFriends(res.data);
 			} catch (err) {
 				console.error(err.message);
@@ -62,14 +62,14 @@ const FriendsList = () => {
 				<input
 					type="text"
 					className="form-control"
-					placeholder="Search Friends by Name..."
+					placeholder="Search people you follow..."
 					value={searchText}
 					onChange={(e) => setSearchText(e.target.value)}
 				/>
 			</div>
 
 			{filteredFriends.length === 0 ? (
-				<h3>No Friends Found</h3>
+				<h3>You are not following anyone yet</h3>
 			) : (
 				<div className="friends-list">
 					{filteredFriends.map((friend) => (

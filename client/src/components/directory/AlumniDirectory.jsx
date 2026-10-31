@@ -3,7 +3,7 @@ import axios from "axios";
 import { connect } from "react-redux";
 import PropTypes from "prop-types";
 import { setAlert } from "../../actions/alert";
-import { socket } from "../../socket";
+import { followUser, unFollowUser } from "../../actions/users";
 import "./AlumniDirectory.css";
 
 const AVATAR_COLORS = ["av-blue", "av-teal", "av-purple", "av-coral"];
@@ -37,21 +37,17 @@ const CheckIcon = () => (
   </svg>
 );
 
-const PeopleIcon = () => (
-  <svg className="check-icon" viewBox="0 0 16 16" fill="none">
-    <circle cx="6" cy="5" r="2.5" stroke="currentColor" strokeWidth="1.2" />
-    <path d="M1 13c0-2.761 2.239-4 5-4s5 1.239 5 4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-    <path d="M11 7.5c1.5 0 3 .8 3 2.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-    <circle cx="12" cy="4.5" r="1.8" stroke="currentColor" strokeWidth="1.2" />
-  </svg>
-);
+const AlumniDirectory = ({
+  auth: { authUser },
+  setAlert,
+  followUser,
+  unFollowUser,
+}) => {
+  const [alumni,     setAlumni]     = useState([]);
+  const [filters,    setFilters]    = useState({ search: "", batch: "", company: "", domain: "", location: "" });
+  const [loadingIds, setLoadingIds] = useState(new Set());
 
-const AlumniDirectory = ({ auth: { authUser }, setAlert }) => {
-  const [alumni,         setAlumni]         = useState([]);
-  const [filters,        setFilters]        = useState({ search: "", batch: "", company: "", domain: "", location: "" });
-  const [sentRequests,   setSentRequests]   = useState(new Set());
-  const [connectedUsers, setConnectedUsers] = useState(new Set());
-  const [loadingIds,     setLoadingIds]     = useState(new Set());
+  const followingUsers = new Set((authUser?.followings || []).map(String));
 
   const fetchAlumni = async () => {
     try {
@@ -67,59 +63,52 @@ const AlumniDirectory = ({ auth: { authUser }, setAlert }) => {
   };
 
   useEffect(() => {
-    fetchFriendStatuses();
-  }, []);
-
-  useEffect(() => {
     const timer = setTimeout(() => {
       fetchAlumni();
     }, 400); // 400ms debounce
     return () => clearTimeout(timer);
   }, [filters]);
 
-  const fetchFriendStatuses = async () => {
-    try {
-      const res = await axios.get(`/api/friends/status`);
-      const pending   = new Set();
-      const connected = new Set();
-      res.data.forEach(({ userId, status }) => {
-        if (status === "pending")  pending.add(userId);
-        if (status === "accepted") connected.add(userId);
-      });
-      setSentRequests(pending);
-      setConnectedUsers(connected);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
   const handleChange  = (e) => setFilters({ ...filters, [e.target.name]: e.target.value });
   const handleKeyDown = (e) => {}; // No longer needed, search happens as you type
 
-  const sendFriendRequest = async (receiverId) => {
-    if (sentRequests.has(receiverId) || loadingIds.has(receiverId) || connectedUsers.has(receiverId)) return;
-    setLoadingIds((prev) => new Set(prev).add(receiverId));
+  const toggleFollow = async (userId) => {
+    if (loadingIds.has(userId)) return;
+    const isFollowing = followingUsers.has(userId);
+
+    if (isFollowing && !window.confirm("Unfollow this alumnus?")) return;
+
+    setLoadingIds((prev) => new Set(prev).add(userId));
     try {
-      await axios.post(`/api/friends/request`, { receiverId });
-      if (authUser?._id) socket.emit("sendFriendRequest", { senderId: authUser._id, receiverId });
-      setSentRequests((prev) => new Set(prev).add(receiverId));
-      setAlert("Connection Request Sent!", "success");
-    } catch (err) {
-      console.error(err.message);
-      setAlert("Error sending connection request", "danger");
+      const ok = isFollowing
+        ? await unFollowUser(userId)
+        : await followUser(userId);
+
+      setAlert(
+        ok
+          ? isFollowing
+            ? "Unfollowed"
+            : "Now following"
+          : isFollowing
+            ? "Error unfollowing user"
+            : "Error following user",
+        ok ? "success" : "danger"
+      );
     } finally {
-      setLoadingIds((prev) => { const u = new Set(prev); u.delete(receiverId); return u; });
+      setLoadingIds((prev) => {
+        const u = new Set(prev);
+        u.delete(userId);
+        return u;
+      });
     }
   };
 
   const getConnectButtonState = (userId) => {
-    if (connectedUsers.has(userId))
-      return { label: "Connected",    disabled: true,  cls: "connect-btn connected", icon: <PeopleIcon /> };
     if (loadingIds.has(userId))
-      return { label: "Sending...",   disabled: true,  cls: "connect-btn sending",   icon: null };
-    if (sentRequests.has(userId))
-      return { label: "Request Sent", disabled: true,  cls: "connect-btn sent",      icon: <CheckIcon /> };
-    return   { label: "Connect",      disabled: false, cls: "connect-btn",            icon: null };
+      return { label: "Saving...",  disabled: true,  cls: "connect-btn sending",   icon: null };
+    if (followingUsers.has(userId))
+      return { label: "Following",  disabled: false, cls: "connect-btn connected", icon: <CheckIcon /> };
+    return   { label: "Follow",     disabled: false, cls: "connect-btn",            icon: null };
   };
 
   const isSelf = (userId) => authUser && authUser._id === userId;
@@ -214,7 +203,7 @@ const AlumniDirectory = ({ auth: { authUser }, setAlert }) => {
                   <button
                     className={btnState.cls}
                     disabled={btnState.disabled}
-                    onClick={() => sendFriendRequest(user._id)}
+                    onClick={() => toggleFollow(user._id)}
                   >
                     {btnState.icon}
                     {btnState.label}
@@ -233,10 +222,16 @@ const AlumniDirectory = ({ auth: { authUser }, setAlert }) => {
 };
 
 AlumniDirectory.propTypes = {
-  auth:     PropTypes.object.isRequired,
-  setAlert: PropTypes.func.isRequired,
+  auth:        PropTypes.object.isRequired,
+  setAlert:    PropTypes.func.isRequired,
+  followUser:  PropTypes.func.isRequired,
+  unFollowUser: PropTypes.func.isRequired,
 };
 
 const mapStateToProps = (state) => ({ auth: state.auth });
 
-export default connect(mapStateToProps, { setAlert })(AlumniDirectory);
+export default connect(mapStateToProps, {
+  setAlert,
+  followUser,
+  unFollowUser,
+})(AlumniDirectory);

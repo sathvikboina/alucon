@@ -311,6 +311,34 @@ router.get("/search/:query", auth, async (req, res) => {
 	}
 });
 
+// @route    GET api/users/following
+// @desc     get the people the current user follows
+// @access   Private
+
+router.get("/following", auth, async (req, res) => {
+	try {
+		const user = await User.findById(req.user.id).populate("followings", [
+			"name",
+			"avatar",
+			"role",
+			"program",
+			"starting_year",
+			"passing_year",
+			"organisation",
+			"location",
+		]);
+
+		if (!user) {
+			return res.status(404).json({ msg: "User not found" });
+		}
+
+		res.json(user.followings);
+	} catch (err) {
+		console.error(err.message);
+		res.status(500).json({ msg: "Server error in following list" });
+	}
+});
+
 // @route    GET api/users/:user_id
 // @desc     get user by id
 // @access   Private
@@ -577,8 +605,9 @@ router.get("/friends/:userId", auth, async (req, res) => {
 		}
 		
 		// people who I follow and who follow me (common ones)
-		let friend_IDs = user.followings.filter((x) =>
-			user.followers.includes(x)
+		const followerIds = new Set(user.followers.map((id) => id.toString()));
+		let friend_IDs = user.followings.filter((id) =>
+			followerIds.has(id.toString())
 		);
 
 		let friends = [];
@@ -599,17 +628,21 @@ router.put("/:id/follow", auth, async (req, res) => {
 		try {
 			const user = await User.findById(req.params.id);
 
-			if (!user.followers.includes(req.user.id)) {
+			const alreadyFollowing = user.followers.some(
+				(id) => id.toString() === req.user.id
+			);
+
+			if (!alreadyFollowing) {
 				const updated_profile = await User.findOneAndUpdate(
 					{ _id: req.params.id },
-					{ $push: { followers: req.user.id } },
+					{ $addToSet: { followers: req.user.id } },
 					{ new: true }
 				);
 
 				const updated_current_user = await User.findOneAndUpdate(
 					{ _id: req.user.id },
 					{
-						$push: { followings: req.params.id },
+						$addToSet: { followings: req.params.id },
 					},
 					{ new: true }
 				);
@@ -637,7 +670,11 @@ router.put("/:id/unfollow", auth, async (req, res) => {
 		try {
 			const user = await User.findById(req.params.id);
 
-			if (user.followers.includes(req.user.id)) {
+			const alreadyFollowing = user.followers.some(
+				(id) => id.toString() === req.user.id
+			);
+
+			if (alreadyFollowing) {
 				const updated_profile = await User.findOneAndUpdate(
 					{ _id: req.params.id },
 					{ $pull: { followers: req.user.id } },

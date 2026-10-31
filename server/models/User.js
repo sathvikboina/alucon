@@ -32,7 +32,6 @@ const UserSchema = new mongoose.Schema({
 	avatar: {
 		type: String,
 	},
-	friends: [{ type: mongoose.Schema.Types.ObjectId, ref: 'user' }],
 	blockedUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'user' }],
 	online:{
       type:Boolean,
@@ -108,14 +107,8 @@ const UserSchema = new mongoose.Schema({
 		work_modes: [{ type: String }],
 		locations: [{ type: String }],
 	},
-	followers: {
-		type: Array,
-		default: [],
-	},
-	followings: {
-		type: Array,
-		default: [],
-	},
+	followers: [{ type: mongoose.Schema.Types.ObjectId, ref: "user" }],
+	followings: [{ type: mongoose.Schema.Types.ObjectId, ref: "user" }],
 	NotificationID : {
 		type : Number,
 		default : 0

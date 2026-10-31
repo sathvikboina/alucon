@@ -16,7 +16,6 @@ import Profile from "../profile/Profile";
 import ForgotPassword from "../auth/ForgotPassword";
 import ResetPassword from "../auth/ResetPassword";
 import AdminDash from "../dashboard/AdminDash.jsx";
-import GeneralDashboard from "../dashboard/Dashboard.jsx";
 import Posts from "../posts/Posts";
 import PostDisplay from "../posts/PostDisplay";
 import Groups from "../groups/Groups";
@@ -38,13 +37,7 @@ import StoriesFeed from "../story/StoriesFeed";
 import StoryForm from "../story/StoryForm";
 
 // ✅ Friends Components
-import FriendSuggestion from "../friends/FriendSuggestion";
-import FriendsList from "../friends/FriendsList";
-import FriendRequests from "../friends/FriendRequests";
-import BlockList from "../friends/BlockList";
-import SentRequests from "../friends/SentRequests";
 
-import CreateGroup from "../messenger/CreateGroup";
 import DoubtRoom from '../doubts/DoubtRoom';
 
 import MentorDashBoard from "../mentorship/MentorDashBoard";

@@ -1,22 +1,17 @@
 // src/components/messenger/Messenger.jsx
-import React, { useEffect, useCallback } from "react";
+import React, { useCallback } from "react";
 import {
   Route, Switch, useRouteMatch, Link, useLocation, useHistory,
 } from "react-router-dom";
 import { connect } from "react-redux";
-import axios from "axios";
 
 import ConversationSidebar from "./ConversationSidebar";
 import ChatWindow          from "./ChatWindow";
 import CreateGroup         from "./CreateGroup";
-import FriendSuggestion    from "../friends/FriendSuggestion";
-import FriendRequests      from "../friends/FriendRequests";
-import SentRequests        from "../friends/SentRequests";
 import FriendsList         from "../friends/FriendsList";
 import BlockList           from "../friends/BlockList";
 
 import { useMessengerSocket } from "../../hooks/useMessengerSocket";
-import { notificationStore }  from "../../socket";
 import "./messenger.css";
 
 // Inject socket helpers as props into ChatWindow without Redux
@@ -61,10 +56,6 @@ const Messenger = ({ auth: { authUser } }) => {
   const { path, url } = useRouteMatch();
   const location      = useLocation();
   const history       = useHistory();
-
-  const [requestCount, setRequestCount] = React.useState(
-    notificationStore.getUnreadRequestsCount()
-  );
 
   // ── Mobile responsive ─────────────────────────────────────────────────────
   const [isMobile,     setIsMobile]     = React.useState(window.innerWidth <= 768);
@@ -124,23 +115,6 @@ const Messenger = ({ auth: { authUser } }) => {
     []
   );
 
-  // ── Notification badge ────────────────────────────────────────────────────
-  useEffect(() => {
-    const unsub = notificationStore.subscribe((store) =>
-      setRequestCount(store.getUnreadRequestsCount())
-    );
-    const fetchPending = async () => {
-      try {
-        const res = await axios.get("/api/friends/requests");
-        res.data.forEach((req) =>
-          notificationStore.addUnreadRequest(req.sender._id || req.sender)
-        );
-      } catch (_) {}
-    };
-    fetchPending();
-    return () => unsub();
-  }, []);
-
   // ── Active nav helper ─────────────────────────────────────────────────────
   const isActive = (subpath) => location.pathname.startsWith(`${url}${subpath}`);
   const navCls   = (subpath) =>
@@ -170,18 +144,8 @@ const Messenger = ({ auth: { authUser } }) => {
           <Link to={`${url}`} className={inboxCls()} title="Chats">
             <span className="nav-icon">💬</span><span className="nav-label"> Chats</span>
           </Link>
-          <Link to={`${url}/friends/list`} className={navCls("/friends/list")} title="Friends">
-            <span className="nav-icon">👥</span><span className="nav-label"> Friends</span>
-          </Link>
-          <Link to={`${url}/friends/requests`} className={navCls("/friends/requests")} title="Requests">
-            <span className="nav-icon">📩</span><span className="nav-label"> Requests</span>
-            {requestCount > 0 && <span className="nav-badge" />}
-          </Link>
-          <Link to={`${url}/friends/requests/sent`} className={navCls("/friends/requests/sent")} title="Sent">
-            <span className="nav-icon">📤</span><span className="nav-label"> Sent</span>
-          </Link>
-          <Link to={`${url}/friends/suggestions`} className={navCls("/friends/suggestions")} title="Discover">
-            <span className="nav-icon">🔍</span><span className="nav-label"> Discover</span>
+          <Link to={`${url}/friends/list`} className={navCls("/friends/list")} title="Following">
+            <span className="nav-icon">👥</span><span className="nav-label"> Following</span>
           </Link>
           <Link to={`${url}/create-group`} className={navCls("/create-group")} title="New Group">
             <span className="nav-icon">＋</span><span className="nav-label"> Group</span>
@@ -247,23 +211,8 @@ const Messenger = ({ auth: { authUser } }) => {
               <CreateGroup />
             </MobilePageShell>
           )} />
-          <Route exact path={`${path}/friends/suggestions`} render={() => (
-            <MobilePageShell title="Discover People" onBack={isMobile ? goBack : null}>
-              <FriendSuggestion />
-            </MobilePageShell>
-          )} />
-          <Route exact path={`${path}/friends/requests`} render={() => (
-            <MobilePageShell title="Friend Requests" onBack={isMobile ? goBack : null}>
-              <FriendRequests />
-            </MobilePageShell>
-          )} />
-          <Route exact path={`${path}/friends/requests/sent`} render={() => (
-            <MobilePageShell title="Sent Requests" onBack={isMobile ? goBack : null}>
-              <SentRequests />
-            </MobilePageShell>
-          )} />
           <Route exact path={`${path}/friends/list`} render={() => (
-            <MobilePageShell title="Friends" onBack={isMobile ? goBack : null}>
+            <MobilePageShell title="Following" onBack={isMobile ? goBack : null}>
               <FriendsList />
             </MobilePageShell>
           )} />

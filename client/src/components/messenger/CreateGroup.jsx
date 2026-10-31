@@ -43,7 +43,7 @@ const CreateGroup = ({ auth: { authUser }, setAlert }) => {
 	useEffect(() => {
 		const fetchFriends = async () => {
 			try {
-				const res = await axios.get(`/api/friends/list`);
+				const res = await axios.get(`/api/users/following`);
 				setFriends(res.data);
 			} catch (err) {
 				console.error(err.message);
@@ -87,7 +87,7 @@ const CreateGroup = ({ auth: { authUser }, setAlert }) => {
       
       <h1 className="create-group-title">Start a New Group</h1>
       <p className="create-group-subtitle">
-        Create a new conversation and invite your friends.
+        Create a new conversation and invite people you follow.
       </p>
 
       <form onSubmit={onSubmit}>
@@ -121,7 +121,7 @@ const CreateGroup = ({ auth: { authUser }, setAlert }) => {
           <div className="members-list">
             {friends.length === 0 ? (
               <p className="empty-text">
-                You don't have any friends to add yet.
+                You are not following anyone yet, so there is no one to add.
               </p>
             ) : (
               friends.map((friend) => {

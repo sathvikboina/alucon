@@ -14,7 +14,6 @@ class NotificationStore {
   constructor() {
     this.unreadMessages = new Map(); // convId -> message count
     this.unreadSenders = new Set();  // senderIds that have unread messages
-    this.unreadRequests = new Set(); // senderIds of pending friend requests
     this.listeners = [];
   }
 
@@ -31,20 +30,6 @@ class NotificationStore {
     this.unreadMessages.delete(id);
     this.unreadSenders.delete(id); 
     this.notify();
-  }
-
-  addUnreadRequest(senderId) {
-    this.unreadRequests.add(senderId);
-    this.notify();
-  }
-
-  clearAllRequests() {
-    this.unreadRequests.clear();
-    this.notify();
-  }
-
-  getUnreadRequestsCount() {
-    return this.unreadRequests.size;
   }
 
   getUnreadCount() {

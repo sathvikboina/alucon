@@ -228,8 +228,10 @@ export const followUser = (user_id) => async (dispatch) => {
 	try {
 		const res = await api.put(`/api/users/${user_id}/follow`);
 		dispatch({ type: FOLLOW_USER, payload: res.data });
+		return true;
 	} catch (err) {
 		console.log(err);
+		return false;
 	}
 };
 
@@ -237,8 +239,10 @@ export const unFollowUser = (user_id) => async (dispatch) => {
 	try {
 		const res = await api.put(`/api/users/${user_id}/unfollow`);
 		dispatch({ type: UNFOLLOW_USER, payload: res.data });
+		return true;
 	} catch (err) {
 		console.log(err);
+		return false;
 	}
 };
 

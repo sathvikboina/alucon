@@ -392,10 +392,10 @@ const handleClickMessage = (msgId) => {
     } catch (err) { console.error(err); }
   };
 
-  const handleRemoveFriend = async () => {
-    if (!window.confirm("Remove this friend?")) return;
+  const handleUnfollow = async () => {
+    if (!window.confirm("Unfollow this user?")) return;
     try {
-      await axios.delete(`${BASE}/api/friends/remove/${receiverId}`);
+      await axios.put(`${BASE}/api/users/${receiverId}/unfollow`);
       history.push("/messenger");
     } catch (err) { console.error(err); }
   };
@@ -506,8 +506,8 @@ const handleClickMessage = (msgId) => {
                   <i className="fas fa-eraser" /> Clear Chat
                 </button>
                 {!isGroup && receiverId && (
-                  <button className="chat-dropdown-item danger" onClick={handleRemoveFriend}>
-                    <i className="fas fa-user-minus" /> Remove Friend
+                  <button className="chat-dropdown-item danger" onClick={handleUnfollow}>
+                    <i className="fas fa-user-minus" /> Unfollow
                   </button>
                 )}
                 {isGroup && (

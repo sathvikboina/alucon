@@ -92,7 +92,6 @@ app.use("/api/requests", require("./routes/api/request"));
 app.use("/api/block", require("./routes/api/blocking"));
 app.use("/api/posts", require("./routes/api/posts"));
 app.use("/api/feed", require("./routes/api/feed"));
-app.use("/api/friends", require("./routes/api/friends"));
 app.use("/api/extras", require("./routes/api/extras"));
 app.use("/api/conversations", require("./routes/api/conversations"));
 app.use("/api/messages", require("./routes/api/messages"));
@@ -217,20 +216,6 @@ io.on("connection", (socket) => {
 			conversationId,
 			userId: socket.userId,
 		});
-	});
-
-	socket.on("sendFriendRequest", ({ receiverId } = {}) => {
-		try {
-			if (!receiverId) return;
-			const receiverSocket = onlineUsers.get(String(receiverId));
-			if (receiverSocket) {
-				io.to(receiverSocket).emit("receiveFriendRequest", {
-					senderId: socket.userId,
-				});
-			}
-		} catch (err) {
-			console.error("Socket error in sendFriendRequest:", err);
-		}
 	});
 
 	socket.on('sendMessage', async ({ receiverId, conversationId, text, isGroup } = {}) => {

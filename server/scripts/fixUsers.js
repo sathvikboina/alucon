@@ -15,11 +15,6 @@ const fixUsers = async () => {
         
 
 		await User.updateMany(
-			{ friends: { $exists: false } },
-			{ $set: { friends: [] } }
-		);
-
-		await User.updateMany(
 			{ blockedUsers: { $exists: false } },
 			{ $set: { blockedUsers: [] } }
 		);

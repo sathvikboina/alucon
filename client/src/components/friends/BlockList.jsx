@@ -19,7 +19,7 @@ const BlockList = ({ auth: { authUser }, setAlert }) => {
 
 		const fetchFriends = async () => {
 			try {
-				const res = await axios.get(`/api/friends/list`);
+				const res = await axios.get(`/api/users/following`);
 				setFriends(res.data);
 			} catch (err) {
 				console.error(err.message);
@@ -85,7 +85,7 @@ const BlockList = ({ auth: { authUser }, setAlert }) => {
 
 			<hr />
 
-			<h2 className="text-primary">Block a Friend</h2>
+			<h2 className="text-primary">Block someone you follow</h2>
 			<div style={{ maxHeight: "300px", overflowY: "auto", border: "1px solid lightgray", padding: "1em" }}>
 				{friends.map((friend) => (
 					!blockedUsers.some(b => b._id === friend._id) && (
