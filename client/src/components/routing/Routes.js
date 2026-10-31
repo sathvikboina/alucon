@@ -28,9 +28,7 @@ import Messenger from "../messenger/Messenger";
 import Job from "../Jobs/jobs.jsx";
 import ArchiveJobs from "../Jobs/archiveJobs.jsx";
 import CreateJob from "../Jobs/createJob.jsx";
-import Gallery from "../Gallery/gallery.jsx";
 
-import Notifications from "../notification/notifications.jsx";
 
 // ✅ Story Components
 import StoryForm from "../story/StoryForm";
@@ -68,10 +66,8 @@ const Routes = () => {
 				<PrivateRoute exact path="/mentor-matches" component={MentorMatches} />
 				<Route exact path="/archivejobs" component={ArchiveJobs} />
 				<Route exact path="/createjob" component={CreateJob} />
-				<Route exact path="/gallery" component={Gallery} />
 				<Route exact path="/events" component={Event} />
 				<Route exact path="/createEvent" component={CreateEvent} />
-				<Route exact path="/notifications" component={Notifications} />
 
 				<Route exact path="/forgotPassword" component={ForgotPassword} />
 				<Route exact path="/resetPassword/:user_id/:reset_token" component={ResetPassword} />
