@@ -105,14 +105,8 @@
   margin-top: 12px;
 }
 
-/* ===== BUTTON BASE ===== */
-.btn {
-  border-radius: 6px;
-  padding: 8px 14px;
-  font-size: 13px;
-  cursor: pointer;
-  transition: 0.15s;
-}
+/* The base `.btn` rule is global and lives in App.css. This file only
+   contributes the variants used by the member card. */
 
 /* DELETE */
 .btn-danger {

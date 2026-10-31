@@ -51,13 +51,13 @@
 
 ---
 
-## 3. Visual / CSS findings (not changed)
+## 3. Visual / CSS findings (remaining; #2 resolved)
 
 1. **Global `:root` token collisions.** `--navy-800` is `#0c1f42` in `Home.css`, `#1a2f54` in `messenger.css`, and `#0f2044` in the post styles. Because all are `:root`, the last-loaded value wins for every page. Consolidate into one token file.
-2. **Global `.btn` collision (resolved for the landing page).** `Home.css` set `padding: 11px 28px`; `UserCard.css` sets `padding: 8px 14px` and `font-size: 13px`. The home rules are now scoped to `.landing .btn`, so the collision no longer affects the landing page. `UserCard.css` still defines `.btn` globally and should be scoped to `.user-card`.
+2. **Global `.btn` collision (resolved).** `Home.css` set `padding: 11px 28px`, while the base `.btn` rule set `padding: 8px 14px` and `font-size: 13px`. The home rules are now scoped to `.landing .btn`, and the base rule was moved out of `UserCard.css` into `App.css`, where the app-wide button base belongs. `UserCard.css` now only contributes `.btn-danger`, `.btn-secondary` and `.btn-simple`. Note: scoping the base to `.user-card` would have been wrong — it is the only base `.btn` definition and is used app-wide.
 3. **Groups selectors are global.** `groups.css` says every rule is scoped to `.groups-page`, but `.group-card`, `.group-tab`, `.group-btn`, `.avatar-stack`, `.member-stack`, etc. are global. No current collisions were found, but the comment is misleading and future components can collide. Prefix or nest them.
 4. **Groups typography is very small.** Badges and labels use `8–11px`, body copy `12px`. This is below comfortable mobile readability; consider a `13px` minimum for body and `11px` for badges.
-5. **Mobile AI briefing is rendered twice.** The desktop and mobile copies both exist in the DOM; the hidden copy is `display: none` at desktop, but assistive technology may still encounter duplicated content. Mark the hidden copy `aria-hidden` or render once with CSS order.
+5. **Mobile AI briefing is duplicated in the DOM.** The desktop rail and mobile copies both exist (`Posts.jsx`); the inactive copy is `display: none` (`Posts.css`), which removes it from the accessibility tree, so this is not an assistive-technology exposure. It is still duplicate markup and duplicate work. Render once and reorder with CSS, or gate it with `aria-hidden` plus `inert` if the duplicate is kept.
 6. **Feed/right-rail breakpoints are otherwise coherent.** Rails hide at `1180px`, the shell collapses at `900px`, and the composer/hero stack at `680px`. The new navbar rules close the remaining tablet gap.
 
 ---
@@ -102,6 +102,8 @@
 - `client/src/components/requests/PostRequestCard.jsx`
 - `client/src/components/posts/PostDisplay.css`
 - `client/src/components/layouts/Navbar.css`
+- `client/src/App.css` (global `.btn` base moved here)
+- `client/src/components/profiles/UserCard.css` (base removed; variants remain)
 
 **Records**
 

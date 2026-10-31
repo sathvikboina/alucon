@@ -5,6 +5,19 @@ body {
   line-height: 1.6;
 }
 
+/* ================= BUTTON BASE ================= */
+/* The single app-wide base button. Component stylesheets only extend it
+   (.btn-danger, .btn-secondary, .btn-simple) and the landing page overrides
+   it with `.landing .btn`. It used to live in UserCard.css, which meant a
+   profile-card stylesheet owned the base styling for every button in the app. */
+.btn {
+  border-radius: 6px;
+  padding: 8px 14px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: 0.15s;
+}
+
 /* ================= HELP PAGE ================= */
 .help-page {
   display: flex;
