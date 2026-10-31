@@ -881,7 +881,7 @@ const Posts = ({
 
           <div className="rail-footer">
             <Link to="/help">Help</Link>
-            <Link to="/stories">Stories</Link>
+            <Link to="/showcase?tab=stories">Stories</Link>
             <Link to="/showcase">Showcase</Link>
             <span>IIIT Allahabad Alumni Network</span>
           </div>

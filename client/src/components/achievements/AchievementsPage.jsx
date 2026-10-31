@@ -97,7 +97,7 @@ function AchievementDetailModal({ achievement, onClose }) {
 }
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
-const AchievementsPage = ({ auth, setAlert }) => {
+const AchievementsPage = ({ auth, setAlert, embedded = false }) => {
   const authUser = auth?.authUser;
   const [achievements, setAchievements] = useState([]);
   const [total, setTotal]               = useState(0);
@@ -158,18 +158,32 @@ const AchievementsPage = ({ auth, setAlert }) => {
   };
 
   return (
-    <div className="achievements-page">
+    <div className={`achievements-page${embedded ? " achievements-page--embedded" : ""}`}>
       {/* Hero */}
-      <div className="achievements-hero">
-        <Trophy size={36} className="hero-icon" />
-        <h1>Awards & Achievements</h1>
-        <p>Celebrating the milestones of our alumni and faculty</p>
-        {canSubmit && (
-          <button className="submit-achievement-btn" onClick={() => setShowSubmitModal(true)}>
-            <Plus size={16} /> Submit Your Achievement
-          </button>
-        )}
-      </div>
+      {embedded ? (
+        <div className="achievements-embedded-toolbar">
+          <div>
+            <h2>Awards &amp; Achievements</h2>
+            <p>Celebrating the milestones of our alumni and faculty</p>
+          </div>
+          {canSubmit && (
+            <button className="submit-achievement-btn" onClick={() => setShowSubmitModal(true)}>
+              <Plus size={16} /> Submit Your Achievement
+            </button>
+          )}
+        </div>
+      ) : (
+        <div className="achievements-hero">
+          <Trophy size={36} className="hero-icon" />
+          <h1>Awards & Achievements</h1>
+          <p>Celebrating the milestones of our alumni and faculty</p>
+          {canSubmit && (
+            <button className="submit-achievement-btn" onClick={() => setShowSubmitModal(true)}>
+              <Plus size={16} /> Submit Your Achievement
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Submit Modal */}
       {showSubmitModal && (
@@ -248,6 +262,10 @@ const AchievementsPage = ({ auth, setAlert }) => {
   );
 };
 
-AchievementsPage.propTypes = { auth: PropTypes.object.isRequired, setAlert: PropTypes.func.isRequired };
+AchievementsPage.propTypes = {
+  auth: PropTypes.object.isRequired,
+  setAlert: PropTypes.func.isRequired,
+  embedded: PropTypes.bool,
+};
 const mapStateToProps = (state) => ({ auth: state.auth });
 export default connect(mapStateToProps, { setAlert })(AchievementsPage);

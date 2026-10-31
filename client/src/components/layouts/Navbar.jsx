@@ -103,7 +103,7 @@ const Navbar = ({
       </span>
       <ul className={`dropdown-menu ${activeDropdown === "institute" ? "show" : ""}`}>
         <li><Link to="/showcase" onClick={closeMobile}>Showcase</Link></li>
-        <li><Link to="/achievements" onClick={closeMobile}>Achievement Awards</Link></li>
+        <li><Link to="/showcase?tab=achievements" onClick={closeMobile}>Achievement Awards</Link></li>
         {/* AI Help (generic chat) is parked until the cited-search phase. */}
       </ul>
     </li>
@@ -147,7 +147,7 @@ const Navbar = ({
           Community ▾
         </span>
         <ul className={`dropdown-menu ${activeDropdown === "community" ? "show" : ""}`}>
-          <li><Link to="/stories" onClick={closeMobile}>Stories of Alumni</Link></li>
+          <li><Link to="/showcase?tab=stories" onClick={closeMobile}>Stories of Alumni</Link></li>
           <li><Link to="/groups" onClick={closeMobile}>Groups &amp; Cohorts</Link></li>
           <li><Link to="/feed" onClick={closeMobile}>Feed</Link></li>
           <li><Link to="/alumni-directory" onClick={closeMobile}>Alumni Directory</Link></li>
@@ -214,7 +214,7 @@ const Navbar = ({
   const guestLinks = (
     <>
       <li><Link to="/help" className="navbar-link" onClick={closeMobile}>Help</Link></li>
-      <li><Link to="/stories" className="navbar-link" onClick={closeMobile}>Stories</Link></li>
+      <li><Link to="/showcase?tab=stories" className="navbar-link" onClick={closeMobile}>Stories</Link></li>
       <li><Link to="/login" className="navbar-link btn-login" onClick={closeMobile}>Login</Link></li>
       <li><Link to="/register" className="navbar-link btn-register" onClick={closeMobile}>Register</Link></li>
     </>

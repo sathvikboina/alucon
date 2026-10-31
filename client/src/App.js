@@ -14,9 +14,6 @@ import InstitutionalShowcase from "./pages/InstitutionalShowcase";
 import GalleryPage from "./pages/GalleryPage";
 import AdminShowcase from "./pages/AdminShowcase";
 import AdminRoute from "./components/routing/AdminRoute";
-import AchievementsPage from "./components/achievements/AchievementsPage";
-import AdminAchievements from "./components/achievements/AdminAchievements";
-import SubmitAchievementForm from "./components/achievements/SubmitAchievementForm";
 
 if (localStorage.token) {
 	setAuthToken(localStorage.token);
@@ -37,10 +34,7 @@ const App = () => {
 						<Route exact path="/" component={Home} />
 						<Route exact path="/showcase" component={InstitutionalShowcase} />
 						<Route exact path="/gallery" component={GalleryPage} />
-						<Route exact path="/achievements" component={AchievementsPage} />
 						<AdminRoute exact path="/admin/showcase" component={AdminShowcase} />
-						<Route exact path="/achievements/admin" component={AdminAchievements} />
-						<Route exact path="/achievements/submit" component={SubmitAchievementForm} />
 
 						<Route component={Routes} />
 					</Switch>

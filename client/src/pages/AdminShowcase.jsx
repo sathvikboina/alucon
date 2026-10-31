@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import uploadImage from '../utils/uploadImage';
+import AdminAchievements from '../components/achievements/AdminAchievements';
 
 const ROUTE_MAP = {
   Alumni:   'alumni',
@@ -10,6 +11,10 @@ const ROUTE_MAP = {
   Media:    'media',
   Timeline: 'timeline',
 };
+
+// Achievements are managed by their own module, but live in this admin panel
+// so every showcase surface has a single entry point.
+const SECTIONS = [...Object.keys(ROUTE_MAP), 'Achievements'];
 
 const FIELDS = {
   Alumni: [
@@ -215,6 +220,7 @@ export default function AdminShowcase() {
   const route = ROUTE_MAP[section];
 
   const fetchItems = () => {
+    if (!route) return;
     setLoadingList(true);
     axios.get(`/api/showcase/${route}`)
       .then(r => setItems(r.data))
@@ -224,7 +230,7 @@ export default function AdminShowcase() {
   useEffect(() => {
     setForm({});
     setEditId(null);
-    fetchItems();
+    if (route) fetchItems();
   }, [section]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const notify = (text) => { setMsg(text); setTimeout(() => setMsg(''), 2500); };
@@ -263,12 +269,17 @@ export default function AdminShowcase() {
 
       {/* Section Tabs */}
       <div className="sc-admin-tabs">
-        {Object.keys(ROUTE_MAP).map(s => (
+        {SECTIONS.map(s => (
           <button key={s} className={section === s ? 'active' : ''} onClick={() => setSection(s)}>
             {s}
           </button>
         ))}
       </div>
+
+      {section === 'Achievements' ? (
+        <AdminAchievements />
+      ) : (
+        <>
 
       {/* Form header */}
       <div className="sc-admin-form-header">
@@ -386,6 +397,8 @@ export default function AdminShowcase() {
           ))
         )}
       </div>
+        </>
+      )}
     </div>
   );
 }

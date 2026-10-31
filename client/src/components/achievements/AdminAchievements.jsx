@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import api from "../../utils/api";
 import { connect } from "react-redux";
+import "./achievements.css";
 
 const AdminAchievements = ({ auth }) => {
   const currentUser = auth?.authUser;

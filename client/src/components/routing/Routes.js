@@ -33,7 +33,6 @@ import Gallery from "../Gallery/gallery.jsx";
 import Notifications from "../notification/notifications.jsx";
 
 // ✅ Story Components
-import StoriesFeed from "../story/StoriesFeed";
 import StoryForm from "../story/StoryForm";
 
 // ✅ Friends Components
@@ -96,7 +95,6 @@ const Routes = () => {
 				<PrivateRoute path="/messenger" component={Messenger} />
 
 				{/* ✅ Story Pages */}
-				<Route exact path="/stories" component={StoriesFeed} />
 				<AlumniRoute exact path="/stories/add" component={StoryForm} />
 				<Route exact path="/doubts" component={DoubtRoom} />
 				<PrivateRoute exact path="/mentorship" component={MentorDashBoard} />

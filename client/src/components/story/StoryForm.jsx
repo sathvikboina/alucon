@@ -69,7 +69,7 @@ const StoryForm = ({ addStory, setAlert, auth: { authUser } }) => {
 
 			await addStory(data);
 
-			history.push("/stories");
+			history.push("/showcase?tab=stories");
 		} catch (err) {
 			console.error(err);
 			setAlert("Failed to post story", "danger");

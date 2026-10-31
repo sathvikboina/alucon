@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { connect } from "react-redux";
-import { getStories, likeStory, unlikeStory, deleteStory } from "../../actions/story";
+import { getStories, likeStory, deleteStory } from "../../actions/story";
 import Spinner from "../layouts/Spinner";
 import PropTypes from "prop-types";
-import { Link, useHistory } from "react-router-dom";
+import { Link } from "react-router-dom";
 import moment from "moment";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -378,6 +378,22 @@ const S = {
     transition: "all 0.15s",
   },
 
+  embeddedPage: { background: "transparent" },
+  embeddedToolbar: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    flexWrap: "wrap",
+    gap: "0.75rem",
+    marginBottom: "1.25rem",
+  },
+  embeddedTitle: {
+    margin: 0,
+    fontSize: "1.15rem",
+    fontWeight: 700,
+    color: "#0c1f57",
+  },
+  embeddedContainer: { padding: 0, maxWidth: "none" },
   loadMoreWrap: { textAlign: "center", marginTop: "2rem" },
   loadMoreBtn: {
     border: "1px solid #c7d2fe",
@@ -404,6 +420,7 @@ const StoriesFeed = ({
   getStories,
   likeStory,
   deleteStory,
+  embedded = false,
   story: { stories, loading },
   auth: { authUser },
 }) => {
@@ -412,7 +429,6 @@ const StoriesFeed = ({
   const [hasMore, setHasMore] = useState(true);
   const [initialLoad, setInitialLoad] = useState(true);
   const [selectedStory, setSelectedStory] = useState(null);
-  const history = useHistory();
 
   useEffect(() => { getStories(page); }, [getStories, page]);
 
@@ -443,26 +459,35 @@ const StoriesFeed = ({
   // Show spinner only on the very first load
   if (initialLoad && loading) return <Spinner />;
 
+  const shareLink = authUser && authUser.role === "alumni" && (
+    <Link to="/stories/add" style={S.shareBtn}>
+      ✍ Share Your Story
+    </Link>
+  );
+
   return (
-    <div style={S.page}>
+    <div style={embedded ? S.embeddedPage : S.page}>
 
       {/* ── Navy Blue Hero Banner ── */}
-      <div style={S.hero}>
-        <div style={S.heroInner}>
-          <div>
-            <h1 style={S.heroTitle}>Alumni Stories</h1>
-            <p style={S.heroSubtitle}>Real journeys from our community of graduates</p>
-          </div>
-          {authUser && authUser.role === "alumni" && (
-            <Link to="/stories/add" style={S.shareBtn}>
-              ✍ Share Your Story
-            </Link>
-          )}
+      {embedded ? (
+        <div style={S.embeddedToolbar}>
+          <h2 style={S.embeddedTitle}>Stories of Alumni</h2>
+          {shareLink}
         </div>
-      </div>
+      ) : (
+        <div style={S.hero}>
+          <div style={S.heroInner}>
+            <div>
+              <h1 style={S.heroTitle}>Alumni Stories</h1>
+              <p style={S.heroSubtitle}>Real journeys from our community of graduates</p>
+            </div>
+            {shareLink}
+          </div>
+        </div>
+      )}
 
       {/* ── Content ── */}
-      <div style={S.container}>
+      <div style={embedded ? S.embeddedContainer : S.container}>
         {allStories.length === 0 ? (
           <div style={S.empty}>No stories yet.</div>
         ) : (
@@ -512,6 +537,7 @@ StoriesFeed.propTypes = {
   deleteStory: PropTypes.func.isRequired,
   story: PropTypes.object.isRequired,
   auth: PropTypes.object.isRequired,
+  embedded: PropTypes.bool,
 };
 
 const mapStateToProps = (state) => ({
