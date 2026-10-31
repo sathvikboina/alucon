@@ -1,0 +1,113 @@
+/* ================= GLOBAL FONT ================= */
+body {
+  font-family: "Montserrat", sans-serif;
+  color: #2c3e50;
+  line-height: 1.6;
+}
+
+/* ================= HELP PAGE ================= */
+.help-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px 20px;
+}
+
+/* ================= FORM CARD ================= */
+.help-page .post-form-container {
+  background: #ffffff;
+  border-radius: 10px;
+  padding: 30px;
+  width: 100%;
+  max-width: 550px;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+}
+
+/* HEADER */
+.help-page .form-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.help-page .form-header h5 {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.help-page .form-header p {
+  font-size: 13px;
+}
+
+/* ================= FORM ================= */
+.help-page .form-group {
+  margin-bottom: 18px;
+}
+
+/* LABEL */
+.help-page label {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  display: block;
+}
+
+/* INPUTS */
+.help-page input,
+.help-page select,
+.help-page textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+/* FOCUS EFFECT */
+.help-page input:focus,
+.help-page select:focus,
+.help-page textarea:focus {
+  outline: none;
+  border-color: #008cc9;
+  box-shadow: 0 0 0 2px rgba(0,140,201,0.1);
+}
+
+/* TEXTAREA */
+.help-page textarea {
+  resize: none;
+}
+
+/* ================= BUTTON ================= */
+.help-page .btn {
+  width: 100%;
+  padding: 10px;
+  font-size: 15px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+}
+
+.help-page .btn-primary {
+  background: #008cc9;
+  color: white;
+}
+
+.help-page .btn-primary:hover {
+  background: #0070a8;
+}
+
+/* ================= LOADING ================= */
+.help-page .fa-spinner {
+  color: #008cc9;
+}
+
+/* ================= RESPONSIVE ================= */
+@media (max-width: 768px) {
+  .help-page {
+    padding: 20px;
+  }
+
+  .help-page .post-form-container {
+    padding: 20px;
+  }
+}

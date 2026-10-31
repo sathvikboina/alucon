@@ -1,0 +1,85 @@
+{
+	"name": "client",
+	"version": "0.1.0",
+	"private": true,
+	"proxy": "http://localhost:5001/",
+	"dependencies": {
+		"@ckeditor/ckeditor5-build-classic": "^33.0.0",
+		"@ckeditor/ckeditor5-react": "^4.0.0",
+		"@emotion/react": "^11.9.0",
+		"@emotion/styled": "^11.8.1",
+		"@fortawesome/fontawesome-svg-core": "^6.7.2",
+		"@fortawesome/react-fontawesome": "^0.2.0",
+		"@mui/material": "^5.6.4",
+		"@reduxjs/toolkit": "^2.5.1",
+		"@testing-library/jest-dom": "^5.16.4",
+		"@testing-library/react": "^11.2.7",
+		"@testing-library/user-event": "^12.8.3",
+		"awesome-react-icons": "^1.4.8",
+		"axios": "^0.21.4",
+		"bootstrap": "^5.2.3",
+		"bootstrap-icons": "^1.10.4",
+		"caniuse-lite": "^1.0.30001478",
+		"cryptr": "^6.0.3",
+		"dompurify": "^3.4.17",
+		"html-react-parser": "^1.4.10",
+		"lucide-react": "^1.8.0",
+		"moment": "^2.29.3",
+		"npm-check-updates": "^12.5.11",
+		"pdf-viewer-reactjs": "^2.2.3",
+		"prop-types": "^15.8.1",
+		"react": "18.2.0",
+		"react-bootstrap": "^2.7.2",
+		"react-bootstrap-icons": "^1.10.3",
+		"react-csv": "^2.2.2",
+		"react-dom": "18.2.0",
+		"react-moment": "^1.1.2",
+		"react-redux": "^7.2.9",
+		"react-router-dom": "^5.3.1",
+		"react-scripts": "^5.0.1",
+		"react-select": "^5.10.1",
+		"recharts": "^3.8.1",
+		"redux": "^4.2.1",
+		"redux-devtools-extension": "^2.13.9",
+		"redux-thunk": "^2.4.1",
+		"serve": "^14.2.0",
+		"socket.io-client": "^4.8.3",
+		"timeago": "^1.6.7",
+		"uuid": "^8.3.2",
+		"web-vitals": "^1.1.2"
+	},
+	"scripts": {
+		"start1": "set NODE_OPTIONS=--openssl-legacy-provider && react-scripts start",
+		"start": "react-scripts start",
+		"build": "react-scripts build",
+		"install-client": " npm install",
+		"build-client": " npm run build",
+		"start-client": " npm start",
+		"test": "react-scripts test",
+		"eject": "react-scripts eject"
+	},
+	"eslintConfig": {
+		"extends": [
+			"react-app",
+			"react-app/jest"
+		]
+	},
+	"browserslist": {
+		"production": [
+			">0.2%",
+			"not dead",
+			"not op_mini all"
+		],
+		"development": [
+			"last 1 chrome version",
+			"last 1 firefox version",
+			"last 1 safari version"
+		]
+	},
+	"devDependencies": {
+		"@babel/plugin-proposal-class-properties": "^7.16.7"
+	},
+	"engines": {
+		"node": ">=18"
+	}
+}

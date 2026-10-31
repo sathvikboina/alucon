@@ -1,0 +1,176 @@
+/* ================= FOOTER ================= */
+.footer-class{
+background:#0f172a;
+color:#e2e8f0;
+padding-top:50px;
+font-family:"Segoe UI",sans-serif;
+}
+
+.footer-container{
+max-width:1200px;
+margin:auto;
+padding:0 40px;
+}
+
+/* FORCE LEFT-RIGHT ALIGNMENT */
+.footer-container .row{
+display:flex;
+flex-direction:row;
+justify-content:space-between;
+align-items:flex-start;
+flex-wrap:nowrap;
+gap:70px;
+}
+
+/* LEFT COLUMN */
+.footer-left{
+flex:1;
+max-width:40%;
+text-align:left;
+}
+
+/* RIGHT COLUMN */
+.footer-right{
+flex:1;
+max-width:60%;
+text-align:left;
+}
+
+/* Headings */
+.footer-heading{
+font-size:24px;
+font-weight:700;
+margin-bottom:25px;
+color:#fff;
+}
+
+/* SOCIAL ICONS */
+.social-icons{
+display:flex;
+gap:16px;
+margin-bottom:30px;
+}
+
+.social-icons a{
+width:45px;
+height:45px;
+border-radius:50%;
+background:#1e293b;
+display:flex;
+justify-content:center;
+align-items:center;
+font-size:18px;
+color:#dbeafe;
+transition:.3s;
+}
+
+.social-icons a:hover{
+background:#2563eb;
+transform:translateY(-3px);
+}
+
+/* LINKS */
+.footer-links{
+list-style:none;
+padding:0;
+margin:0;
+}
+
+.footer-links li{
+margin-bottom:22px;
+}
+
+.footer-links a{
+text-decoration:none;
+color:#dbeafe;
+font-size:17px;
+transition:.3s;
+}
+
+.footer-links a:hover{
+color:#60a5fa;
+}
+
+/* DOWNLOAD MANUAL BUTTON */
+.manual-btn{
+display:inline-block;
+background:#e1d012;
+color:#111827 !important;
+padding:12px 24px;
+border-radius:8px;
+font-weight:800;
+letter-spacing:1px;
+box-shadow:0 4px 15px rgba(250,204,21,.45);
+text-transform:uppercase;
+}
+
+.manual-btn:hover{
+background:#fde047;
+transform:translateY(-2px);
+}
+
+/* CONTACT SECTION */
+.help-section{
+display:flex;
+align-items:flex-start;
+gap:16px;
+margin-bottom:26px;
+}
+
+.help-section i{
+font-size:20px;
+color:#60a5fa;
+margin-top:4px;
+}
+
+.contact-info-text{
+margin:0;
+font-size:17px;
+line-height:1.7;
+color:#dbeafe;
+}
+
+/* COPYRIGHT */
+.footer-copyright{
+margin-top:40px;
+background:#020617;
+border-top:1px solid #1e293b;
+font-size:14px;
+color:#94a3b8;
+}
+
+.footer-copyright a{
+color:#60a5fa;
+text-decoration:none;
+}
+
+.footer-copyright a:hover{
+text-decoration:underline;
+}
+
+/* MOBILE */
+@media(max-width:768px){
+
+.footer-container .row{
+flex-direction:column;
+flex-wrap:wrap;
+gap:35px;
+}
+
+.footer-left,
+.footer-right{
+max-width:100%;
+width:100%;
+padding:0;
+text-align:center;
+}
+
+.social-icons{
+justify-content:center;
+}
+
+.help-section{
+justify-content:center;
+text-align:left;
+}
+}

@@ -1,0 +1,126 @@
+/*login*/
+/* ================= LOGIN PAGE ================= */
+.form-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  min-height: calc(100vh - 80px); /* adjust for navbar */
+  padding: 20px;
+}
+
+/* ================= CARD ================= */
+.auth-form {
+  width: 100%;
+  max-width: 400px;
+
+  background: #ffffff;
+  padding: 30px;
+  border-radius: 10px;
+
+  box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+}
+
+/* TITLE */
+.form-container h1 {
+  margin-bottom: 5px;
+  font-weight: 700;
+}
+
+.form-container .lead {
+  margin-bottom: 20px;
+  color: #666;
+}
+
+/* ================= FORM ================= */
+.auth-form .form-group {
+  margin-bottom: 18px;
+}
+
+/* INPUTS */
+.auth-form input {
+  width: 100%;
+  padding: 10px 12px;
+
+  border: 1px solid #ccc;
+  border-radius: 6px;
+
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+/* FOCUS EFFECT */
+.auth-form input:focus {
+  outline: none;
+  border-color: #008cc9;
+  box-shadow: 0 0 0 2px rgba(0,140,201,0.1);
+}
+
+/* PASSWORD TOGGLE */
+.auth-form span {
+  font-size: 13px;
+  color: #008cc9;
+  cursor: pointer;
+}
+
+.auth-form span:hover {
+  text-decoration: underline;
+}
+
+/* ================= BUTTON ================= */
+.auth-form .btn {
+  width: 100%;
+  padding: 10px;
+  font-size: 15px;
+
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+}
+
+/* PRIMARY BUTTON */
+.auth-form .btn-primary {
+  background: #008cc9;
+  color: white;
+}
+
+.auth-form .btn-primary:hover {
+  background: #0070a8;
+}
+
+/* ================= LINKS ================= */
+.form-container .my-1 {
+  margin-top: 15px;
+  font-size: 14px;
+}
+
+.form-container a {
+  color: #008cc9;
+  text-decoration: none;
+}
+
+.form-container a:hover {
+  text-decoration: underline;
+}
+
+/* ================= RESPONSIVE ================= */
+@media (max-width: 768px) {
+  .auth-form {
+    padding: 20px;
+  }
+}
+.auth-form {
+  animation: fadeIn 0.4s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+} 

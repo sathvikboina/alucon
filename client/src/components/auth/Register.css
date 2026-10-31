@@ -1,0 +1,250 @@
+/* ===== Register.css — Academic Portal Theme ===== */
+
+/* Container */
+.form-container {
+  max-width: 500px;
+  margin: 2.5rem auto;
+  padding: 2.5rem 2rem;
+  background: #fff;
+  border: 1px solid #d6d3cc;
+  border-radius: 10px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.07);
+  font-family: 'Segoe UI', 'Inter', Arial, sans-serif;
+}
+
+.form-container h1 {
+  text-align: center;
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: #1a3a5c;
+  margin-bottom: 0.3rem;
+  letter-spacing: 0.5px;
+}
+
+.form-container h1::after {
+  content: '';
+  display: block;
+  width: 48px;
+  height: 3px;
+  background: #1a6fbd;
+  margin: 0.5rem auto 1.5rem;
+  border-radius: 2px;
+}
+
+/* Form */
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Inputs */
+.auth-form input[type="text"],
+.auth-form input[type="email"],
+.auth-form input[type="password"],
+.auth-form input[type="number"],
+.auth-form select,
+.otp-container input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid #c5cad4;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  color: #222;
+  background: #f8f9fb;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+  outline: none;
+}
+
+.auth-form input:focus,
+.auth-form select:focus,
+.otp-container input:focus {
+  border-color: #1a6fbd;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(26, 111, 189, 0.12);
+}
+
+.auth-form select {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%231a3a5c' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 36px;
+}
+
+/* Section blocks */
+.academic-section,
+.alumni-section,
+.faculty-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px;
+  background: #f0f4fa;
+  border-left: 3px solid #1a6fbd;
+  border-radius: 0 6px 6px 0;
+}
+
+/* Password strength */
+.password-strength {
+  font-size: 0.83rem;
+  font-weight: 600;
+  padding: 5px 10px;
+  border-radius: 4px;
+  display: inline-block;
+  background: #f0f4fa;
+  color: #555;
+  border: 1px solid #d0d7e4;
+}
+
+/* Dynamically colored — apply via JS or extra classes if needed */
+.strength-weak   { background: #fdecea; color: #c0392b; border-color: #f5b7b1; }
+.strength-medium { background: #fef9e7; color: #b7770d; border-color: #fde68a; }
+.strength-strong { background: #eafaf1; color: #1a8a4a; border-color: #a9dfbf; }
+
+/* Submit button */
+.btn.btn-primary {
+  padding: 11px;
+  background: #1a3a5c;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  letter-spacing: 0.3px;
+  transition: background 0.2s, transform 0.1s;
+  margin-top: 4px;
+}
+
+.btn.btn-primary:hover {
+  background: #1a6fbd;
+}
+
+.btn.btn-primary:active {
+  transform: scale(0.98);
+}
+
+.btn.btn-primary:disabled {
+  background: #8ca6c2;
+  cursor: not-allowed;
+}
+
+/* OTP container */
+.otp-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 2rem 1.5rem;
+  background: #f0f4fa;
+  border-radius: 8px;
+  border: 1px solid #c5cad4;
+}
+
+.otp-container h3 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #1a3a5c;
+  margin: 0;
+}
+
+.otp-container input {
+  width: 140px;
+  text-align: center;
+  font-size: 1.3rem;
+  letter-spacing: 6px;
+  font-weight: 700;
+  color: #1a3a5c;
+  border: 1.5px solid #1a6fbd;
+  background: #fff;
+  border-radius: 8px;
+  padding: 10px;
+}
+
+.otp-container button {
+  padding: 9px 22px;
+  border-radius: 6px;
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1.5px solid #1a3a5c;
+  background: #1a3a5c;
+  color: #fff;
+  transition: background 0.2s;
+  width: 100%;
+  max-width: 220px;
+}
+
+.otp-container button:hover:not(:disabled) {
+  background: #1a6fbd;
+  border-color: #1a6fbd;
+}
+
+.otp-container button:disabled {
+  background: #c5cad4;
+  border-color: #c5cad4;
+  color: #888;
+  cursor: not-allowed;
+}
+
+.otp-container .reset-btn {
+  background: transparent;
+  color: #1a3a5c;
+  border-color: #c5cad4;
+  font-weight: 500;
+}
+
+.otp-container .reset-btn:hover {
+  background: #e8ecf3;
+  border-color: #1a3a5c;
+}
+
+/* OTP timer */
+.otp-timer {
+  font-size: 0.83rem;
+  color: #7a8698;
+  margin: 0;
+}
+
+/* Success message */
+.success-msg {
+  margin-top: 1.2rem;
+  padding: 12px 16px;
+  background: #eafaf1;
+  border: 1px solid #a9dfbf;
+  border-radius: 6px;
+  color: #1a8a4a;
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-align: center;
+}
+
+/* Footer link */
+.my-1 {
+  text-align: center;
+  margin-top: 1.2rem;
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.my-1 a {
+  color: #1a6fbd;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.my-1 a:hover {
+  text-decoration: underline;
+}
+
+
+/* Responsive */
+@media (max-width: 540px) {
+  .form-container {
+    margin: 1rem;
+    padding: 1.5rem 1rem;
+  }
+}
