@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<style>
+			html {
+				text-align: center;
+			}
+
+			table,
+			th,
+			td,
+			tr {
+				border: 10px solid black;
+				border-collapse: collapse;
+				padding: 100px;
+			};
+		</style>
+
+		<meta charset="UTF-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<table>
+			<tr>
+				<td>Name</td>
+				<td>${name}</td>
+			</tr>
+			<tr>
+				<td>Batch</td>
+				<td>${starting_year}-${passing_year}</td>
+			</tr>
+			<tr>
+				<td>Course</td>
+				<td style="text-transform: uppercase">${program}</td>
+			</tr>
+			<tr>
+				<td>Working at</td>
+				<td>${organisation}, ${location}</td>
+			</tr>
+			<tr>
+				<td>Position</td>
+				<td>${designation}</td>
+			</tr>
+		</table>
+	</head>
+	<body></body>
+</html>
