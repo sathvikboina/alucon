@@ -18,6 +18,11 @@ const Channel = require("../models/Channel");
 const Event = require("../models/Event");
 const Job = require("../models/Jobs");
 const Group = require("../models/Group");
+const MentorShipRequest = require("../models/MentorShipRequest");
+const Conversation = require("../models/Conversation");
+const Message = require("../models/Message");
+const JoinRequest = require("../models/JoinRequest");
+const EventQuestion = require("../models/EventQuestion");
 const { groups: demoGroups } = require("./demoGroups");
 
 // Demo accounts share a public password, so they must never exist on a
@@ -184,6 +189,8 @@ const events = [
     Link: "https://example.com/events/career-qa",
     start: inDays(4, 19),
     end: inDays(4, 20),
+    // Open the Q&A window now so the seeded questions are visible in the demo.
+    queryStart: inDays(-1, 9),
   },
   {
     title: "Systems Alumni Meet",
@@ -499,6 +506,157 @@ const obsoletePosts = [
   { heading: "Frontend to platform engineering: what transferred?", channel: "General" },
 ];
 
+// ---------------------------------------------------------------------------
+// Demo story: mentorship requests, Messenger chats, pending join requests and
+// event Q&A. Every person and message below is fictional and labelled as such
+// in the seeded text.
+// ---------------------------------------------------------------------------
+const mentorshipRequests = [
+  {
+    from: "sathvik",
+    to: "aarav",
+    area: "Career",
+    status: "pending",
+    message: "Demo request (fictional): I would like guidance on moving from coursework to production ML.",
+    daysAgo: 2,
+  },
+  {
+    from: "sathvik",
+    to: "riya",
+    area: "Placements",
+    status: "active",
+    message: "Demo request (fictional): could we talk about backend interview preparation?",
+    daysAgo: 9,
+  },
+  {
+    from: "sathvik",
+    to: "sneha",
+    area: "Research",
+    status: "completed",
+    message: "Demo request (fictional): advice on applying to research roles.",
+    daysAgo: 30,
+    completedDaysAgo: 12,
+  },
+  {
+    from: "dev",
+    to: "aarav",
+    area: "Career",
+    status: "pending",
+    message: "Demo request (fictional): looking for advice on ML internships.",
+    daysAgo: 1,
+  },
+  {
+    from: "priya",
+    to: "riya",
+    area: "Placements",
+    status: "accepted",
+    message: "Demo request (fictional): referral and interview preparation.",
+    daysAgo: 5,
+  },
+];
+
+const demoConversations = [
+  {
+    members: ["sathvik", "aarav"],
+    isGroup: false,
+    messages: [
+      { from: "aarav", text: "Demo chat (fictional): happy to help with the ML roadmap. What are you working on this month?", hoursAgo: 26 },
+      { from: "sathvik", text: "Demo chat (fictional): building a small recommender for the alumni feed.", hoursAgo: 25 },
+      { from: "aarav", text: "Demo chat (fictional): nice. Start with evaluation before adding features.", hoursAgo: 24 },
+    ],
+  },
+  {
+    members: ["sathvik", "riya"],
+    isGroup: false,
+    messages: [
+      { from: "sathvik", text: "Demo chat (fictional): could you review my backend interview plan?", hoursAgo: 8 },
+      { from: "riya", text: "Demo chat (fictional): yes, send it over and I will add comments.", hoursAgo: 7 },
+    ],
+  },
+  {
+    members: ["sathvik", "aarav", "riya", "sneha"],
+    isGroup: true,
+    groupName: "Demo ML Circle (fictional)",
+    groupAdmins: ["aarav"],
+    messages: [
+      { from: "sneha", text: "Demo chat (fictional): sharing a paper on efficient retrieval later today.", hoursAgo: 50 },
+      { from: "riya", text: "Demo chat (fictional): great, I can cover the systems side.", hoursAgo: 49 },
+      { from: "sathvik", text: "Demo chat (fictional): I will bring questions from the feed recommender.", hoursAgo: 48 },
+    ],
+  },
+];
+
+const demoJoinRequests = [
+  {
+    name: "Demo Applicant One (fictional)",
+    email: "demo.applicant1@example.com",
+    role: "student",
+    program: "B.Tech IT",
+    starting_year: "2021",
+    passing_year: "2025",
+  },
+  {
+    name: "Demo Applicant Two (fictional)",
+    email: "demo.applicant2@example.com",
+    role: "alumni",
+    program: "B.Tech IT",
+    starting_year: "2015",
+    passing_year: "2019",
+    organisation: "Demo Labs (fictional)",
+    designation: "Engineer",
+    location: "Bengaluru, India",
+  },
+  {
+    name: "Demo Applicant Three (fictional)",
+    email: "demo.applicant3@example.com",
+    role: "faculty",
+    department: "Information Technology",
+    designation: "Assistant Professor",
+  },
+];
+
+const demoEventQuestions = [
+  {
+    eventTitle: "Career Q&A with Alumni",
+    student: "sathvik",
+    question: "Demo question (fictional): how early should I start applying for ML internships?",
+    hoursAgo: 30,
+    replies: [
+      {
+        alumni: "aarav",
+        text: "Demo answer (fictional): start three to four months before the window and build one project you can explain end to end.",
+        hoursAgo: 28,
+      },
+    ],
+  },
+  {
+    eventTitle: "Career Q&A with Alumni",
+    student: "dev",
+    question: "Demo question (fictional): how do referrals actually work at product companies?",
+    hoursAgo: 22,
+    replies: [
+      {
+        alumni: "riya",
+        text: "Demo answer (fictional): ask someone who knows your work, share the role link and a two-line summary, and follow up once.",
+        hoursAgo: 20,
+      },
+    ],
+  },
+  {
+    eventTitle: "Career Q&A with Alumni",
+    student: "priya",
+    question: "Demo question (fictional): is a research master's useful before an industry ML role?",
+    hoursAgo: 14,
+    replies: [
+      {
+        alumni: "sneha",
+        text: "Demo answer (fictional): it helps for research-heavy teams; for product teams, shipped projects matter more.",
+        hoursAgo: 12,
+      },
+    ],
+  },
+];
+
 async function run() {
   await mongoose.connect(MONGO_URI);
   console.log("Connected to", mongoose.connection.name);
@@ -676,7 +834,7 @@ async function run() {
         startTime: spec.start,
         endTime: spec.end,
         isPostQueryEnabled: true,
-        queryStartTime: spec.start,
+        queryStartTime: spec.queryStart || spec.start,
         queryEndTime: spec.end,
       });
       createdEvents += 1;
@@ -684,7 +842,7 @@ async function run() {
       // Keep the "upcoming" rail populated on every reseed.
       existing.startTime = spec.start;
       existing.endTime = spec.end;
-      existing.queryStartTime = spec.start;
+      existing.queryStartTime = spec.queryStart || spec.start;
       existing.queryEndTime = spec.end;
       await existing.save();
       refreshedEvents += 1;
@@ -851,18 +1009,170 @@ async function run() {
     }
   }
 
+  // ── Mentorship requests in pending / active / completed states ───────────
+  let createdMentorship = 0;
+  let refreshedMentorship = 0;
+  for (const spec of mentorshipRequests) {
+    const from = byKey[spec.from];
+    const to = byKey[spec.to];
+    if (!from || !to) continue;
+
+    const createdAt = hoursAgo(spec.daysAgo * 24);
+    const fields = {
+      message: spec.message,
+      status: spec.status,
+      updatedAt: createdAt,
+    };
+    if (spec.status === "completed") {
+      fields.completedAt = hoursAgo(spec.completedDaysAgo * 24);
+    }
+
+    const existing = await MentorShipRequest.findOne({
+      requestedBy: from._id,
+      requestedTo: to._id,
+      areaOfHelp: spec.area,
+    });
+
+    if (!existing) {
+      await MentorShipRequest.create({
+        requestedBy: from._id,
+        requestedTo: to._id,
+        areaOfHelp: spec.area,
+        createdAt,
+        ...fields,
+      });
+      createdMentorship += 1;
+    } else {
+      Object.assign(existing, fields);
+      await existing.save();
+      refreshedMentorship += 1;
+    }
+  }
+
+  // ── Messenger conversations and messages ─────────────────────────────────
+  let createdConversations = 0;
+  let createdMessages = 0;
+  for (const spec of demoConversations) {
+    const memberIds = spec.members
+      .map((key) => byKey[key]?._id)
+      .filter(Boolean);
+    if (memberIds.length < 2) continue;
+
+    let conversation = await Conversation.findOne({
+      isGroup: !!spec.isGroup,
+      members: { $all: memberIds, $size: memberIds.length },
+    });
+
+    if (!conversation) {
+      conversation = await Conversation.create({
+        isGroup: !!spec.isGroup,
+        groupName: spec.groupName,
+        groupAdmins: (spec.groupAdmins || [])
+          .map((key) => byKey[key]?._id)
+          .filter(Boolean),
+        members: memberIds,
+      });
+      createdConversations += 1;
+    }
+
+    let latest = null;
+    for (const entry of spec.messages) {
+      const sender = byKey[entry.from];
+      if (!sender) continue;
+
+      const when = hoursAgo(entry.hoursAgo);
+      let message = await Message.findOne({
+        conversation: conversation._id,
+        sender: sender._id,
+        text: entry.text,
+      });
+
+      if (!message) {
+        message = await Message.create({
+          conversation: conversation._id,
+          sender: sender._id,
+          text: entry.text,
+          readBy: memberIds,
+        });
+        createdMessages += 1;
+      }
+
+      // Mongoose manages timestamps, so set the demo time explicitly.
+      await Message.collection.updateOne(
+        { _id: message._id },
+        { $set: { createdAt: when, updatedAt: when } }
+      );
+
+      if (!latest || when > latest.when) {
+        latest = { when, sender: sender._id, text: entry.text };
+      }
+    }
+
+    if (latest) {
+      conversation.lastMessage = latest.text;
+      conversation.lastMessageAt = latest.when;
+      conversation.lastMessageSender = latest.sender;
+      await conversation.save();
+    }
+  }
+
+  // ── Pending join requests for the admin queue ────────────────────────────
+  let createdJoinRequests = 0;
+  for (const spec of demoJoinRequests) {
+    const existing = await JoinRequest.findOne({ email: spec.email });
+    if (!existing) {
+      await JoinRequest.create({ ...spec, password });
+      createdJoinRequests += 1;
+    }
+  }
+
+  // ── Event Q&A with seeded replies ────────────────────────────────────────
+  let createdEventQuestions = 0;
+  for (const spec of demoEventQuestions) {
+    const event = await Event.findOne({ title: spec.eventTitle });
+    const student = byKey[spec.student];
+    if (!event || !student) continue;
+
+    const existing = await EventQuestion.findOne({
+      eventId: event._id,
+      question: spec.question,
+    });
+    if (!existing) {
+      await EventQuestion.create({
+        eventId: event._id,
+        studentId: student._id,
+        question: spec.question,
+        createdAt: hoursAgo(spec.hoursAgo),
+        replies: (spec.replies || [])
+          .map((reply) => ({
+            alumniId: byKey[reply.alumni]?._id,
+            replyText: reply.text,
+            createdAt: hoursAgo(reply.hoursAgo),
+          }))
+          .filter((reply) => reply.alumniId),
+      });
+      createdEventQuestions += 1;
+    }
+  }
+
   console.log(
     `Seeded: ${createdUsers} users, ${createdChannels} topics, ${createdPosts} posts, ` +
       `${createdComments} comments, ${createdLikes} likes, ${createdFollows} follows, ` +
       `${createdEvents} events, ${createdJobs} jobs, ${createdGroups} groups, ` +
-      `${createdDiscussions} group discussions, ${createdGroupComments} group replies.`
+      `${createdDiscussions} group discussions, ${createdGroupComments} group replies, ` +
+      `${createdMentorship} mentorship requests, ${createdConversations} conversations, ` +
+      `${createdMessages} messages, ${createdJoinRequests} join requests, ` +
+      `${createdEventQuestions} event questions.`
   );
   console.log(
     `Refreshed: ${refreshedPosts} posts, ${refreshedComments} comments, ` +
       `${refreshedEvents} events, ${refreshedJobs} jobs, ${refreshedGroups} groups, ` +
-      `${refreshedDiscussions} group discussions.`
+      `${refreshedDiscussions} group discussions, ${refreshedMentorship} mentorship requests.`
   );
   console.log(`Demo password for every seeded account: ${DEMO_PASSWORD}`);
+  console.log(
+    "All seeded people, messages and questions are fictional demo data, not real alumni records."
+  );
 
   await mongoose.disconnect();
 }
