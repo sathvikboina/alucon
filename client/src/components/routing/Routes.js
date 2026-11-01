@@ -22,7 +22,6 @@ import Groups from "../groups/Groups";
 import GroupDetail from "../groups/GroupDetail";
 import Profiles from "../profiles/Profiles";
 import Help from "../layouts/Help";
-import Achievement from "../layouts/Achievement";
 import Messenger from "../messenger/Messenger";
 
 import Job from "../Jobs/jobs.jsx";
@@ -85,7 +84,6 @@ const Routes = () => {
 
 				<AdminRoute exact path="/dashboard" component={AdminDash} />
 				<AdminRoute exact path="/analytics" component={AnalyticsDashboard} />
-				<Route exact path="/add-achievement" component={Achievement} />
 
 				{/* ✅ Messenger Pages */}
 				<PrivateRoute path="/messenger" component={Messenger} />
