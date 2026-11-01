@@ -93,6 +93,7 @@ app.use("/api/block", require("./routes/api/blocking"));
 app.use("/api/posts", require("./routes/api/posts"));
 app.use("/api/feed", require("./routes/api/feed"));
 app.use("/api/extras", require("./routes/api/extras"));
+app.use("/api/availability", require("./routes/api/availability"));
 app.use("/api/conversations", require("./routes/api/conversations"));
 app.use("/api/messages", require("./routes/api/messages"));
 app.use("/api/channels", require("./routes/api/channel"));

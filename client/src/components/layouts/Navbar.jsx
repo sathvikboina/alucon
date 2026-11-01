@@ -15,6 +15,12 @@ const Navbar = ({
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [hasAdminNotifications, setHasAdminNotifications] = useState(false);
+  const [availability, setAvailability] = useState({
+    doubts: 0,
+    resources: 0,
+    showcase: 0,
+    sections: {},
+  });
   const navRef = useRef(null);
 
   const toggleDropdown = (name) => {
@@ -95,32 +101,44 @@ const Navbar = ({
     checkAdminNotifications();
   }, [isAuthenticated, authUser]);
 
-  /* ── Institute Dropdown ── */
-  const instituteDropdown = (
-    <li className="dropdown">
-      <span className="navbar-link" onClick={() => toggleDropdown("institute")}>
-        Institute ▾
-      </span>
-      <ul className={`dropdown-menu ${activeDropdown === "institute" ? "show" : ""}`}>
-        <li><Link to="/showcase" onClick={closeMobile}>Showcase</Link></li>
-        <li><Link to="/showcase?tab=achievements" onClick={closeMobile}>Achievement Awards</Link></li>
-        {/* AI Help (generic chat) is parked until the cited-search phase. */}
-      </ul>
-    </li>
-  );
+  // Counts let the nav hide modules that do not have enough demo content yet.
+  useEffect(() => {
+    let cancelled = false;
+    api
+      .get("/api/availability")
+      .then((res) => {
+        if (!cancelled) setAvailability(res.data || {});
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const sections = availability.sections || {};
+  const showShowcase = (availability.showcase || 0) >= 5;
+  const showStories = (sections.stories || 0) >= 5;
+  const showAchievements = (sections.achievements || 0) >= 5;
+  const showDoubts = (availability.doubts || 0) >= 5;
+  const showResources = (availability.resources || 0) >= 5;
+  const hasLearning = showDoubts || showResources;
 
   /* ── Learning Dropdown ── */
-  const learningDropdown = (
+  const learningDropdown = hasLearning ? (
     <li className="dropdown">
       <span className="navbar-link" onClick={() => toggleDropdown("learning")}>
         <i className="fas fa-graduation-cap"></i> Learning ▾
       </span>
       <ul className={`dropdown-menu ${activeDropdown === "learning" ? "show" : ""}`}>
-        <li><Link to="/resources" onClick={closeMobile}>Resource Hub</Link></li>
-        <li><Link to="/doubts" onClick={closeMobile}>Doubt Room</Link></li>
+        {showResources && (
+          <li><Link to="/resources" onClick={closeMobile}>Resource Hub</Link></li>
+        )}
+        {showDoubts && (
+          <li><Link to="/doubts" onClick={closeMobile}>Doubt Room</Link></li>
+        )}
       </ul>
     </li>
-  );
+  ) : null;
 
   /* ── Auth Links ── */
   const authLinks = (
@@ -147,44 +165,23 @@ const Navbar = ({
           Community ▾
         </span>
         <ul className={`dropdown-menu ${activeDropdown === "community" ? "show" : ""}`}>
-          <li><Link to="/showcase?tab=stories" onClick={closeMobile}>Stories of Alumni</Link></li>
           <li><Link to="/groups" onClick={closeMobile}>Groups &amp; Cohorts</Link></li>
-          <li><Link to="/feed" onClick={closeMobile}>Feed</Link></li>
           <li><Link to="/alumni-directory" onClick={closeMobile}>Alumni Directory</Link></li>
           <li><Link to="/mentor-matches" onClick={closeMobile}>Find a Mentor</Link></li>
           <li><Link to="/mentorship" onClick={closeMobile}>Mentorship Dashboard</Link></li>
+          {showStories && (
+            <li><Link to="/showcase?tab=stories" onClick={closeMobile}>Stories of Alumni</Link></li>
+          )}
+          {showShowcase && (
+            <li><Link to="/showcase" onClick={closeMobile}>Showcase</Link></li>
+          )}
+          {showAchievements && (
+            <li><Link to="/showcase?tab=achievements" onClick={closeMobile}>Achievement Awards</Link></li>
+          )}
         </ul>
       </li>
 
       {learningDropdown}
-
-      <li>
-        <Link to="/profiles?search=" className="navbar-link" onClick={closeMobile}>
-          Members
-        </Link>
-      </li>
-
-      {authUser && authUser.role && authUser.role.toLowerCase() !== "student" && (
-        <li>
-          <Link to="/support-initiatives" className="navbar-link" onClick={closeMobile}>
-            Support Us
-          </Link>
-        </li>
-      )}
-
-      {authUser?.isAdmin && (
-        <li>
-          <Link to="/dashboard" className="navbar-link" style={{ position: "relative" }} onClick={closeMobile}>
-            Dashboard
-            {hasAdminNotifications && (
-              <span 
-                className="notification-dot" 
-                style={{ top: "0px", right: "-8px", width: "8px", height: "8px", backgroundColor: "#ef4444", borderRadius: "50%", position: "absolute", boxShadow: "0 0 0 2px #0f2044" }} 
-              />
-            )}
-          </Link>
-        </li>
-      )}
 
       <li>
         <Link to="/messenger" className="navbar-link" style={{ position: "relative" }} onClick={closeMobile}>
@@ -200,10 +197,27 @@ const Navbar = ({
 
       <li className="dropdown">
         <span className="navbar-link" onClick={() => toggleDropdown("profile")}>
-          <i className="fas fa-user"></i>
+          <i className="fas fa-user"></i> <span className="hide-sm">Profile ▾</span>
         </span>
         <ul className={`dropdown-menu right ${activeDropdown === "profile" ? "show" : ""}`}>
           <li><Link to="/userprofile" onClick={closeMobile}>Profile</Link></li>
+          <li><Link to="/profiles?search=" onClick={closeMobile}>Members</Link></li>
+          {authUser && authUser.role && authUser.role.toLowerCase() !== "student" && (
+            <li><Link to="/support-initiatives" onClick={closeMobile}>Support Us</Link></li>
+          )}
+          {authUser?.isAdmin && (
+            <li>
+              <Link to="/dashboard" onClick={closeMobile} style={{ position: "relative" }}>
+                Admin Dashboard
+                {hasAdminNotifications && (
+                  <span
+                    className="notification-dot"
+                    style={{ top: "6px", right: "8px", width: "8px", height: "8px", backgroundColor: "#ef4444", borderRadius: "50%", position: "absolute" }}
+                  />
+                )}
+              </Link>
+            </li>
+          )}
           <li><Link to="/" onClick={() => { logOut(); closeMobile(); }}>Logout</Link></li>
         </ul>
       </li>
@@ -247,7 +261,6 @@ const Navbar = ({
       {/* Nav links */}
       {!loadingAuth && (
         <ul className={`nav-links ${mobileOpen ? "mobile-open" : ""}`}>
-          {instituteDropdown}
           {isAuthenticated ? authLinks : guestLinks}
         </ul>
       )}
