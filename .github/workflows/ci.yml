@@ -26,7 +26,7 @@ jobs:
         run: find server -name '*.js' -not -path '*/node_modules/*' -print0 | xargs -0 -n1 node --check
 
       - name: Server tests
-        run: npm --prefix server run test:matching
+        run: npm --prefix server test
 
       - name: Install client dependencies
         run: npm ci --prefix client

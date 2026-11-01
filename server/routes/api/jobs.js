@@ -6,12 +6,24 @@ const User = require("../../models/User");
 const Job = require("../../models/Jobs");
 const Notification = require("../../models/Notifications");
 
-const sendEmail = require("../../middleware/utils/sendEmail");
+const escapeHtml = require("../../middleware/utils/escapeHtml");
+const { enqueueBroadcast } = require("../../services/emailQueue");
+const { rateLimit } = require("../../middleware/rateLimit");
 
 const Filter = require("bad-words");
 const { check, validationResult } = require("express-validator");
 var mongoose = require("mongoose");
 const Channel = require("../../models/Channel");
+
+// Job announcements email the community, so cap how often one account can
+// trigger a broadcast.
+const createJobLimiter = rateLimit({
+  scope: "job-create",
+  windowMs: 60 * 60 * 1000,
+  max: 10,
+  message: "Too many job announcements. Please try again later.",
+  key: (req) => req.user?.id || "anonymous",
+});
 
 router.get("/get/getjob", async (req, res) => {
   try {
@@ -35,7 +47,7 @@ router.get("/get/getjob", async (req, res) => {
   }
 });
 
-router.post("/create-job", auth, async (req, res) => {
+router.post("/create-job", auth, createJobLimiter, async (req, res) => {
   try {
     const author = await User.findById(req.user.id).select("name role isAdmin");
     if (!author) return res.status(401).json({ error: "Unauthorized" });
@@ -85,44 +97,40 @@ router.post("/create-job", auth, async (req, res) => {
     })
     const updating2 = await ppp.save();
 
-    const users = await User.find();
-    if (users != undefined) {
-      for (let i = 0; i < users.length; i++) {
-        // console.log(users[i].email);
-        const options = {
-          subject: `New Job Posted by ${author.name}`,
-          html: `Dear ${users[i].name} 
-					<br>
-					You have new Job available,
-					 <br>
-					 <br>
-					 Title: ${req.body.job_name}
-					  <br>
-					  <br>
-					   Description: ${req.body.description}
-					   <br>
-					  <br>
-					   Link : ${req.body.link}
-					   <br>
-					  <br>
+    const users = await User.find({}, "email").lean();
+    const subjectName = String(author.name || "").replace(/[\r\n]+/g, " ");
+    const jobTitle = escapeHtml(req.body.job_name);
+    const jobDescription = escapeHtml(req.body.description);
+    const jobLink = escapeHtml(req.body.link);
+    const jobDeadline = escapeHtml(req.body.job_deadline);
 
-					   Deadline : ${req.body.job_deadline}
-					   `,
-          to: users[i].email,
-          from: {
-            name: "AlumniConnect",
-            address: process.env.EMAIL,
-          },
-        };
+    // Queue the announcement instead of awaiting one Brevo call per member.
+    // The queue deduplicates, caps the list and retries failures in the
+    // background, so the response no longer depends on the mail provider.
+    enqueueBroadcast({
+      subject: `New Job Posted by ${subjectName}`,
+      html: `
+        <p>Hello,</p>
+        <p>A new job is available on AlumniConnect.</p>
+        <p><b>Title:</b> ${jobTitle}</p>
+        <p><b>Description:</b> ${jobDescription}</p>
+        <p><b>Link:</b> ${jobLink}</p>
+        <p><b>Deadline:</b> ${jobDeadline}</p>
+      `,
+      text: `A new job is available on AlumniConnect.
 
-        const pp = await sendEmail(options);
-      }
-    }
-// 
-    // console.log("saved Job");
+Title: ${req.body.job_name}
+Description: ${req.body.description}
+Link: ${req.body.link}
+Deadline: ${req.body.job_deadline}`,
+      recipients: users.map((user) => user.email),
+      meta: { type: "job", jobId: String(data._id) },
+    });
+
     res.json(data);
   } catch (e) {
     console.log(e);
+    res.status(500).json({ error: "Server error" });
   }
 });
 

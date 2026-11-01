@@ -6,13 +6,24 @@ const User = require("../../models/User");
 const Event = require("../../models/Event");
 const Notification = require("../../models/Notifications");
 
-const sendEmail = require("../../middleware/utils/sendEmail");
+const escapeHtml = require("../../middleware/utils/escapeHtml");
+const { enqueueBroadcast } = require("../../services/emailQueue");
+const { rateLimit } = require("../../middleware/rateLimit");
 
 const Filter = require("bad-words");
 const { check, validationResult } = require("express-validator");
 var mongoose = require("mongoose");
 const Channel = require("../../models/Channel");
 // console.log("hi");    
+
+// Event announcements also email the community; cap the trigger rate.
+const createEventLimiter = rateLimit({
+  scope: "event-create",
+  windowMs: 60 * 60 * 1000,
+  max: 10,
+  message: "Too many event announcements. Please try again later.",
+  key: (req) => req.user?.id || "anonymous",
+});
 
 router.get("/get/getevent", async (req, res) => {
   try {
@@ -26,7 +37,7 @@ router.get("/get/getevent", async (req, res) => {
   }
 });
 
-router.post("/create-event", auth, async (req, res) => {
+router.post("/create-event", auth, createEventLimiter, async (req, res) => {
   try {
     const author = await User.findById(req.user.id).select("name role isAdmin");
     if (!author) return res.status(401).json({ error: "Unauthorized" });
@@ -81,28 +92,26 @@ router.post("/create-event", auth, async (req, res) => {
 
     await ppp.save();
 
-    const users = await User.find();
-    if (users) {
-      for (let i = 0; i < users.length; i++) {
-        const options = {
-          subject: "New Event Posted by Admin",
-          html: `Dear ${users[i].name} 
-          <br>
-          You have new event available,
-          <br>
-          Title: ${req.body.event_name}
-          <br>
-          Description: ${req.body.description}`,
-          to: users[i].email,
-          from: {
-            name: "AlumniConnect",
-            address: process.env.EMAIL,
-          },
-        };
+    const users = await User.find({}, "email").lean();
+    const eventTitle = escapeHtml(req.body.event_name);
+    const eventDescription = escapeHtml(req.body.description);
 
-        await sendEmail(options);
-      }
-    }
+    // Queue the announcement so the request does not wait on Brevo.
+    enqueueBroadcast({
+      subject: "New Event Posted by Admin",
+      html: `
+        <p>Hello,</p>
+        <p>A new event is available on AlumniConnect.</p>
+        <p><b>Title:</b> ${eventTitle}</p>
+        <p><b>Description:</b> ${eventDescription}</p>
+      `,
+      text: `A new event is available on AlumniConnect.
+
+Title: ${req.body.event_name}
+Description: ${req.body.description}`,
+      recipients: users.map((user) => user.email),
+      meta: { type: "event", eventId: String(data._id) },
+    });
 
     res.json(data);
 

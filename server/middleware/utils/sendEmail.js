@@ -27,12 +27,14 @@ const sendEmail = async (emailOptions) => {
     await apiInstance.sendTransacEmail(emailData);
 
     console.log("✅ Email sent to:", emailOptions.to);
+    return true;
 
   } catch (err) {
     console.error(
       "❌ Email error:",
       err.response?.body || err.message
     );
+    return false;
   }
 };
 
