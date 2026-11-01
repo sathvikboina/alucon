@@ -98,12 +98,6 @@ router.post(
             });
 
             const savedPost = await post.save();
-            const post_id = savedPost._id;
-
-            // ✅ Update the Channel to push the post id
-            await result_channel.updateOne({
-  $push: { postRequests: post._id },
-});
 
             console.log("Post Created");
             res.json(savedPost);
