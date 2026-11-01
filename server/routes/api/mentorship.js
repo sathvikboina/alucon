@@ -11,7 +11,8 @@ const ALLOWED_STATUS = ['accepted', 'declined', 'active', 'completed'];
 // Capacity is a count, so a unique index cannot enforce it. Serialising the
 // check-and-save per mentor makes it atomic inside this process; the unique
 // partial index on the model covers duplicates across processes.
-const mentorLockKey = (mentorId) => `mentorship:mentor:${String(mentorId)}`;
+const mentorLockKey = (mentorId) =>
+  `mentorship:mentor:${String(mentorId).trim().toLowerCase()}`;
 
 // Keep this in sync with the matching service: capacity is the number of
 // accepted/active mentees a mentor can hold at once.

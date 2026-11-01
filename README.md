@@ -71,7 +71,8 @@ The platform focuses on engagement, collaboration, and alumni tracking in one in
 ### Additional Services
 - Socket.io
 - Cloudinary
-- Nodemailer
+- Brevo (transactional email)
+- Gemini (optional AI layer with an offline fallback)
 - Render
 
 ---
@@ -133,9 +134,14 @@ Create a `.env` file in server directory:
 PORT=5001
 MONGO_URI=your_mongodb_uri
 JWT_SECRET=your_secret_key
+CLIENT_URL=http://localhost:3000
 
-EMAIL_USER=your_email
-EMAIL_PASS=your_password
+# First head admin created at boot. Required in production.
+ADMIN_EMAIL=your_admin_email
+ADMIN_PASSWORD=your_admin_password
+
+# Transactional email (Brevo). Announcement email is skipped when blank.
+BREVO_API_KEY=your_brevo_key
 
 CLOUDINARY_CLOUD_NAME=your_cloud_name
 CLOUDINARY_API_KEY=your_key

@@ -1,5 +1,13 @@
-1. install NodeJs in your system
-2. clone the repo
-3. run "npm install" in project folder
-4. go to client folder and run "npm install"
-5. go to project folder in two terminals separately, run "npm run server" in one terminal and "npm run client" on another.
+# AlumniConnect server
+
+The API runs on Node.js 22 (see `.nvmrc`). Full setup instructions, including
+MongoDB, the environment template and the demo seed, live in the repository's
+root `README.md`.
+
+```bash
+npm install
+npm run server   # nodemon, development
+npm start        # plain node
+npm run seed     # refresh demo data
+npm test         # matching, email queue and security tests
+```
