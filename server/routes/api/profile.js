@@ -163,10 +163,13 @@ router.post(
 
 router.get("/all", auth, async (req, res) => {
 	try {
-		console.log("All Users route");
-		const users = await User.find().select("-password");
+		// Directory-safe fields only: no email, password or private settings.
+		const users = await User.find()
+			.select(
+				"name avatar role program department passing_year organisation designation location working_area skills bio"
+			)
+			.limit(500);
 		res.json(users);
-		// console.log(users);
 	} catch (error) {
 		console.error(error.message);
 		res.status(500).json({ msg: "Server Error in getting all profiles" });

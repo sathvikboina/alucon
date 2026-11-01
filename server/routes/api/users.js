@@ -309,39 +309,6 @@ router.post("/reset-otp", resetOtpLimiter, (req, res) => {
 
 // ================= OTHER ROUTES (UNCHANGED) =================
 
-// GET CURRENT USER
-router.get("/me", auth, async (req, res) => {
-  try {
-    const user = await User.findById(req.user.id);
-    res.json(user);
-  } catch {
-    res.status(500).json({ msg: "Server error" });
-  }
-});
-
-
-// MAKE ADMIN
-router.get("/:id/make-admin", authHeadAdmin, async (req, res) => {
-  const user = await User.findByIdAndUpdate(
-    req.params.id,
-    { isAdmin: true, adminType: "sub" },
-    { new: true }
-  );
-  res.json(user);
-});
-
-
-// REMOVE ADMIN
-router.get("/:id/remove-admin", authHeadAdmin, async (req, res) => {
-  const user = await User.findByIdAndUpdate(
-    req.params.id,
-    { isAdmin: false, $unset: { adminType: "" } },
-    { new: true }
-  );
-  res.json(user);
-});
-
-
 // @route    GET api/users/me
 // @desc     get current user
 // @access   Private
@@ -357,32 +324,33 @@ router.get("/me", auth, async (req, res) => {
 });
 router.get("/search/:query", auth, async (req, res) => {
 	try {
-		const searchTerm = req.params.query;
-		console.log(searchTerm);
-		var users = [];
+		const searchTerm = String(req.params.query || "").trim().slice(0, 64);
+		let users = [];
+
+		if (!searchTerm) {
+			return res
+				.status(400)
+				.json({ msg: "Search query is required" });
+		}
+
 		if (searchTerm === "all") {
 			users = await User.find().select("-password").sort({ date: -1 });
-			console.log("inside get all user api");
-			if (users) {
-				console.log("NON ZERO USERS" + users.length);
-			}
 		} else {
-			console.log("inside search users");
+			// Escape regex metacharacters so a query cannot change the match
+			// semantics or trigger expensive backtracking.
+			const safeTerm = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 			users = await User.find({
 				$or: [
-					{ name: { $regex: searchTerm, $options: "i" } },
-					{ email: { $regex: searchTerm, $options: "i" } },
-					{ company: { $regex: searchTerm, $options: "i" } },
-					{ organisation: { $regex: searchTerm, $options: "i" } },
+					{ name: { $regex: safeTerm, $options: "i" } },
+					{ email: { $regex: safeTerm, $options: "i" } },
+					{ company: { $regex: safeTerm, $options: "i" } },
+					{ organisation: { $regex: safeTerm, $options: "i" } },
 				]
 			}).select("-password").sort({ date: -1 });
-			if (users) {
-				console.log("NON zero search USERS" + users.length);
-			}
 		}
+
 		res.json(users);
 	} catch (err) {
-		// console.error(err.message);
 		res.status(500).json({ msg: "Server Error in getting all Users" });
 	}
 });
@@ -445,11 +413,11 @@ router.get("/:user_id", auth, async (req, res) => {
 
 
 
-// @route    GET api/users/:id/make-admin
+// @route    POST api/users/:id/make-admin
 // @desc     make admin
 // @access   Private
 
-router.get("/:id/make-admin", authHeadAdmin, async (req, res) => {
+router.post("/:id/make-admin", authHeadAdmin, async (req, res) => {
 	try {
 		const updatedUser = await User.findOneAndUpdate(
 			{ _id: req.params.id },
@@ -463,11 +431,11 @@ router.get("/:id/make-admin", authHeadAdmin, async (req, res) => {
 	}
 });
 
-// @route    GET api/users/:id/remove-admin
+// @route    POST api/users/:id/remove-admin
 // @desc     remove admin
 // @access   Private
 
-router.get("/:id/remove-admin", authHeadAdmin, async (req, res) => {
+router.post("/:id/remove-admin", authHeadAdmin, async (req, res) => {
 	try {
 		const updatedUser = await User.findOneAndUpdate(
 			{ _id: req.params.id },
@@ -631,19 +599,19 @@ router.delete("/education/:edu_id", auth, async (req, res) => {
 	}
 });
 
-// @route    GET api/users/:user_id/block
+// @route    POST api/users/:user_id/block
 // @desc     Block a user given user_id
 // @access   Private
 
-router.get("/:id/block", authHeadAdmin, async (req, res) => {
+router.post("/:id/block", authHeadAdmin, async (req, res) => {
 	try {
 		const updatedUser = await User.findOneAndUpdate(
 			{ _id: req.params.id },
 			{ blocked: true },
 			{ new: true }
 		);
-		if (updatedUser === null) {
-			res.json("user is coming null");
+		if (!updatedUser) {
+			return res.status(404).json({ msg: "User not found" });
 		}
 		res.json(updatedUser);
 	} catch (err) {
@@ -652,11 +620,11 @@ router.get("/:id/block", authHeadAdmin, async (req, res) => {
 	}
 });
 
-// @route    GET api/users/:user_id/unblock
+// @route    POST api/users/:user_id/unblock
 // @desc     UnBlock a user given user_id
 // @access   Private
 
-router.get("/:id/unblock", authHeadAdmin, async (req, res) => {
+router.post("/:id/unblock", authHeadAdmin, async (req, res) => {
 	try {
 		const updatedUser = await User.findOneAndUpdate(
 			{ _id: req.params.id },

@@ -8,6 +8,7 @@ const gravatar = require("gravatar");
 var mongoose = require("mongoose");
 const Post = require("../../models/Post");
 const sendEmail = require("../../middleware/utils/sendEmail");
+const escapeHtml = require("../../middleware/utils/escapeHtml");
 const Channel = require("../../models/Channel");
 const bcrypt = require("bcryptjs");
 
@@ -165,7 +166,7 @@ router.get("/join", authAdmin, async (req, res) => {
 //   }
 // });
 
-router.get("/join/:id/approve", authAdmin, async (req, res) => {
+router.post("/join/:id/approve", authAdmin, async (req, res) => {
   console.log("🔥 APPROVE ROUTE HIT:", req.params.id);
 
   try {
@@ -239,7 +240,7 @@ const user = new User(userData);
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee;">
             <h2 style="color: #2c3e50;">AlumniConnect</h2>
 
-            <p>Hello ${user.name},</p>
+            <p>Hello ${escapeHtml(user.name)},</p>
 
             <p>
               Your account has been <strong>successfully approved</strong>.
@@ -297,9 +298,12 @@ router.get("/join/:filter", authAdmin, async (req, res) => {
 
 
 
-router.get("/join/:id/reject", authAdmin, async (req, res) => {
+router.post("/join/:id/reject", authAdmin, async (req, res) => {
 	try {
-		await JoinRequest.findOneAndDelete(req.params.id);
+		const removed = await JoinRequest.findByIdAndDelete(req.params.id);
+		if (!removed) {
+			return res.status(404).json({ msg: "Join request not found." });
+		}
 		res.json({ id: req.params.id });
 	} catch (err) {
 		console.error(err.message);

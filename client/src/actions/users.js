@@ -178,7 +178,7 @@ export const getGithubRepos = (username) => async (dispatch) => {
 
 export const makeAdmin = (user_id) => async (dispatch) => {
 	try {
-		const res = await api.get(`/api/users/${user_id}/make-admin`);
+		const res = await api.post(`/api/users/${user_id}/make-admin`);
 		dispatch({ type: MAKE_ADMIN, payload: res.data });
 	} catch (err) {
 		dispatch({
@@ -190,7 +190,7 @@ export const makeAdmin = (user_id) => async (dispatch) => {
 
 export const removeAdmin = (user_id) => async (dispatch) => {
 	try {
-		const res = await api.get(`/api/users/${user_id}/remove-admin`);
+		const res = await api.post(`/api/users/${user_id}/remove-admin`);
 		dispatch({ type: REMOVE_ADMIN, payload: res.data });
 	} catch (err) {
 		dispatch({
@@ -202,7 +202,7 @@ export const removeAdmin = (user_id) => async (dispatch) => {
 
 export const blockUser = (user_id) => async (dispatch) => {
 	try {
-		const res = await api.get(`/api/users/${user_id}/block`);
+		const res = await api.post(`/api/users/${user_id}/block`);
 		dispatch({ type: BLOCK_USER, payload: res.data });
 	} catch (err) {
 		dispatch({
@@ -214,7 +214,7 @@ export const blockUser = (user_id) => async (dispatch) => {
 
 export const unblockUser = (user_id) => async (dispatch) => {
 	try {
-		const res = await api.get(`/api/users/${user_id}/unblock`);
+		const res = await api.post(`/api/users/${user_id}/unblock`);
 		dispatch({ type: UNBLOCK_USER, payload: res.data });
 	} catch (err) {
 		dispatch({

@@ -3,9 +3,27 @@ const router = express.Router();
 const FeedBack = require("../../models/FeedBack");
 const authAdmin = require("../../middleware/authAdmin");
 const sendEmail = require("../../middleware/utils/sendEmail");
+const escapeHtml = require("../../middleware/utils/escapeHtml");
+const { rateLimit } = require("../../middleware/rateLimit");
 
-router.post("/submit-feedback", async (req, res) => {
-  const { name, email, role, feedback } = req.body;
+const feedbackLimiter = rateLimit({
+  scope: "feedback",
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  message: "Too many feedback submissions. Please try again later.",
+});
+
+router.post("/submit-feedback", feedbackLimiter, async (req, res) => {
+  const name = String(req.body?.name || "").trim().slice(0, 120);
+  const email = String(req.body?.email || "").trim().slice(0, 254);
+  const role = String(req.body?.role || "").trim().slice(0, 40);
+  const feedback = String(req.body?.feedback || "").trim().slice(0, 4000);
+
+  if (!name || !email || !feedback) {
+    return res
+      .status(400)
+      .json({ errors: [{ msg: "Name, email and feedback are required" }] });
+  }
 
   try {
     // ✅ Save feedback in DB
@@ -13,16 +31,17 @@ router.post("/submit-feedback", async (req, res) => {
     const fd = await feedback_object.save();
 
     // ✅ Email to ADMIN
+    const subjectName = name.replace(/[\r\n]+/g, " ");
     const emailOptions = {
       to: process.env.ADMIN_EMAIL || process.env.EMAIL, // admin email
-      subject: `New feedback/query from ${name}`,
+      subject: `New feedback/query from ${subjectName}`,
       html: `
         <h3>New Feedback Received</h3>
-        <p><b>Name:</b> ${name}</p>
-        <p><b>Email:</b> ${email}</p>
-        <p><b>Role:</b> ${role}</p>
+        <p><b>Name:</b> ${escapeHtml(name)}</p>
+        <p><b>Email:</b> ${escapeHtml(email)}</p>
+        <p><b>Role:</b> ${escapeHtml(role)}</p>
         <p><b>Message:</b></p>
-        <p>${feedback}</p>
+        <p>${escapeHtml(feedback).replace(/\n/g, "<br/>")}</p>
       `,
       text: `
         New Feedback

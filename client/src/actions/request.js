@@ -91,8 +91,9 @@ export const approveJoinRequest = (requestId) => async (dispatch) => {
       },
     };
 
-    const res = await axios.get(
+    const res = await axios.post(
       `/api/requests/join/${requestId}/approve`,
+      {},
       config
     );
 
@@ -112,7 +113,7 @@ export const approveJoinRequest = (requestId) => async (dispatch) => {
 
 export const rejectJoinRequest = (requestId) => async (dispatch) => {
 	try {
-		const res = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/requests/join/${requestId}/reject`);
+		const res = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/requests/join/${requestId}/reject`);
 		dispatch({
 			type: REJECT_JOIN_REQUEST,
 			payload: res.data,
