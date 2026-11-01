@@ -161,13 +161,19 @@ exist **before** `npm start` or `npm run build` (CRA inlines it at compile time)
 
 ## ▶ Running the Project
 
+### Requirements
+
+Node.js **22 LTS** or newer. The repository pins the major version in `.nvmrc`, so
+`nvm use` selects it automatically. Node 20 reached end of life on 30 April 2026
+and is no longer accepted by `run.sh` or the package `engines` fields.
+
 ### One-command start (recommended)
 
 ```bash
 ./run.sh
 ```
 
-`run.sh` checks Node 18+, starts the `alumni-mongo` Docker container (or creates
+`run.sh` requires Node 22+, starts the `alumni-mongo` Docker container (or creates
 `mongo:6` if needed), falls back to a local `MONGO_URI` when `server/.env` still
 contains the placeholder, installs missing dependencies, seeds only when the
 database is empty, then starts the API and React dev server. Logs go to

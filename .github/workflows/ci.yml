@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: |
+            server/package-lock.json
+            client/package-lock.json
+
+      - name: Install server dependencies
+        run: npm ci --prefix server
+
+      - name: Server syntax check
+        run: find server -name '*.js' -not -path '*/node_modules/*' -print0 | xargs -0 -n1 node --check
+
+      - name: Server tests
+        run: npm --prefix server run test:matching
+
+      - name: Install client dependencies
+        run: npm ci --prefix client
+
+      - name: Client build
+        run: npm --prefix client run build
+        env:
+          CI: false
+          GENERATE_SOURCEMAP: false
+          NODE_OPTIONS: --max-old-space-size=2048
+          REACT_APP_BACKEND_URL: http://localhost:5001

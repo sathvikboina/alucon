@@ -1,5 +1,8 @@
 {
   "name": "alumni",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "start": "node server/server.js",
     "build": "cd server && npm install && cd ../client && npm install && npm run build"

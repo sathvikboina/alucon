@@ -63,11 +63,12 @@ wait_for_port() {
   return 1
 }
 
-command -v node >/dev/null 2>&1 || die "Node.js is required (v18+). Install it and retry."
+command -v node >/dev/null 2>&1 || die "Node.js is required (v22+). Install it and retry."
 command -v npm >/dev/null 2>&1 || die "npm is required. Install it and retry."
 NODE_MAJOR="$(node -p 'process.versions.node.split(".")[0]')"
-if [ "$NODE_MAJOR" -lt 18 ]; then
-  die "Node.js $(node -v) is too old. Use Node 18 or newer."
+if [ "$NODE_MAJOR" -lt 22 ]; then
+  die "Node.js $(node -v) is unsupported. This project needs Node 22 LTS.
+If you use nvm: nvm install 22 && nvm use 22"
 fi
 
 # ---------------------------------------------------------------- MongoDB ---
