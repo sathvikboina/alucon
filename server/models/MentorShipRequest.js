@@ -21,4 +21,19 @@ const MentorshipRequestSchema = new mongoose.Schema({
   completedAt: { type: Date }
 });
 
+// A member may have at most one open request with a given mentor. Declined and
+// completed rows fall out of the index, so history is preserved and a fresh
+// request is allowed later. The partial index makes the duplicate check atomic
+// even when two requests race in different processes.
+MentorshipRequestSchema.index(
+  { requestedBy: 1, requestedTo: 1 },
+  {
+    unique: true,
+    partialFilterExpression: {
+      status: { $in: ['pending', 'accepted', 'active'] }
+    },
+    name: 'unique_open_mentorship_request'
+  }
+);
+
 module.exports = mongoose.model('mentorship_request', MentorshipRequestSchema);

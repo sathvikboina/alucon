@@ -4,8 +4,14 @@ const auth = require('../../middleware/auth');
 const MentorShipRequest = require('../../models/MentorShipRequest');
 const User = require('../../models/User');
 const { getMentorMatches, rankMentors, MENTORSHIP_AREAS } = require('../../services/matching');
+const { withLock } = require('../../utils/keyedMutex');
 
 const ALLOWED_STATUS = ['accepted', 'declined', 'active', 'completed'];
+
+// Capacity is a count, so a unique index cannot enforce it. Serialising the
+// check-and-save per mentor makes it atomic inside this process; the unique
+// partial index on the model covers duplicates across processes.
+const mentorLockKey = (mentorId) => `mentorship:mentor:${String(mentorId)}`;
 
 // Keep this in sync with the matching service: capacity is the number of
 // accepted/active mentees a mentor can hold at once.
@@ -45,56 +51,76 @@ router.post('/', auth, async (req, res) => {
       return res.status(400).json({ msg: 'This mentor is not accepting requests right now' });
     }
 
-    const existing = await MentorShipRequest.findOne({
-      requestedBy: req.user.id,
-      requestedTo,
-      status: { $in: ['pending', 'accepted', 'active'] },
+    const requester = await User.findById(req.user.id).lean();
+
+    // Both the duplicate check and the capacity count are read-then-write, so
+    // they run under a per-mentor lock. The unique partial index is the
+    // backstop if a second process is ever added.
+    const outcome = await withLock(mentorLockKey(requestedTo), async () => {
+      const existing = await MentorShipRequest.findOne({
+        requestedBy: req.user.id,
+        requestedTo,
+        status: { $in: ['pending', 'accepted', 'active'] },
+      });
+      if (existing) {
+        return {
+          status: 409,
+          body: {
+            msg: 'You already have an open mentorship request with this mentor',
+            request: existing,
+          },
+        };
+      }
+
+      const mentorRequests = await MentorShipRequest.find({ requestedTo })
+        .select('requestedBy requestedTo status')
+        .lean();
+      const activeCount = mentorRequests.filter((request) =>
+        ['accepted', 'active'].includes(request.status)
+      ).length;
+      if (activeCount >= mentorCapacity(mentor)) {
+        return {
+          status: 409,
+          body: { msg: 'This mentor is currently at capacity for new requests' },
+        };
+      }
+
+      // Pass the real request history so the snapshot's "slots open" and
+      // acceptance figures are truthful, not a fresh-mentor default.
+      const [mentorMatch] = rankMentors(requester || {}, [mentor], {
+        area: areaOfHelp,
+        requests: mentorRequests,
+        limit: 1,
+      });
+      if (!mentorMatch) {
+        return {
+          status: 409,
+          body: { msg: 'This mentor is not available for a new request right now' },
+        };
+      }
+
+      const newRequest = new MentorShipRequest({
+        requestedBy: req.user.id,
+        requestedTo,
+        areaOfHelp,
+        message: typeof message === 'string' ? message.slice(0, 1200) : '',
+        status: 'pending',
+        match_score: mentorMatch.score,
+        match_reasons: mentorMatch.reasons.slice(0, 5),
+      });
+      const saved = await newRequest.save();
+      return { status: 200, body: saved };
     });
-    if (existing) {
+
+    res.status(outcome.status).json(outcome.body);
+  } catch (err) {
+    // The partial unique index rejects a duplicate that slipped past the lock
+    // (for example from another process). Report it the same way.
+    if (err && err.code === 11000) {
       return res.status(409).json({
         msg: 'You already have an open mentorship request with this mentor',
-        request: existing,
       });
     }
-
-    const mentorRequests = await MentorShipRequest.find({ requestedTo })
-      .select('requestedBy requestedTo status')
-      .lean();
-    const activeCount = mentorRequests.filter((request) =>
-      ['accepted', 'active'].includes(request.status)
-    ).length;
-    if (activeCount >= mentorCapacity(mentor)) {
-      return res.status(409).json({
-        msg: 'This mentor is currently at capacity for new requests',
-      });
-    }
-
-    const requester = await User.findById(req.user.id).lean();
-    // Pass the real request history so the snapshot's "slots open" and
-    // acceptance figures are truthful, not a fresh-mentor default.
-    const [mentorMatch] = rankMentors(requester || {}, [mentor], {
-      area: areaOfHelp,
-      requests: mentorRequests,
-      limit: 1,
-    });
-    if (!mentorMatch) {
-      return res.status(409).json({
-        msg: 'This mentor is not available for a new request right now',
-      });
-    }
-
-    const newRequest = new MentorShipRequest({
-      requestedBy: req.user.id,
-      requestedTo,
-      areaOfHelp,
-      message: typeof message === 'string' ? message.slice(0, 1200) : '',
-      status: 'pending',
-      match_score: mentorMatch.score,
-      match_reasons: mentorMatch.reasons.slice(0, 5),
-    });
-    const saved = await newRequest.save();
-    res.json(saved);
-  } catch (err) {
     console.error('mentorship request:', err.message);
     res.status(500).json({ msg: 'Server error' });
   }
@@ -161,35 +187,61 @@ router.put('/:id', auth, async (req, res) => {
       declined: [],
       completed: [],
     };
-    const current = request.status || 'pending';
-    if (status !== current && !allowedTransitions[current].includes(status)) {
-      return res.status(400).json({
-        msg: `Cannot move this ${current} request to ${status}`,
-      });
-    }
 
-    // Accepting consumes a slot immediately, so enforce capacity at the point
-    // of acceptance too (requests may arrive while earlier ones are pending).
-    if (status === 'accepted') {
-      const mentor = await User.findById(request.requestedTo).select('mentorship').lean();
-      const acceptedCount = await MentorShipRequest.countDocuments({
-        requestedTo: request.requestedTo,
-        status: { $in: ['accepted', 'active'] },
-        _id: { $ne: request._id },
-      });
-      if (acceptedCount >= mentorCapacity(mentor)) {
-        return res.status(409).json({
-          msg: 'You are already at your mentoring capacity. Complete an active mentorship before accepting another.',
-        });
+    // Re-read and re-validate inside the critical section: the document may
+    // have changed between the authorization read above and this write.
+    const applyTransition = async () => {
+      const fresh = await MentorShipRequest.findById(req.params.id);
+      if (!fresh) {
+        return { status: 404, body: { msg: 'Mentorship request not found' } };
       }
+
+      const current = fresh.status || 'pending';
+      if (status !== current && !allowedTransitions[current].includes(status)) {
+        return {
+          status: 400,
+          body: { msg: `Cannot move this ${current} request to ${status}` },
+        };
+      }
+
+      // Accepting consumes a slot immediately, so enforce capacity at the point
+      // of acceptance too (requests may arrive while earlier ones are pending).
+      if (status === 'accepted') {
+        const mentor = await User.findById(fresh.requestedTo)
+          .select('mentorship')
+          .lean();
+        const acceptedCount = await MentorShipRequest.countDocuments({
+          requestedTo: fresh.requestedTo,
+          status: { $in: ['accepted', 'active'] },
+          _id: { $ne: fresh._id },
+        });
+        if (acceptedCount >= mentorCapacity(mentor)) {
+          return {
+            status: 409,
+            body: {
+              msg: 'You are already at your mentoring capacity. Complete an active mentorship before accepting another.',
+            },
+          };
+        }
+      }
+
+      fresh.status = status;
+      fresh.updatedAt = new Date();
+      if (status === 'completed') fresh.completedAt = new Date();
+      await fresh.save();
+      return { status: 200, id: fresh._id };
+    };
+
+    const outcome =
+      status === 'accepted'
+        ? await withLock(mentorLockKey(request.requestedTo), applyTransition)
+        : await applyTransition();
+
+    if (outcome.status !== 200) {
+      return res.status(outcome.status).json(outcome.body);
     }
 
-    request.status = status;
-    request.updatedAt = new Date();
-    if (status === 'completed') request.completedAt = new Date();
-    await request.save();
-
-    const populated = await MentorShipRequest.findById(request._id)
+    const populated = await MentorShipRequest.findById(outcome.id)
       .populate('requestedBy', ['name', 'avatar', 'program', 'passing_year', 'skills'])
       .populate('requestedTo', ['name', 'avatar', 'designation', 'organisation']);
     res.json(populated);
