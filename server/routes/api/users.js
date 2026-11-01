@@ -9,14 +9,79 @@ const authHeadAdmin = require("../../middleware/authHeadAdmin");
 const JoinRequest = require("../../models/JoinRequest");
 require("dotenv").config();
 const sendEmail = require("../../middleware/utils/sendEmail");
+const jwt = require("jsonwebtoken");
+const { rateLimit } = require("../../middleware/rateLimit");
 
 // ✅ OTP STORE
 const otpStore = new Map();
+
+const OTP_TOKEN_TTL = "15m";
+
+const normalizeEmail = (value) =>
+	String(value || "").trim().toLowerCase().slice(0, 254);
+
+const otpKey = (req) =>
+	`${req.ip || req.connection?.remoteAddress || "unknown"}:${normalizeEmail(req.body?.email)}`;
+
+const registerLimiter = rateLimit({
+	scope: "register",
+	windowMs: 60 * 60 * 1000,
+	max: 5,
+	message: "Too many registration attempts. Please try again later.",
+});
+
+const verifyOtpLimiter = rateLimit({
+	scope: "verify-otp",
+	windowMs: 15 * 60 * 1000,
+	max: 10,
+	message: "Too many OTP attempts. Please request a new code later.",
+});
+
+const resendOtpLimiter = rateLimit({
+	scope: "resend-otp",
+	windowMs: 15 * 60 * 1000,
+	max: 3,
+	message: "Too many OTP resend requests. Please wait before trying again.",
+	key: otpKey,
+});
+
+const resetOtpLimiter = rateLimit({
+	scope: "reset-otp",
+	windowMs: 15 * 60 * 1000,
+	max: 10,
+	message: "Too many OTP reset requests. Please wait before trying again.",
+	key: otpKey,
+});
+
+function signOtpToken(email) {
+	return jwt.sign(
+		{ email: normalizeEmail(email), purpose: "otp-reset" },
+		process.env.ACCESS_TOKEN_SECRET || process.env.JWT_SECRET,
+		{ expiresIn: OTP_TOKEN_TTL }
+	);
+}
+
+function verifyOtpToken(token, email) {
+	if (!token) return false;
+	try {
+		const payload = jwt.verify(
+			token,
+			process.env.ACCESS_TOKEN_SECRET || process.env.JWT_SECRET
+		);
+		return (
+			payload.purpose === "otp-reset" &&
+			payload.email === normalizeEmail(email)
+		);
+	} catch (err) {
+		return false;
+	}
+}
 
 
 // ================= REGISTER (SEND OTP) =================
 router.post(
   "/register",
+  registerLimiter,
   [
     check("name", "Name is required!").not().isEmpty(),
     check("email", "Valid email required").isEmail(),
@@ -133,7 +198,10 @@ router.post(
         `,
       });
 
-      return res.json({ msg: "OTP sent successfully. If not received, please check your spam folder." });
+      return res.json({
+        msg: "OTP sent successfully. If not received, please check your spam folder.",
+        otp_token: signOtpToken(email),
+      });
 
     } catch (err) {
       console.error(err);
@@ -144,7 +212,7 @@ router.post(
 
 
 // ================= VERIFY OTP =================
-router.post("/verify-otp", async (req, res) => {
+router.post("/verify-otp", verifyOtpLimiter, async (req, res) => {
   const { email, otp } = req.body;
 
   const record = otpStore.get(email);
@@ -198,8 +266,12 @@ router.post("/verify-otp", async (req, res) => {
 
 
 // ================= RESEND OTP =================
-router.post("/resend-otp", async (req, res) => {
-  const { email } = req.body;
+router.post("/resend-otp", resendOtpLimiter, async (req, res) => {
+  const { email, otp_token } = req.body;
+
+  if (!verifyOtpToken(otp_token, email)) {
+    return res.status(401).json({ msg: "Invalid or expired OTP session" });
+  }
 
   const record = otpStore.get(email);
   if (!record) return res.status(400).json({ msg: "No request found" });
@@ -217,13 +289,17 @@ router.post("/resend-otp", async (req, res) => {
     html: `<h2>New OTP: ${newOtp}</h2>`,
   });
 
-  res.json({ msg: "OTP resent" });
+  res.json({ msg: "OTP resent", otp_token: signOtpToken(email) });
 });
 
 
 // ================= RESET OTP =================
-router.post("/reset-otp", (req, res) => {
-  const { email } = req.body;
+router.post("/reset-otp", resetOtpLimiter, (req, res) => {
+  const { email, otp_token } = req.body;
+
+  if (!verifyOtpToken(otp_token, email)) {
+    return res.status(401).json({ msg: "Invalid or expired OTP session" });
+  }
 
   otpStore.delete(email);
 

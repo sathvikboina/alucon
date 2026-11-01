@@ -7,6 +7,33 @@ const sendEmail = require("../../middleware/utils/sendEmail");
 const { check, validationResult } = require("express-validator");
 const jwt = require("jsonwebtoken");
 const config = require("config");
+const {
+	rateLimit,
+	loginLockout,
+	recordLoginFailure,
+	clearLoginFailures,
+} = require("../../middleware/rateLimit");
+
+const loginLimiter = rateLimit({
+	scope: "login",
+	windowMs: 10 * 60 * 1000,
+	max: 10,
+	message: "Too many login attempts. Please try again later.",
+});
+
+const forgotPasswordLimiter = rateLimit({
+	scope: "forgot-password",
+	windowMs: 15 * 60 * 1000,
+	max: 5,
+	message: "Too many reset requests. Please try again later.",
+});
+
+const resetPasswordLimiter = rateLimit({
+	scope: "reset-password",
+	windowMs: 15 * 60 * 1000,
+	max: 10,
+	message: "Too many reset attempts. Please try again later.",
+});
 
 // @route    GET api/auth
 // @desc     Test route
@@ -28,6 +55,8 @@ router.get("/", auth, async (req, res) => {
 // @access   Public
 router.post(
 	"/",
+	loginLimiter,
+	loginLockout(),
 	[
 		check("email", "Please include a valid email! ").isEmail(),
 		check("password", "Password Required").exists(),
@@ -44,6 +73,7 @@ router.post(
 		try {
 			let user = await User.findOne({ email }).select("+password");
 			if (!user) {
+				recordLoginFailure(req);
 				return res
 					.status(400)
 					.json({ errors: [{ msg: "Invalid credentials" }] });
@@ -57,10 +87,13 @@ router.post(
 
 			const isMatch = await bcrypt.compare(password, user.password);
 			if (!isMatch) {
+				recordLoginFailure(req);
 				return res
 					.status(400)
 					.json({ errors: [{ msg: "Invalid credentials" }] });
 			}
+
+			clearLoginFailures(req);
 
 			const payload = {
 				user: {
@@ -97,6 +130,7 @@ router.post(
 
 router.post(
 	"/forgot-password",
+	forgotPasswordLimiter,
 	[
 		check("email", "Please include a valid email! ")
 			.isEmail()
@@ -178,6 +212,7 @@ const options = {
 
 router.post(
 	"/reset-password",
+	resetPasswordLimiter,
 	[
 		check("password", "Password Required").not().isEmpty().isLength({
 			min: 6,
@@ -224,7 +259,7 @@ router.post(
 	}
 );
 
-router.post("/verify-reset-link", async (req, res) => {
+router.post("/verify-reset-link", resetPasswordLimiter, async (req, res) => {
 	const { user_id, reset_token } = req.body;
 	try {
 		const user = await User.findOne({ _id: user_id }).select("+password");

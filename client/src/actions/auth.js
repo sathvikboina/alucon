@@ -164,7 +164,7 @@ export const register =
 			});
 			dispatch(setAlert("Verify OTP to send join request to Admin", "success"));
 			// dispatch(loadUser());
-			return true;
+			return res.data;
 		} catch (e) {
 			const errors = e?.response?.data?.errors;
 			if (errors) {

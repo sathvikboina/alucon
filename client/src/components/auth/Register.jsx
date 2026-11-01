@@ -29,6 +29,7 @@ const Register = ({ setAlert, register, closeSideNav }) => {
 
   const [showOtpInput, setShowOtpInput] = useState(false);
   const [otp, setOtp] = useState("");
+  const [otpToken, setOtpToken] = useState("");
   const [timer, setTimer] = useState(60);
   const [canResend, setCanResend] = useState(false);
 
@@ -94,10 +95,11 @@ const Register = ({ setAlert, register, closeSideNav }) => {
       return setAlert("Invalid year range", "danger");
 
     setLoading(true);
-    const success = await register({ ...formInput });
+    const result = await register({ ...formInput });
     setLoading(false);
 
-    if (success) {
+    if (result) {
+      setOtpToken(result.otp_token || "");
       setShowOtpInput(true);
       setTimer(60);
       setCanResend(false);
@@ -119,23 +121,31 @@ const Register = ({ setAlert, register, closeSideNav }) => {
   };
 
   const resendOtp = async () => {
-    await fetch("/api/users/resend-otp", {
+    const res = await fetch("/api/users/resend-otp", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email }),
+      body: JSON.stringify({ email, otp_token: otpToken }),
     });
+    const data = await res.json();
+    if (!res.ok) return alert(data.msg || "Could not resend OTP");
+
+    setOtpToken(data.otp_token || otpToken);
     setTimer(60);
     setCanResend(false);
   };
 
   const resetOtp = async () => {
-    await fetch("/api/users/reset-otp", {
+    const res = await fetch("/api/users/reset-otp", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email }),
+      body: JSON.stringify({ email, otp_token: otpToken }),
     });
+    const data = await res.json();
+    if (!res.ok) return alert(data.msg || "Could not reset OTP");
+
     setShowOtpInput(false);
     setOtp("");
+    setOtpToken("");
   };
 
   return (
