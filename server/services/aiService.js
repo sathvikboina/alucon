@@ -5,7 +5,15 @@
 // is down) callers fall back to deterministic, extractive output, so the demo
 // keeps working without pretending an LLM answered.
 
-const FALLBACK_MODELS = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"];
+// 2.5 and older are retired for new API keys (404). The 3.x stable models are
+// the current target; 3-flash-preview is first because it is the model that
+// answers reliably within the request budget on the free tier.
+const FALLBACK_MODELS = [
+  "gemini-3-flash-preview",
+  "gemini-3.5-flash-lite",
+  "gemini-3.8-flash",
+  "gemini-flash-latest",
+];
 const MODEL_TIMEOUT_MS = 25000;
 // A request may try several models. Cap the whole chain so a slow provider
 // cannot hold an HTTP request open for minutes.
@@ -58,9 +66,12 @@ async function callModel(model, prompt, options) {
       responseMimeType: "application/json",
     };
 
-    // 2.5 Flash enables "thinking" by default, which can eat the JSON budget.
+    // Gemini 3 enables "thinking" by default. On a long briefing prompt that
+    // consumed ~860 tokens and truncated the JSON, so keep reasoning low.
     if (model.startsWith("gemini-2.5")) {
       generationConfig.thinkingConfig = { thinkingBudget: 0 };
+    } else if (model.startsWith("gemini-3")) {
+      generationConfig.thinkingConfig = { thinkingLevel: "low" };
     }
 
     const res = await fetch(
@@ -100,7 +111,19 @@ async function callModel(model, prompt, options) {
       .trim();
 
     const data = extractJson(text);
-    if (!data) return { error: "Model returned no parseable JSON" };
+    if (!data) {
+      if (process.env.AI_DEBUG === "true") {
+        console.warn(
+          `[ai] ${model} raw output (${text.length} chars, finish=${
+            body.candidates?.[0]?.finishReason
+          }, usage=${JSON.stringify(body.usageMetadata || {})}):`,
+          text.slice(0, 300),
+          "...",
+          text.slice(-120)
+        );
+      }
+      return { error: "Model returned no parseable JSON" };
+    }
     return { data };
   } catch (err) {
     return {
@@ -128,11 +151,25 @@ async function generateJSON(prompt, options = {}) {
       break;
     }
 
+    const started = Date.now();
     const result = await callModel(model, prompt, {
       ...options,
       timeoutMs: Math.min(remaining, MODEL_TIMEOUT_MS),
     });
-    if (result.data) return { data: result.data, model };
+    const elapsed = Date.now() - started;
+    if (result.data) {
+      if (process.env.AI_DEBUG === "true") {
+        console.log(`[ai] ${model} answered in ${elapsed}ms`);
+      }
+      return { data: result.data, model };
+    }
+    if (process.env.AI_DEBUG === "true") {
+      console.warn(
+        `[ai] ${model} failed after ${elapsed}ms: ${
+          result.notFound ? "404 not found" : result.error
+        }`
+      );
+    }
     if (result.notFound) continue;
     lastError = result.error || lastError;
     // Try the next model: a 400 can be model-specific (e.g. thinking config),

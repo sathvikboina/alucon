@@ -150,7 +150,7 @@ CLOUDINARY_API_SECRET=your_secret
 # AI features (Gemini). Optional: without a key the app uses offline,
 # extractive output so the UI still works.
 GEMINI_API_KEY=your_gemini_key
-GEMINI_MODEL=gemini-2.5-flash
+GEMINI_MODEL=gemini-3-flash-preview
 ```
 
 Frontend `.env`

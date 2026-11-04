@@ -551,7 +551,7 @@ async function summarizeThread(user, postId, { force = false } = {}) {
     }
   }
 
-  const ai = await generateJSON(threadPrompt(post, comments), { maxOutputTokens: 600 });
+  const ai = await generateJSON(threadPrompt(post, comments), { maxOutputTokens: 1000 });
   const payload = normalizeThreadSummary(ai?.data, post);
   const model = ai?.model || "offline";
 
