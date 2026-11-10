@@ -22,6 +22,9 @@ const DAY = 24 * 60 * 60 * 1000;
 const BRIEFING_TTL = 6 * 60 * 60 * 1000;
 const THREAD_TTL = 24 * 60 * 60 * 1000;
 const FIT_TTL = 12 * 60 * 60 * 1000;
+// TL;DR is only offered for long-form posts. Short posts are quicker to read
+// than the summary itself, so the button would be noise.
+const MIN_TLDR_WORDS = 750;
 
 const TECH_KEYWORDS = [
   "python", "javascript", "typescript", "react", "node", "express", "sql",
@@ -71,6 +74,13 @@ const stripHtml = (value = "") =>
 const truncate = (value, max) => {
   const text = String(value || "");
   return text.length > max ? `${text.slice(0, max - 1).trimEnd()}…` : text;
+};
+
+// Plain-text word count for the TL;DR threshold. HTML tags and entities do not
+// count as words.
+const countWords = (value = "") => {
+  const text = stripHtml(value == null ? "" : value);
+  return text ? text.split(/\s+/).filter(Boolean).length : 0;
 };
 
 const cleanString = (value, max) => {
@@ -535,6 +545,10 @@ async function summarizeThread(user, postId, { force = false } = {}) {
   }
 
   const comments = Array.isArray(post.comments) ? post.comments : [];
+  const words = countWords(post.text);
+  if (words < MIN_TLDR_WORDS) {
+    return { error: "post_too_short", wordCount: words, minWords: MIN_TLDR_WORDS };
+  }
   if (comments.length === 0) return { error: "no_comments" };
 
   const key = `thread:${postId}:${comments.length}`;
@@ -787,4 +801,6 @@ module.exports = {
   getJobFit,
   isConfigured,
   canView,
+  countWords,
+  MIN_TLDR_WORDS,
 };

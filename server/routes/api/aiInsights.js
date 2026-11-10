@@ -58,6 +58,13 @@ router.post("/posts/:id/summary", auth, async (req, res) => {
     if (summary.error === "no_comments") {
       return res.status(400).json({ msg: "There are no replies to summarize yet" });
     }
+    if (summary.error === "post_too_short") {
+      return res.status(400).json({
+        msg: `TL;DR is only available for posts of ${summary.minWords} words or more`,
+        wordCount: summary.wordCount,
+        minWords: summary.minWords,
+      });
+    }
 
     res.json(summary);
   } catch (err) {

@@ -10,6 +10,19 @@ import api from "../../utils/api";
 import { trackFeedEvent } from "../../utils/feedTracking";
 import "./PostCard.css";
 
+// TL;DR is only offered for long-form posts. Keep this in sync with
+// server/services/aiInsights.js (MIN_TLDR_WORDS).
+const MIN_TLDR_WORDS = 750;
+
+const countWords = (html = "") => {
+  const text = String(html)
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&[a-z#0-9]+;/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  return text ? text.split(" ").length : 0;
+};
+
 const PostCard = ({
   post: { _id, heading, text, likes, comments, date, user, avatar, name, images, channel, feed },
   auth: { loadingAuth, authUser },
@@ -40,7 +53,8 @@ const PostCard = ({
     toggleLike(_id);
   };
 
-  const canSummarize = (comments?.length || 0) >= 2;
+  const canSummarize =
+    (comments?.length || 0) >= 2 && countWords(text) >= MIN_TLDR_WORDS;
 
   const summarize = async () => {
     setSummaryError("");

@@ -18,6 +18,8 @@ const {
   summarizeThread,
   getJobFit,
   isConfigured,
+  countWords,
+  MIN_TLDR_WORDS,
 } = require("../services/aiInsights");
 const { getInternshipMatches, getMentorMatches } = require("../services/matching");
 
@@ -95,7 +97,11 @@ async function run() {
   }
 
   let summaries = 0;
-  const threads = posts.filter((post) => (post.comments || []).length >= 2);
+  const threads = posts.filter(
+    (post) =>
+      (post.comments || []).length >= 2 &&
+      countWords(post.text) >= MIN_TLDR_WORDS
+  );
   for (const post of threads) {
     try {
       // The cache key is post-based, so only the first call hits the model.
