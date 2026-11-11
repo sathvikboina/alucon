@@ -39,6 +39,7 @@ import MentorDashBoard from "../mentorship/MentorDashBoard";
 import InternshipMatches from "../matching/InternshipMatches";
 import MentorMatches from "../matching/MentorMatches";
 import Doors from "../doors/Doors";
+import WarmPaths from "../warmpaths/WarmPaths";
 import ResourceHub from "../resource/ResourceHub";
 import AISearch from "../search/AISearch";
 
@@ -65,6 +66,7 @@ const Routes = () => {
 				<PrivateRoute exact path="/internship-matches" component={InternshipMatches} />
 				<PrivateRoute exact path="/mentor-matches" component={MentorMatches} />
 				<PrivateRoute exact path="/doors" component={Doors} />
+				<PrivateRoute exact path="/warm-paths" component={WarmPaths} />
 				<Route exact path="/archivejobs" component={ArchiveJobs} />
 				<Route exact path="/createjob" component={CreateJob} />
 				<Route exact path="/events" component={Event} />

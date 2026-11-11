@@ -600,6 +600,25 @@ const matchingProfiles = {
   },
 };
 
+// Explicit seeded opt-ins for fictional demo alumni. Existing accounts are
+// only switched on when they are still opted out, so a manual opt-out is never
+// overwritten by a later seed.
+const connectorOptInKeys = new Set([
+  "aarav",
+  "riya",
+  "sneha",
+  "dev",
+  "priya",
+  "aditya",
+  "meera",
+  "kabir",
+  "ananya",
+  "rahul",
+  "neha",
+  "ishaan",
+  "tara",
+]);
+
 const mentorDefaultsFor = (spec) => {
   if (!["alumni", "faculty"].includes(spec.role)) {
     return { available: false, areas: [], capacity: 0, mode: "Remote" };
@@ -679,6 +698,16 @@ const demoDoors = [
     monthlyCap: 1,
     active: true,
     daysAgo: 10,
+  },
+  {
+    key: "priya-referral",
+    owner: "priya",
+    type: "referral",
+    title: "Referral for applied ML roles",
+    topics: ["Machine Learning", "Referrals", "Careers"],
+    monthlyCap: 1,
+    active: true,
+    daysAgo: 8,
   },
   {
     key: "sneha-question",
@@ -926,6 +955,10 @@ async function run() {
       (!user.experience || user.experience.length === 0)
     ) {
       user.experience = spec.pastExperience;
+      await user.save();
+    }
+    if (connectorOptInKeys.has(spec.key) && !user.connector_opt_in) {
+      user.connector_opt_in = true;
       await user.save();
     }
     byKey[spec.key] = user;

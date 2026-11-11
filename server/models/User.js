@@ -109,6 +109,12 @@ const UserSchema = new mongoose.Schema({
 	},
 	followers: [{ type: mongoose.Schema.Types.ObjectId, ref: "user" }],
 	followings: [{ type: mongoose.Schema.Types.ObjectId, ref: "user" }],
+	// Opt-in: a member never appears as a connector or warm-path endpoint until
+	// they explicitly enable this. Legacy accounts stay opted out.
+	connector_opt_in: {
+		type: Boolean,
+		default: false,
+	},
 	NotificationID : {
 		type : Number,
 		default : 0
