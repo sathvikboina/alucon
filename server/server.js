@@ -118,6 +118,7 @@ app.use("/api/notifications", require("./routes/api/notifications"));
 app.use("/api/stories", require("./routes/api/stories"));
 app.use("/api/doubts", require("./routes/api/doubts"));
 app.use("/api/mentorship", require("./routes/api/mentorship"));
+app.use("/api/doors", require("./routes/api/doors"));
 app.use("/api/resources", require("./routes/api/resources"));
 app.use("/api/event-questions", eventQuestionsRoutes);
 app.use("/api/analytics", require("./routes/api/analytics"));

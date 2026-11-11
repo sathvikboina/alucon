@@ -161,6 +161,7 @@ const Navbar = ({
         </span>
         <ul className={`dropdown-menu ${activeDropdown === "opportunities" ? "show" : ""}`}>
           <li><Link to="/jobs" onClick={closeMobile}>Jobs</Link></li>
+          <li><Link to="/doors" onClick={closeMobile}>Open Doors</Link></li>
           <li><Link to="/internship-matches" onClick={closeMobile}>Internship Matches</Link></li>
           <li><Link to="/events" onClick={closeMobile}>Events</Link></li>
         </ul>

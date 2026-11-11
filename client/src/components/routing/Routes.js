@@ -37,6 +37,7 @@ import DoubtRoom from '../doubts/DoubtRoom';
 import MentorDashBoard from "../mentorship/MentorDashBoard";
 import InternshipMatches from "../matching/InternshipMatches";
 import MentorMatches from "../matching/MentorMatches";
+import Doors from "../doors/Doors";
 import ResourceHub from "../resource/ResourceHub";
 import AISearch from "../search/AISearch";
 
@@ -61,6 +62,7 @@ const Routes = () => {
 				<Route exact path="/jobs" component={Job} />
 				<PrivateRoute exact path="/internship-matches" component={InternshipMatches} />
 				<PrivateRoute exact path="/mentor-matches" component={MentorMatches} />
+				<PrivateRoute exact path="/doors" component={Doors} />
 				<Route exact path="/archivejobs" component={ArchiveJobs} />
 				<Route exact path="/createjob" component={CreateJob} />
 				<Route exact path="/events" component={Event} />

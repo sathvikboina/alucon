@@ -20,6 +20,8 @@ const Job = require("../models/Jobs");
 const Group = require("../models/Group");
 const Resource = require("../models/Resource");
 const MentorShipRequest = require("../models/MentorShipRequest");
+const Door = require("../models/Door");
+const DoorRequest = require("../models/DoorRequest");
 const Conversation = require("../models/Conversation");
 const Message = require("../models/Message");
 const JoinRequest = require("../models/JoinRequest");
@@ -547,6 +549,111 @@ const mentorDefaultsFor = (spec) => {
 // long-form post. Remove it so the feed does not show both.
 const obsoletePosts = [
   { heading: "Frontend to platform engineering: what transferred?", channel: "General" },
+];
+
+// ---------------------------------------------------------------------------
+// Open Doors demo data. These are capped offers, not calendars. One door is
+// intentionally inactive so the default and the owner toggle are visible.
+// ---------------------------------------------------------------------------
+const demoDoors = [
+  {
+    key: "aarav-chat",
+    owner: "aarav",
+    type: "chat15",
+    title: "15 minutes on production ML",
+    topics: ["Machine Learning", "MLOps", "Careers"],
+    monthlyCap: 2,
+    active: true,
+    daysAgo: 18,
+  },
+  {
+    key: "aarav-question",
+    owner: "aarav",
+    type: "question",
+    title: "Ask about production ML careers",
+    topics: ["Machine Learning", "Interviews", "Careers"],
+    monthlyCap: 8,
+    active: true,
+    daysAgo: 16,
+  },
+  {
+    key: "riya-resume",
+    owner: "riya",
+    type: "resume_review",
+    title: "Backend resume review",
+    topics: ["Backend", "Resume", "Placements"],
+    monthlyCap: 2,
+    active: true,
+    daysAgo: 14,
+  },
+  {
+    key: "tara-mock",
+    owner: "tara",
+    type: "mock_interview",
+    title: "Design systems mock interview",
+    topics: ["Design", "Interviews"],
+    monthlyCap: 2,
+    active: true,
+    daysAgo: 12,
+  },
+  {
+    key: "kabir-referral",
+    owner: "kabir",
+    type: "referral",
+    title: "Referral for fintech backend roles",
+    topics: ["Backend", "Referrals", "Fintech"],
+    monthlyCap: 1,
+    active: true,
+    daysAgo: 10,
+  },
+  {
+    key: "sneha-question",
+    owner: "sneha",
+    type: "question",
+    title: "Computer vision research questions",
+    topics: ["Computer Vision", "Research", "Higher Studies"],
+    monthlyCap: 6,
+    active: true,
+    daysAgo: 9,
+  },
+  {
+    key: "nikhil-chat",
+    owner: "nikhil",
+    type: "chat15",
+    title: "Search infrastructure at Google",
+    topics: ["Search", "Google", "Distributed Systems"],
+    monthlyCap: 1,
+    active: false,
+    daysAgo: 7,
+  },
+];
+
+const demoDoorRequests = [
+  {
+    door: "aarav-question",
+    from: "sathvik",
+    status: "completed",
+    message: "How should I evaluate a production ML model before launch?",
+    answerText:
+      "Demo answer (fictional): freeze a representative evaluation set, report per-slice metrics, and compare against the current production model. Add a monitoring plan before you touch the ranking logic.",
+    daysAgo: 20,
+    completedDaysAgo: 15,
+    helped: true,
+  },
+  {
+    door: "aarav-chat",
+    from: "sathvik",
+    status: "accepted",
+    message: "Demo request (fictional): could we talk about moving from coursework to production ML?",
+    daysAgo: 4,
+  },
+  {
+    door: "riya-resume",
+    from: "sathvik",
+    status: "pending",
+    message: "Demo request (fictional): could you review my backend resume before placements?",
+    daysAgo: 2,
+  },
 ];
 
 // ---------------------------------------------------------------------------
@@ -1110,6 +1217,75 @@ async function run() {
     }
   }
 
+  // ── Open Doors and their request history ─────────────────────────────────
+  let createdDoors = 0;
+  let createdDoorRequests = 0;
+  const doorByKey = {};
+  for (const spec of demoDoors) {
+    const owner = byKey[spec.owner];
+    if (!owner) continue;
+
+    const fields = {
+      type: spec.type,
+      topics: spec.topics,
+      monthlyCap: spec.monthlyCap,
+      active: spec.active,
+      updatedAt: hoursAgo(spec.daysAgo * 24),
+    };
+    let door = await Door.findOne({ owner: owner._id, title: spec.title });
+    if (!door) {
+      door = await Door.create({
+        owner: owner._id,
+        title: spec.title,
+        createdAt: hoursAgo(spec.daysAgo * 24),
+        ...fields,
+      });
+      createdDoors += 1;
+    } else {
+      Object.assign(door, fields);
+      await door.save();
+    }
+    doorByKey[spec.key] = door;
+  }
+
+  for (const spec of demoDoorRequests) {
+    const door = doorByKey[spec.door];
+    const from = byKey[spec.from];
+    if (!door || !from) continue;
+
+    const createdAt = hoursAgo(spec.daysAgo * 24);
+    const fields = {
+      status: spec.status,
+      message: spec.message,
+      answerText: spec.answerText || "",
+      helped: spec.helped ?? null,
+      updatedAt: createdAt,
+    };
+    if (spec.status === "completed") {
+      fields.completedAt = hoursAgo(
+        (spec.completedDaysAgo ?? spec.daysAgo) * 24
+      );
+    }
+
+    const existing = await DoorRequest.findOne({
+      door: door._id,
+      requestedBy: from._id,
+      message: spec.message,
+    });
+    if (!existing) {
+      await DoorRequest.create({
+        door: door._id,
+        requestedBy: from._id,
+        createdAt,
+        ...fields,
+      });
+      createdDoorRequests += 1;
+    } else {
+      Object.assign(existing, fields);
+      await existing.save();
+    }
+  }
+
   // ── Messenger conversations and messages ─────────────────────────────────
   let createdConversations = 0;
   let createdMessages = 0;
@@ -1222,7 +1398,8 @@ async function run() {
       `${createdEvents} events, ${createdJobs} jobs, ${createdResources} resources, ` +
       `${createdGroups} groups, ` +
       `${createdDiscussions} group discussions, ${createdGroupComments} group replies, ` +
-      `${createdMentorship} mentorship requests, ${createdConversations} conversations, ` +
+      `${createdMentorship} mentorship requests, ${createdDoors} doors, ` +
+      `${createdDoorRequests} door requests, ${createdConversations} conversations, ` +
       `${createdMessages} messages, ${createdJoinRequests} join requests, ` +
       `${createdEventQuestions} event questions.`
   );
