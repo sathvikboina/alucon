@@ -66,7 +66,7 @@ async function callModel(model, prompt, options) {
       responseMimeType: "application/json",
     };
 
-    // Gemini 3 enables "thinking" by default. On a long briefing prompt that
+    // Gemini 3 enables "thinking" by default. On a long thread prompt that
     // consumed ~860 tokens and truncated the JSON, so keep reasoning low.
     if (model.startsWith("gemini-2.5")) {
       generationConfig.thinkingConfig = { thinkingBudget: 0 };

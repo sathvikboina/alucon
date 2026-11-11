@@ -4,7 +4,7 @@
  *
  *   GEMINI_API_KEY=... MONGO_URI=... npm run ai:warm
  *
- * Briefings are generated only when a member asks for one, and job fit plus
+ * Thread TL;DR is the only generative feature left; job fit and
  * mentor/internship matching are deterministic, so there is nothing to warm for
  * those features. Offline (no-key) output is never cached, so this script exits
  * early rather than poisoning the cache with extractive results.

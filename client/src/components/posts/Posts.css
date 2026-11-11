@@ -701,147 +701,55 @@
   .feed-hero-right .search-box input { width: 100%; min-width: 0; }
 }
 
-/* ============================================
-   AI BRIEFING (right rail)
-   ============================================ */
-.ai-briefing {
-  border-color: #dbe4f5;
-  background: linear-gradient(180deg, #fbfdff 0%, #ffffff 60%);
-}
-
-.ai-spark { color: #2563b0; margin-right: 4px; }
-
-.ai-refresh {
-  background: none;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-  font-family: inherit;
-}
-
-.ai-refresh:disabled { opacity: 0.55; cursor: default; }
-
-.ai-briefing-empty { display: flex; flex-direction: column; gap: 10px; }
-
-.ai-generate {
-  align-self: flex-start;
-  padding: 8px 14px;
-  border: 1px solid #c8973c;
-  border-radius: 7px;
-  background: #fffaf0;
-  color: #7a5316;
-  font-family: inherit;
-  font-size: 0.8rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease;
-}
-
-.ai-generate:hover {
-  background: #fdf1d8;
-  border-color: #b3842f;
-}
-
-.ai-headline {
-  font-size: 0.88rem;
-  font-weight: 700;
-  color: var(--navy-800);
-  margin: 0 0 4px;
-  line-height: 1.35;
-}
-
-.ai-summary {
-  font-size: 0.78rem;
-  color: var(--grey-500);
-  line-height: 1.5;
-  margin: 0 0 10px;
-}
-
-.ai-focus {
-  display: block;
-  background: var(--navy-50);
-  border: 1px solid var(--navy-100);
-  border-radius: 8px;
-  padding: 8px 10px;
-  margin-bottom: 10px;
-  text-decoration: none;
-  transition: background var(--t);
-}
-
-.ai-focus:hover { background: #e8f0fa; text-decoration: none; }
-
-.ai-focus-kicker {
-  display: block;
-  font-size: 0.62rem;
-  text-transform: uppercase;
-  letter-spacing: 0.09em;
-  font-weight: 700;
-  color: var(--navy-400);
-  margin-bottom: 2px;
-}
-
-.ai-focus strong {
-  font-size: 0.78rem;
-  color: var(--navy-800);
-  line-height: 1.4;
-}
-
-.ai-themes {
+/* ── Top time filter ── */
+.top-filter {
   display: flex;
+  align-items: center;
+  gap: 8px;
   flex-wrap: wrap;
-  gap: 4px;
-  margin-bottom: 6px;
+  padding: 8px 0 10px;
+  border-bottom: 1px solid var(--grey-200);
+  margin-bottom: 12px;
 }
 
-.ai-theme {
+.top-filter-label {
   font-size: 0.68rem;
-  background: var(--grey-100);
-  color: var(--grey-700);
-  border-radius: 20px;
-  padding: 2px 8px;
-}
-
-.ai-theme em { font-style: normal; color: var(--grey-400); margin-left: 4px; }
-
-.ai-list { margin-top: 8px; }
-.ai-list .rail-eyebrow { margin: 0 0 4px; }
-
-.ai-list-item {
-  display: block;
-  padding: 6px 0;
-  border-top: 1px solid var(--grey-100);
-  text-decoration: none;
-}
-
-.ai-list-item:first-of-type { border-top: none; }
-
-.ai-list-item strong {
-  display: block;
-  font-size: 0.76rem;
-  color: var(--navy-800);
-  line-height: 1.35;
-}
-
-.ai-list-item small { font-size: 0.68rem; color: var(--grey-400); }
-.ai-list-item:hover strong { color: var(--navy-500); text-decoration: none; }
-
-.ai-foot {
-  margin: 10px 0 0;
-  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
   color: var(--grey-400);
-  border-top: 1px solid var(--grey-100);
-  padding-top: 6px;
 }
 
-/* The briefing is rendered twice; the in-feed copy only appears once the
-   right rail is hidden, so mobile users still see it. */
-.feed-briefing-mobile { display: none; }
+.top-filter select,
+.top-filter input[type="date"] {
+  font-family: inherit;
+  font-size: 0.74rem;
+  color: var(--navy-800);
+  background: var(--white);
+  border: 1px solid var(--grey-200);
+  border-radius: 6px;
+  padding: 4px 8px;
+}
 
-@media (max-width: 1180px) {
-  .feed-briefing-mobile {
-    display: block;
-    margin: 0 0 14px;
-  }
+.top-filter input[type="date"] { padding: 3px 6px; }
 
-  .feed-briefing-mobile .ai-briefing { margin: 0; }
+.top-filter-apply {
+  background: var(--navy-800);
+  color: var(--white);
+  border: none;
+  border-radius: 6px;
+  padding: 5px 12px;
+  font-family: inherit;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.top-filter-apply:hover { background: var(--navy-500); }
+
+.top-filter-range { color: var(--grey-400); font-size: 0.7rem; margin-left: auto; }
+.top-filter-error { color: #b42318; font-size: 0.72rem; width: 100%; margin: 0; }
+
+@media (max-width: 680px) {
+  .top-filter-range { margin-left: 0; }
 }

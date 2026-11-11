@@ -205,4 +205,144 @@ router.get("/for-you", auth, async (req, res) => {
   }
 });
 
+// ---------------------------------------------------------------------------
+// Top feed
+// ---------------------------------------------------------------------------
+
+const TOP_RANGES = ["today", "week", "month", "year", "all", "custom"];
+const TOP_RANGE_DAYS = { week: 7, month: 30, year: 365 };
+
+function startOfDay(date) {
+  const copy = new Date(date);
+  copy.setHours(0, 0, 0, 0);
+  return copy;
+}
+
+// Parses the requested window. Presets are relative to "now"; custom ranges
+// must supply both ends and are inclusive of the whole end day.
+function parseTopWindow(rangeRaw, fromRaw, toRaw) {
+  const range = String(rangeRaw || "week").trim().toLowerCase();
+  if (!TOP_RANGES.includes(range)) {
+    return { error: `range must be one of ${TOP_RANGES.join(", ")}` };
+  }
+
+  if (range === "custom") {
+    const from = fromRaw ? new Date(fromRaw) : null;
+    const to = toRaw ? new Date(toRaw) : null;
+    if (!from || Number.isNaN(from.getTime()) || !to || Number.isNaN(to.getTime())) {
+      return { error: "custom range needs valid from and to dates" };
+    }
+    if (from.getTime() > to.getTime()) {
+      return { error: "from must be before to" };
+    }
+    const end = new Date(to);
+    // A bare date is midnight; include the rest of that day.
+    if (/^\d{4}-\d{2}-\d{2}$/.test(String(toRaw).trim())) {
+      end.setHours(23, 59, 59, 999);
+    }
+    return { range, from, to: end };
+  }
+
+  if (range === "all") return { range, from: null, to: null };
+
+  const now = new Date();
+  if (range === "today") {
+    return { range, from: startOfDay(now), to: now };
+  }
+  const days = TOP_RANGE_DAYS[range];
+  return {
+    range,
+    from: new Date(now.getTime() - days * DAY_MS),
+    to: now,
+  };
+}
+
+function topReason(post) {
+  const likes = post.likes?.length || 0;
+  const comments = post.comments?.length || 0;
+  if (likes === 0 && comments === 0) return "New post";
+  const parts = [];
+  if (likes > 0) parts.push(`${likes} like${likes === 1 ? "" : "s"}`);
+  if (comments > 0) parts.push(`${comments} comment${comments === 1 ? "" : "s"}`);
+  return parts.join(" · ");
+}
+
+// Deterministic engagement score. Comments weigh more than likes because they
+// cost more effort; the date is only a tie-breaker, never a multiplier.
+function topScore(post) {
+  return (post.likes?.length || 0) * 2 + (post.comments?.length || 0) * 4;
+}
+
+// @route   GET api/feed/top
+// @desc    Most-engaged posts in a preset or custom time window
+// @access  Private
+router.get("/top", auth, async (req, res) => {
+  try {
+    const window = parseTopWindow(req.query.range, req.query.from, req.query.to);
+    if (window.error) {
+      return res.status(400).json({ msg: window.error });
+    }
+
+    const parsedLimit = Number.parseInt(req.query.limit, 10);
+    const limit = Number.isFinite(parsedLimit)
+      ? Math.min(50, Math.max(1, parsedLimit))
+      : 30;
+    const channel = text(req.query.channel, 60);
+
+    const user = await User.findById(req.user.id)
+      .select("name role isAdmin followings blockedUsers")
+      .lean();
+    if (!user) {
+      return res.status(401).json({ msg: "User not found" });
+    }
+
+    const dateFilter = window.from
+      ? { date: { $gte: window.from, ...(window.to ? { $lte: window.to } : {}) } }
+      : {};
+
+    const candidates = await Post.find({
+      group: null,
+      ...(channel ? { channel } : {}),
+      ...dateFilter,
+    })
+      .sort({ date: -1 })
+      .limit(500)
+      .lean();
+
+    const blocked = new Set((user.blockedUsers || []).map(String));
+    const visible = candidates.filter(
+      (post) => canViewPost(user, post) && !blocked.has(String(post.user))
+    );
+
+    const ranked = visible
+      .map((post) => ({ post, score: topScore(post) }))
+      .sort((a, b) => {
+        if (b.score !== a.score) return b.score - a.score;
+        return new Date(b.post.date || 0) - new Date(a.post.date || 0);
+      })
+      .slice(0, limit)
+      .map(({ post, score }) => ({
+        ...post,
+        feed: { score, reason: topReason(post), algorithm: "top-v1" },
+      }));
+
+    res.json({
+      posts: ranked,
+      meta: {
+        algorithm: "top-v1",
+        range: window.range,
+        from: window.from ? window.from.toISOString() : null,
+        to: window.to ? window.to.toISOString() : null,
+        channel: channel || null,
+        candidateCount: visible.length,
+        count: ranked.length,
+        generatedAt: new Date().toISOString(),
+      },
+    });
+  } catch (error) {
+    console.error("[feed] top failed:", error.message);
+    res.status(500).send("Server Error");
+  }
+});
+
 module.exports = router;

@@ -3,7 +3,6 @@ const router = express.Router();
 const auth = require("../../middleware/auth");
 const User = require("../../models/User");
 const {
-  getBriefing,
   summarizeThread,
   getJobFit,
   isConfigured,
@@ -24,21 +23,6 @@ const wantsRefresh = (req, user) =>
 // @desc    Whether a model key is configured (useful for demos/debugging)
 router.get("/status", auth, (req, res) => {
   res.json({ configured: isConfigured(), models: modelList() });
-});
-
-// @route   GET api/ai/insights/briefing
-// @desc    On-demand grounded community briefing for the signed-in member
-router.get("/briefing", auth, async (req, res) => {
-  try {
-    const user = await asUser(req);
-    if (!user) return res.status(404).json({ msg: "User not found" });
-
-    const briefing = await getBriefing(user, { force: wantsRefresh(req, user) });
-    res.json(briefing);
-  } catch (err) {
-    console.error("[ai] briefing:", err.message);
-    res.status(500).json({ msg: "Could not build the briefing" });
-  }
 });
 
 // @route   POST api/ai/insights/posts/:id/summary

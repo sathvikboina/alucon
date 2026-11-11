@@ -349,7 +349,7 @@ const Groups = () => {
             <p className="group-rail-empty">
               Every hub thread is a real community post, so likes, replies and
               the AI TL;DR keep working. Group threads never appear in the main
-              feed or the weekly briefing.
+              feed or unified search.
             </p>
           </div>
         </aside>

@@ -432,8 +432,8 @@ const GroupDetail = () => {
             <h2>Visibility</h2>
             <p>
               Threads in this hub are real community posts. They are excluded
-              from the main feed, the “For you” ranker and the weekly AI
-              briefing, and are readable only by members.
+              from the main feed, the “For you” ranker and unified search,
+              and are readable only by members.
             </p>
           </section>
         )}

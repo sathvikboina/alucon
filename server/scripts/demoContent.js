@@ -492,8 +492,8 @@ const posts = [
 <p>If you are considering a move abroad, budget energy for the non-technical transition. It is the part nobody puts in the offer letter.</p>`,
   },
   {
-    // Deliberately left unanswered (no comments) so the AI briefing has a real
-    // open question to point at instead of only resolved threads.
+    // Deliberately left unanswered (no comments) so the feed has a real open
+    // question instead of only resolved threads.
     author: "sathvik",
     heading: "Open question: how do you evaluate retrieval when the corpus changes weekly?",
     channel: "Research",

@@ -51,110 +51,6 @@ const formatEventDate = (value) => {
   };
 };
 
-// Rendered twice: once in the right rail on wide screens and once inside the
-// feed column when the rail is hidden. Nothing is generated until the member
-// asks for it, so the feed never spends a model call on page load.
-const BriefingCard = ({ briefing, loading, error, canForce, onGenerate }) => (
-  <section className="rail-card ai-briefing">
-    <div className="rail-header">
-      <h3>
-        <span className="ai-spark" aria-hidden="true">✦</span> AI briefing
-      </h3>
-      {briefing && canForce && (
-        <button
-          type="button"
-          className="rail-link ai-refresh"
-          onClick={onGenerate}
-          disabled={loading}
-        >
-          {loading ? "Reading…" : "Refresh"}
-        </button>
-      )}
-    </div>
-
-    {!briefing ? (
-      <div className="ai-briefing-empty">
-        <p className="rail-empty">
-          {loading
-            ? "Reading the community…"
-            : error ||
-              "A summary of what the community is discussing, generated only when you ask."}
-        </p>
-        {!loading && (
-          <button type="button" className="ai-generate" onClick={onGenerate}>
-            Generate briefing
-          </button>
-        )}
-      </div>
-    ) : (
-      <>
-        <p className="ai-headline">{briefing.headline}</p>
-        <p className="ai-summary">{briefing.summary}</p>
-
-        {briefing.focus && (
-          <Link to={briefing.focus.href} className="ai-focus">
-            <span className="ai-focus-kicker">Suggested next step</span>
-            <strong>{briefing.focus.text}</strong>
-          </Link>
-        )}
-
-        {briefing.themes?.length > 0 && (
-          <div className="ai-themes">
-            {briefing.themes.slice(0, 3).map((theme) => (
-              <span key={theme.name} className="ai-theme">
-                {theme.name}
-                <em>{theme.count}</em>
-              </span>
-            ))}
-          </div>
-        )}
-
-        {briefing.highlights?.length > 0 && (
-          <div className="ai-list">
-            <p className="rail-eyebrow">Worth reading</p>
-            {briefing.highlights.slice(0, 2).map((item) => (
-              <Link key={item.postId} to={item.href} className="ai-list-item">
-                <strong>{item.title}</strong>
-                {item.text && <small>{item.text}</small>}
-              </Link>
-            ))}
-          </div>
-        )}
-
-        {briefing.upcoming?.length > 0 && (
-          <div className="ai-list">
-            <p className="rail-eyebrow">Coming up</p>
-            {briefing.upcoming.slice(0, 2).map((event) => (
-              <Link key={event.eventId} to={event.href} className="ai-list-item">
-                <strong>{event.title}</strong>
-                <small>
-                  {new Date(event.when).toLocaleDateString("en-IN", {
-                    day: "numeric",
-                    month: "short",
-                  })}
-                </small>
-              </Link>
-            ))}
-          </div>
-        )}
-
-        <p className="ai-foot">
-          {briefing.model === "offline" ? "Offline briefing" : "AI-generated"} ·{" "}
-          {briefing.sources?.length || 0} sources
-        </p>
-      </>
-    )}
-  </section>
-);
-
-BriefingCard.propTypes = {
-  briefing: PropTypes.object,
-  loading: PropTypes.bool,
-  error: PropTypes.string,
-  canForce: PropTypes.bool,
-  onGenerate: PropTypes.func.isRequired,
-};
-
 const Posts = ({
   getPosts,
   closeSideNav,
@@ -179,6 +75,15 @@ const Posts = ({
   const [rankedPosts, setRankedPosts] = useState(null);
   const [feedMeta, setFeedMeta] = useState(null);
   const [feedStale, setFeedStale] = useState(false);
+  const [topPosts, setTopPosts] = useState(null);
+  const [topMeta, setTopMeta] = useState(null);
+  const [topLoading, setTopLoading] = useState(false);
+  const [topError, setTopError] = useState("");
+  const [topRange, setTopRange] = useState("week");
+  const [topFrom, setTopFrom] = useState("");
+  const [topTo, setTopTo] = useState("");
+  const [appliedFrom, setAppliedFrom] = useState("");
+  const [appliedTo, setAppliedTo] = useState("");
   const streamRef = useRef(null);
 
   const [composerOpen, setComposerOpen] = useState(false);
@@ -195,30 +100,6 @@ const Posts = ({
 
   const [people, setPeople] = useState([]);
   const [upcoming, setUpcoming] = useState([]);
-  const [briefing, setBriefing] = useState(null);
-  const [briefingLoading, setBriefingLoading] = useState(false);
-  const [briefingError, setBriefingError] = useState("");
-  // Cache bypass costs a model call; the server only honours it for admins.
-  const canForceBriefing = Boolean(authUser?.isAdmin);
-
-  const loadBriefing = async (force = false) => {
-    setBriefingLoading(true);
-    setBriefingError("");
-    try {
-      const { data } = await api.get(
-        `/api/ai/insights/briefing${force ? "?force=1" : ""}`
-      );
-      setBriefing(data);
-    } catch (err) {
-      // The briefing is additive; the feed remains usable without it.
-      setBriefingError(
-        err?.response?.data?.msg || "Could not generate a briefing right now."
-      );
-    } finally {
-      setBriefingLoading(false);
-    }
-  };
-
   const loadRankedFeed = useCallback(async () => {
     try {
       const { data } = await api.get("/api/feed/for-you", {
@@ -237,6 +118,55 @@ const Posts = ({
     if (activeQuery || channelName) return;
     loadRankedFeed();
   }, [activeQuery, channelName, loadRankedFeed]);
+
+  const loadTopFeed = useCallback(async () => {
+    if (topRange === "custom" && (!appliedFrom || !appliedTo)) {
+      setTopPosts([]);
+      setTopMeta(null);
+      setTopLoading(false);
+      return;
+    }
+    setTopLoading(true);
+    setTopError("");
+    try {
+      const params = { range: topRange, limit: 50 };
+      if (channelName) params.channel = channelName;
+      if (topRange === "custom") {
+        params.from = appliedFrom;
+        params.to = appliedTo;
+      }
+      const { data } = await api.get("/api/feed/top", { params });
+      setTopPosts(Array.isArray(data?.posts) ? data.posts : []);
+      setTopMeta(data?.meta || null);
+    } catch (err) {
+      setTopPosts([]);
+      setTopMeta(null);
+      setTopError(
+        err?.response?.data?.msg || "Could not load the top posts right now."
+      );
+    } finally {
+      setTopLoading(false);
+    }
+  }, [topRange, appliedFrom, appliedTo, channelName]);
+
+  useEffect(() => {
+    if (mode !== "top" || activeQuery) return;
+    loadTopFeed();
+  }, [mode, activeQuery, loadTopFeed]);
+
+  const handleApplyCustomRange = () => {
+    if (!topFrom || !topTo) {
+      setTopError("Choose both a start and an end date.");
+      return;
+    }
+    if (new Date(topFrom).getTime() > new Date(topTo).getTime()) {
+      setTopError("The start date must be before the end date.");
+      return;
+    }
+    setTopError("");
+    setAppliedFrom(topFrom);
+    setAppliedTo(topTo);
+  };
 
   useEffect(() => {
     const markStale = () => setFeedStale(true);
@@ -353,8 +283,18 @@ const Posts = ({
       });
     }
 
+    // Top is ranked server-side for the chosen window. Keep that order and its
+    // engagement reason, but refresh the card counts from redux after a like.
+    if (mode === "top" && !activeQuery && topPosts) {
+      const byId = new Map(list.map((post) => [String(post._id), post]));
+      filtered = topPosts.map((post) => {
+        const fresh = byId.get(String(post._id));
+        return fresh ? { ...fresh, feed: post.feed } : post;
+      });
+    }
+
     return filtered;
-  }, [posts, authUser, mode, activeQuery, channelName, rankedPosts]);
+  }, [posts, authUser, mode, activeQuery, channelName, rankedPosts, topPosts]);
 
   // Record impressions and dwell time for cards in the ranked feed.
   useEffect(() => {
@@ -514,8 +454,7 @@ const Posts = ({
             <Link className="rail-nav-item" to="/events">
               <i className="fas fa-calendar-alt" /> Events
             </Link>
-            {/* Ask IIITA (generic chat) is parked until the cited-search phase;
-                the grounded AI briefing lives in the right rail. */}
+            {/* Ask IIITA (generic chat) is parked until the cited-search phase. */}
           </nav>
 
           <button className="create-btn rail-compose" onClick={openComposer}>
@@ -678,23 +617,13 @@ const Posts = ({
             </form>
           </section>
 
-          {/* The right rail is hidden below 1180px; keep the briefing here. */}
-          <div className="feed-briefing-mobile">
-            <BriefingCard
-              briefing={briefing}
-              loading={briefingLoading}
-              error={briefingError}
-              canForce={canForceBriefing}
-              onGenerate={() => loadBriefing(canForceBriefing)}
-            />
-          </div>
-
           {/* ── Mode tabs ── */}
           <div className="feed-tabs-row">
             <div className="feed-tabs" role="tablist" aria-label="Feed mode">
               {[
                 ["for-you", "For you"],
                 ["latest", "Latest"],
+                ["top", "Top"],
                 ["following", "Following"],
               ].map(([value, label]) => (
                 <button
@@ -738,6 +667,65 @@ const Posts = ({
             )}
           </div>
 
+          {mode === "top" && !activeQuery && (
+            <div className="top-filter" aria-label="Top posts time filter">
+              <span className="top-filter-label">Time</span>
+              <select
+                value={topRange}
+                onChange={(e) => setTopRange(e.target.value)}
+                aria-label="Top posts time range"
+              >
+                <option value="today">Today</option>
+                <option value="week">This week</option>
+                <option value="month">This month</option>
+                <option value="year">This year</option>
+                <option value="all">All time</option>
+                <option value="custom">Custom…</option>
+              </select>
+
+              {topRange === "custom" && (
+                <>
+                  <input
+                    type="date"
+                    value={topFrom}
+                    max={topTo || undefined}
+                    onChange={(e) => setTopFrom(e.target.value)}
+                    aria-label="From date"
+                  />
+                  <span className="top-filter-label">to</span>
+                  <input
+                    type="date"
+                    value={topTo}
+                    min={topFrom || undefined}
+                    onChange={(e) => setTopTo(e.target.value)}
+                    aria-label="To date"
+                  />
+                  <button
+                    type="button"
+                    className="top-filter-apply"
+                    onClick={handleApplyCustomRange}
+                  >
+                    Apply
+                  </button>
+                </>
+              )}
+
+              <span className="top-filter-range">
+                {topLoading
+                  ? "Ranking…"
+                  : topMeta
+                  ? `${topMeta.count} post${topMeta.count === 1 ? "" : "s"} · ranked by engagement`
+                  : ""}
+              </span>
+
+              {topError && (
+                <p className="top-filter-error" role="alert">
+                  {topError}
+                </p>
+              )}
+            </div>
+          )}
+
           {/* ── Topic filter ── */}
           <div className="channel-strip">
             <Link
@@ -766,11 +754,19 @@ const Posts = ({
 
           {/* ── Stream ── */}
           <div className="feed-stream" ref={streamRef}>
-            {loading ? (
-              <p className="no-posts">Loading the community feed…</p>
+            {(mode === "top" && !activeQuery ? topLoading : loading) ? (
+              <p className="no-posts">
+                {mode === "top" && !activeQuery
+                  ? "Ranking the most engaged posts…"
+                  : "Loading the community feed…"}
+              </p>
             ) : visiblePosts.length === 0 ? (
               <p className="no-posts">
-                {mode === "following"
+                {mode === "top" && !activeQuery
+                  ? topRange === "custom" && (!appliedFrom || !appliedTo)
+                    ? "Choose a custom start and end date, then Apply."
+                    : "No posts in this time window yet."
+                  : mode === "following"
                   ? "No posts from people you follow yet."
                   : "Nothing here yet. Be the first to post."}
               </p>
@@ -780,7 +776,9 @@ const Posts = ({
                   key={pst._id}
                   post={pst}
                   showReason={
-                    mode === "for-you" && !activeQuery && !channelName
+                    !activeQuery &&
+                    (mode === "top" ||
+                      (mode === "for-you" && !channelName))
                   }
                 />
               ))
@@ -790,14 +788,6 @@ const Posts = ({
 
         {/* ── Right rail ── */}
         <aside className="feed-rail feed-rail-right">
-          <BriefingCard
-            briefing={briefing}
-            loading={briefingLoading}
-            error={briefingError}
-            canForce={canForceBriefing}
-            onGenerate={() => loadBriefing(canForceBriefing)}
-          />
-
           <section className="rail-card">
             <div className="rail-header">
               <h3>What's happening</h3>

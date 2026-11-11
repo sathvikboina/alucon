@@ -38,8 +38,8 @@ const PostSchema = new Schema({
 		required: true,
 	},
 	// Set when the post is a discussion inside a community group. Group posts
-	// are deliberately kept out of the main feed and AI briefing; readers reach
-	// them through /api/groups/:id/discussions.
+	// are deliberately kept out of the main feed and unified search; readers
+	// reach them through /api/groups/:id/discussions.
 	group: {
 		type: Schema.Types.ObjectId,
 		ref: "group",

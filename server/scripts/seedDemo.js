@@ -747,7 +747,7 @@ async function run() {
       continue;
     } else {
       // Demo timestamps are relative to "now". Refresh them on every seed so
-      // the feed and the 7-day AI briefing do not silently age out.
+      // the feed and the Top time filters do not silently age out.
       post.date = spec.date;
       await post.save();
       refreshedPosts += 1;

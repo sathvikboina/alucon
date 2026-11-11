@@ -56,10 +56,10 @@ The platform focuses on engagement, collaboration, and alumni tracking in one in
 
 The full inventory is the **Features** sheet in the workbook. The technically
 differentiated features — unified BGE search, explainable deterministic
-matching, the hybrid feed recommender, grounded on-demand briefing, private
-groups with AI isolation, atomic mentorship, real-time messenger and the
-security regression suite — are indexed in
-[`STANDOUT_FEATURES.md`](./STANDOUT_FEATURES.md), together with the lean
+matching, the hybrid feed recommender with Top time windows, the thread TL;DR,
+private groups with AI isolation, atomic mentorship, real-time messenger and
+the security regression suite — are indexed in
+[`STANDOUT_FEATURES.xlsx`](./STANDOUT_FEATURES.xlsx), together with the lean
 delivery path and effort estimates.
 
 ---
@@ -84,7 +84,7 @@ delivery path and effort estimates.
 - Socket.io
 - Cloudinary
 - Brevo (transactional email)
-- Gemini (on-demand briefing and thread TL;DR only; optional, with an offline fallback)
+- Gemini (thread TL;DR only; optional, with an offline fallback)
 - BGE-small-en-v1.5 via `@huggingface/transformers` (local embeddings for unified search)
 - Render
 
@@ -160,7 +160,7 @@ CLOUDINARY_CLOUD_NAME=your_cloud_name
 CLOUDINARY_API_KEY=your_key
 CLOUDINARY_API_SECRET=your_secret
 
-# On-demand AI (Gemini). Used only for the feed briefing and thread TL;DR.
+# Thread TL;DR (Gemini). Optional: without a key the app returns offline, extractive output.
 # Optional: without a key the app returns offline, extractive output.
 GEMINI_API_KEY=your_gemini_key
 GEMINI_MODEL=gemini-3-flash-preview
@@ -245,7 +245,7 @@ The script refuses to run when `NODE_ENV=production`, because every demo
 account shares a public password. It is idempotent (users matched by email,
 posts by heading, groups by name), so it is safe to re-run locally. Re-running also refreshes the demo timestamps
 (post and comment dates, event times and job deadlines), so the feed and the
-on-demand briefing stay relative to today. The seed also rebuilds the unified
+Top time windows stay relative to today. The seed also rebuilds the unified
 search index. It seeds 38 feed posts plus 9 group
 discussions and the comment threads behind them: a
 base set of announcements plus longer LinkedIn-style essays and short X-style
@@ -295,22 +295,22 @@ access mode:
 
 Group threads are ordinary `Post` documents with a `group` reference. Likes,
 comments and the AI TL;DR therefore work unchanged. They are deliberately
-excluded from `/api/posts/search`, `/api/feed/for-you` and the on-demand AI
-briefing (`group: null`), and post detail, likes, comments and thread summaries
-all re-check `canViewGroupPost`. The demo seed creates seven hubs, nine
-discussions and two replies.
+excluded from `/api/posts/search`, `/api/feed/for-you`, `/api/feed/top` and
+unified search (`group: null`), and post detail, likes, comments and thread
+summaries all re-check `canViewGroupPost`. The demo seed creates seven hubs,
+nine discussions and two replies.
 
 ---
 
 ## ✨ AI Features
 
 AI is attached to existing objects instead of living in a generic chat page.
-Generated text is on demand: the feed briefing and a thread TL;DR. Search, job
-fit and matching are deterministic and never call a model.
+The only generated text is the on-demand thread TL;DR. Search, the feed
+recommender, Top ranking, job fit and matching are deterministic and never call
+a model.
 
 | Feature | Where | Endpoint |
 |---|---|---|
-| **On-demand briefing** — themes, a suggested next step, posts worth reading, upcoming events, sources | Feed right rail; generated only when the member clicks **Generate briefing**, moved into the feed below 1180px | `GET /api/ai/insights/briefing` |
 | **Thread TL;DR** — 3 bullets, the open question, a suggested reply | Post card, when a thread has ≥2 replies and the post is at least 750 words | `POST /api/ai/insights/posts/:id/summary` |
 | **Job fit** — deterministic score, verdict, matched/missing skills, prep steps | Job board, student view | `GET /api/ai/insights/jobs/:id/fit` |
 | **Internship matches** — deterministic ranked roles, evidence, gaps, deadline context | `/internship-matches` | `GET /api/ai/insights/jobs/matches` |
@@ -318,13 +318,12 @@ fit and matching are deterministic and never call a model.
 
 Design guarantees:
 
-- **Grounded** — the model only sees posts the signed-in user may view; themes,
-  counts, events and people are computed in Mongo, not generated.
-- **Cited** — briefing responses include a `sources[]` array rendered as links.
-- **Cached** — only generated text lives in `ai_artifacts` (briefing 6 h, thread
-  TL;DR 24 h). Offline fallbacks are never cached. Cache bypass (`?force=1`) is
-  admin-only, so a normal account cannot trigger repeated model calls.
-- **Degrades safely** — with no `GEMINI_API_KEY`, briefing and TL;DR return a
+- **Grounded** — the model only sees a thread the signed-in user may view,
+  including the group membership check, and is told not to invent replies.
+- **Cached** — only generated text lives in `ai_artifacts` (thread TL;DR 24 h).
+  Offline fallbacks are never cached. Cache bypass (`?force=1`) is admin-only,
+  so a normal account cannot trigger repeated model calls.
+- **Degrades safely** — with no `GEMINI_API_KEY`, the TL;DR returns a
   deterministic extractive result labelled `offline` in the UI.
 - **Time-boxed** — a request may try several Gemini models, but the whole chain
   is capped at 20 seconds before falling back.
@@ -395,7 +394,7 @@ MONGO_URI=mongodb://127.0.0.1:27017/alumniconnect npm run seed
 npm run test:matching
 ```
 
-Set the key in `server/.env` and restart to enable generated text. Briefings are
+Set the key in `server/.env` and restart to enable generated text. The TL;DR is
 on demand, so `npm run ai:warm` pre-computes thread TL;DR artifacts only:
 
 ```bash
@@ -414,7 +413,9 @@ curl -H "x-auth-token: <token>" http://localhost:5001/api/ai/insights/status
 ## 🧭 Feed Recommendations
 
 The **For you** tab is ranked server-side from how the signed-in user actually
-uses the site. `Latest` and `Following` remain chronological.
+uses the site. `Latest` and `Following` remain chronological. The **Top** tab
+ranks by engagement inside a preset or custom time window and needs no model
+key.
 
 **What is recorded** (`feed_events`, 90-day TTL): impressions, clicks, dwell
 seconds, likes, comments, shares, follows, searches, topic views and
@@ -439,7 +440,16 @@ seconds, likes, comments, shares, follows, searches, topic views and
 This ranker uses no LLM, embedding model or vector database. (The separate
 unified search index does use BGE-small embeddings stored in MongoDB; the two
 systems are independent.) The API returns a `feed.reason` for each post,
-rendered as the `✦` chip on the card. The full technical record is in
+rendered as the `✦` chip on the card.
+
+**Top** calls `GET /api/feed/top` with `range=today|week|month|year|all|custom`,
+optional `from`/`to` dates and an optional `channel`. Posts are filtered for
+role visibility and blocked authors, then ranked by 2×likes + 4×comments with a
+date tie-break. Custom ranges are validated server-side and the end date is
+inclusive. The UI exposes the presets and a custom date pair with an Apply
+action, plus loading, empty and error states.
+
+The full technical record is in
 [`AlumniConnect_Changelog_and_Ideas.xlsx`](./AlumniConnect_Changelog_and_Ideas.xlsx)
 — the single source of truth, with the combined changelog, future ideas,
 phased schedule, stack/algorithms, features and verification. The older
@@ -450,6 +460,7 @@ Endpoints:
 | Method | Path | Purpose |
 |---|---|---|
 | `GET` | `/api/feed/for-you?limit=30&channel=` | Ranked posts + `meta` |
+| `GET` | `/api/feed/top?range=week&from=&to=&channel=&limit=30` | Engagement-ranked posts in a time window |
 | `POST` | `/api/feed/events` | Batch of 1–50 behavioural events |
 | `POST` | `/api/feed/reset` | Delete the user's feed history |
 
