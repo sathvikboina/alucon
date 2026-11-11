@@ -52,6 +52,18 @@ The platform focuses on engagement, collaboration, and alumni tracking in one in
 
 ---
 
+## ✨ Standout Features
+
+The full inventory is the **Features** sheet in the workbook. The technically
+differentiated features — unified BGE search, explainable deterministic
+matching, the hybrid feed recommender, grounded on-demand briefing, private
+groups with AI isolation, atomic mentorship, real-time messenger and the
+security regression suite — are indexed in
+[`STANDOUT_FEATURES.md`](./STANDOUT_FEATURES.md), together with the lean
+delivery path and effort estimates.
+
+---
+
 ## 🛠 Tech Stack
 
 ### Frontend
