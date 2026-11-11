@@ -9,6 +9,10 @@ const Notification = require("../../models/Notifications");
 const escapeHtml = require("../../middleware/utils/escapeHtml");
 const { enqueueBroadcast } = require("../../services/emailQueue");
 const { rateLimit } = require("../../middleware/rateLimit");
+const {
+  queueSearchRefresh,
+  removeSearchDocument,
+} = require("../../services/searchIndex");
 
 const Filter = require("bad-words");
 const { check, validationResult } = require("express-validator");
@@ -86,6 +90,7 @@ router.post("/create-job", auth, createJobLimiter, async (req, res) => {
     });
 
     const save = await data.save();
+    queueSearchRefresh("job", save._id);
 
     const ppp = new Notification({
       created_by_user: author.name,
@@ -146,6 +151,7 @@ router.post("/deletejob", auth, async (req, res) => {
     }
 
     await Job.deleteOne({ _id: req.body.jobID });
+    await removeSearchDocument("job", req.body.jobID);
     res.json({ invalid_msg: "valid" });
   } catch (e) {
     console.log(e);

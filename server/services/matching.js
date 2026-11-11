@@ -144,6 +144,36 @@ const normalize = (value) =>
     .replace(/\s+/g, " ")
     .trim();
 
+// Programme names arrive in several shapes: "B.Tech IT", "B.Tech (IT)",
+// "B.Tech. IT", "BTech IT" and "B.Tech (Information Technology)". Reduce them
+// to one canonical token so eligibility checks do not silently reject a match.
+const PROGRAM_ALIASES = {
+  "btech information technology": "btech it",
+  "btech information tech": "btech it",
+  "btech it": "btech it",
+  "btech computer science": "btech cse",
+  "btech computer science engineering": "btech cse",
+  "btech cse": "btech cse",
+  "mtech information technology": "mtech it",
+  "mtech it": "mtech it",
+};
+
+const normalizeProgram = (value) => {
+  let text = normalize(value)
+    .replace(/\./g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  text = text
+    .replace(/\bb tech\b/g, "btech")
+    .replace(/\bm tech\b/g, "mtech")
+    .replace(/\bb sc\b/g, "bsc")
+    .replace(/\bm sc\b/g, "msc")
+    .replace(/\bin\b/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  return PROGRAM_ALIASES[text] || text;
+};
+
 const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 const hasPhrase = (text, phrase) => {
@@ -278,8 +308,8 @@ function inferJobType(job) {
 function isEligible(user, job) {
   const programs = toArray(job?.eligible_programs);
   if (programs.length) {
-    const program = normalize(user?.program);
-    if (!program || !programs.some((item) => normalize(item) === program)) {
+    const program = normalizeProgram(user?.program);
+    if (!program || !programs.some((item) => normalizeProgram(item) === program)) {
       return { ok: false, reason: `Open to ${programs.join(", ")}` };
     }
   }
@@ -489,7 +519,7 @@ function matchInternship(user, job, poster) {
   };
 }
 
-function rankInternships(user, jobs, { posters = {}, limit = 12, type = "", mode = "" } = {}) {
+function rankInternships(user, jobs, { posters = {}, limit = Infinity, type = "", mode = "" } = {}) {
   const typeFilter = normalize(type);
   const modeFilter = normalize(mode);
 
@@ -546,8 +576,8 @@ function areaAlignment(user, person, goal) {
 }
 
 function sameBackground(user, person) {
-  const userProgram = normalize(user?.program);
-  const personProgram = normalize(person?.program);
+  const userProgram = normalizeProgram(user?.program);
+  const personProgram = normalizeProgram(person?.program);
   const userDepartment = normalize(user?.department);
   const personDepartment = normalize(person?.department);
   if (userProgram && personProgram && userProgram === personProgram) return true;
@@ -686,7 +716,7 @@ function matchMentor(user, person, { goal, requests }) {
   };
 }
 
-function rankMentors(user, people, { area = "", requests = [], limit = 8 } = {}) {
+function rankMentors(user, people, { area = "", requests = [], limit = Infinity } = {}) {
   const selectedGoal = MENTORSHIP_AREAS.includes(area)
     ? area
     : inferGoals(user).find((goal) => MENTORSHIP_AREAS.includes(goal)) || "Career";
@@ -722,7 +752,6 @@ async function getInternshipMatches(user, options = {}) {
 
   const ranked = rankInternships(user, jobs, {
     posters: posterById,
-    limit: 12,
     type,
     mode,
   });
@@ -776,7 +805,7 @@ async function getMentorMatches(user, options = {}) {
     .select("requestedBy requestedTo status")
     .lean();
 
-  const ranked = rankMentors(user, people, { area, requests, limit: 12 });
+  const ranked = rankMentors(user, people, { area, requests });
   const finalMatches = ranked.slice(0, boundedLimit);
   const payload = {
     matches: finalMatches,

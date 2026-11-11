@@ -8,6 +8,7 @@
     "server": "nodemon server.js",
     "seed": "node scripts/seedDemo.js",
     "search:index": "node scripts/buildSearchIndex.js",
+    "search:eval": "node scripts/evaluateSearch.js",
     "ai:warm": "node scripts/warmAI.js",
     "test": "node --test tests/*.test.js",
     "test:matching": "node --test tests/matching.test.js",

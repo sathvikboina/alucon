@@ -205,3 +205,28 @@ test("mentors must explicitly opt in", () => {
   const ranked = rankMentors(student, people, { area: "Career" });
   assert.equal(ranked.length, 0);
 });
+
+test("programme name variants match eligibility", () => {
+  const variants = [
+    "B.Tech (IT)",
+    "B.Tech. IT",
+    "BTech IT",
+    "B.Tech in IT",
+    "B.Tech (Information Technology)",
+  ];
+  for (const eligible of variants) {
+    const job = { ...jobs[0], _id: `job-${eligible}`, eligible_programs: [eligible] };
+    const ranked = rankInternships(student, [job], { posters });
+    assert.equal(ranked.length, 1, `${eligible} should match B.Tech IT`);
+  }
+});
+
+test("ranking keeps every match so totals are not capped at the display limit", () => {
+  const many = Array.from({ length: 15 }, (_, index) => ({
+    ...jobs[0],
+    _id: `job-${index}`,
+    Job_name: `Ranked Role ${index}`,
+  }));
+  const ranked = rankInternships(student, many, { posters });
+  assert.equal(ranked.length, 15);
+});

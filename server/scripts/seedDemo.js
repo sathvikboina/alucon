@@ -18,6 +18,7 @@ const Channel = require("../models/Channel");
 const Event = require("../models/Event");
 const Job = require("../models/Jobs");
 const Group = require("../models/Group");
+const Resource = require("../models/Resource");
 const MentorShipRequest = require("../models/MentorShipRequest");
 const Conversation = require("../models/Conversation");
 const Message = require("../models/Message");
@@ -164,6 +165,21 @@ const users = [
     skills: ["Java", "Distributed Systems", "Kafka", "SQL"],
     bio: "Software engineer focused on distributed systems and backend architecture.",
   },
+  {
+    key: "nikhil",
+    name: "Nikhil Sethi",
+    email: "nikhil.sethi@iiita.ac.in",
+    role: "alumni",
+    program: "B.Tech IT",
+    starting_year: "2013",
+    passing_year: "2017",
+    location: "Mountain View, USA",
+    designation: "Senior Software Engineer",
+    organisation: "Google",
+    working_area: "Search Infrastructure",
+    skills: ["Distributed Systems", "Search", "C++", "Information Retrieval"],
+    bio: "Fictional demo alumnus working on search infrastructure at Google. Included only so search demos can show a recognisable company.",
+  },
 ];
 
 const channels = ["General", "Research", "Career", "Events", "Achievements"];
@@ -273,6 +289,33 @@ const jobs = [
     location: "India",
     work_mode: "Hybrid",
     job_type: "Referral",
+  },
+];
+
+const resources = [
+  {
+    title: "Hidden Technical Debt in Machine Learning Systems",
+    topic: "Research",
+    fileUrl: "https://arxiv.org/pdf/2205.02302",
+    filePublicId: "seed-resource-ml-debt",
+  },
+  {
+    title: "C-Pack: BGE Text Embeddings",
+    topic: "Research",
+    fileUrl: "https://arxiv.org/pdf/2402.03216",
+    filePublicId: "seed-resource-bge",
+  },
+  {
+    title: "Attention Is All You Need",
+    topic: "Research",
+    fileUrl: "https://arxiv.org/pdf/1706.03762",
+    filePublicId: "seed-resource-transformer",
+  },
+  {
+    title: "BERT: Pre-training of Deep Bidirectional Transformers",
+    topic: "Research",
+    fileUrl: "https://arxiv.org/pdf/1810.04805",
+    filePublicId: "seed-resource-bert",
   },
 ];
 
@@ -705,6 +748,24 @@ async function run() {
     if (!existing) {
       await Channel.create({ name });
       createdChannels += 1;
+    }
+  }
+
+  let createdResources = 0;
+  for (const spec of resources) {
+    const existing = await Resource.findOne({ title: spec.title });
+    if (existing) {
+      existing.topic = spec.topic;
+      existing.fileUrl = spec.fileUrl;
+      existing.filePublicId = spec.filePublicId;
+      existing.uploadedBy = byKey.sathvik?._id;
+      await existing.save();
+    } else {
+      await Resource.create({
+        ...spec,
+        uploadedBy: byKey.sathvik?._id,
+      });
+      createdResources += 1;
     }
   }
 
@@ -1158,7 +1219,8 @@ async function run() {
   console.log(
     `Seeded: ${createdUsers} users, ${createdChannels} topics, ${createdPosts} posts, ` +
       `${createdComments} comments, ${createdLikes} likes, ${createdFollows} follows, ` +
-      `${createdEvents} events, ${createdJobs} jobs, ${createdGroups} groups, ` +
+      `${createdEvents} events, ${createdJobs} jobs, ${createdResources} resources, ` +
+      `${createdGroups} groups, ` +
       `${createdDiscussions} group discussions, ${createdGroupComments} group replies, ` +
       `${createdMentorship} mentorship requests, ${createdConversations} conversations, ` +
       `${createdMessages} messages, ${createdJoinRequests} join requests, ` +

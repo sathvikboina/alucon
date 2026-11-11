@@ -7,6 +7,10 @@ const { check, validationResult } = require("express-validator");
 const Profile = require("../../models/Profile");
 const User = require("../../models/User");
 const Post = require("../../models/Post");
+const {
+	queueSearchRefresh,
+	removeSearchDocumentsForUser,
+} = require("../../services/searchIndex");
 
 // @route    GET api/profile/me
 // @desc     get current user's profile
@@ -137,6 +141,7 @@ router.post(
 					{ $set: profileFields },   // $set is safer — only updates provided fields
 					{ new: true, runValidators: true }
 				).select("-password");
+				queueSearchRefresh("alumni", req.user.id);
 				return res.json(profile);
 			}
 			else {
@@ -184,6 +189,7 @@ router.delete("/", auth, async (req, res) => {
 	try {
 		await Post.deleteMany({ user: req.user.id });
 		await User.findOneAndRemove({ _id: req.user.id });
+		await removeSearchDocumentsForUser(req.user.id);
 		res.json({ msg: "User Deleted" });
 	} catch (error) {
 		console.error(error.message);

@@ -9,6 +9,10 @@ const Notification = require("../../models/Notifications");
 const escapeHtml = require("../../middleware/utils/escapeHtml");
 const { enqueueBroadcast } = require("../../services/emailQueue");
 const { rateLimit } = require("../../middleware/rateLimit");
+const {
+  queueSearchRefresh,
+  removeSearchDocument,
+} = require("../../services/searchIndex");
 
 const Filter = require("bad-words");
 const { check, validationResult } = require("express-validator");
@@ -79,6 +83,7 @@ router.post("/create-event", auth, createEventLimiter, async (req, res) => {
     });
 
     const save = await data.save();
+    queueSearchRefresh("event", save._id);
 
     // 👉 Notification (UNCHANGED)
     const ppp = new Notification({
@@ -133,6 +138,7 @@ router.post("/deleteevent", auth, async (req, res) => {
     }
 
     await Event.deleteOne({ _id: req.body.eventID });
+    await removeSearchDocument("event", req.body.eventID);
     res.json({ invalid_msg: "valid" });
   } catch (e) {
     console.log(e);

@@ -7,6 +7,10 @@ const { v2: cloudinary } = require("cloudinary");
 const CloudinaryStorageModule = require("multer-storage-cloudinary");
 const CloudinaryStorage =
   CloudinaryStorageModule.CloudinaryStorage || CloudinaryStorageModule;
+const {
+  queueSearchRefresh,
+  removeSearchDocument,
+} = require("../../services/searchIndex");
 
 
 // ================= CLOUDINARY CONFIG =================
@@ -83,6 +87,7 @@ router.post("/upload", auth, (req, res) => {
     });
 
     await resource.save();
+    queueSearchRefresh("resource", resource._id);
 
     res.json(resource);
 
@@ -156,6 +161,7 @@ router.delete("/:id", auth, async (req, res) => {
 
 
     await resource.deleteOne();
+    await removeSearchDocument("resource", req.params.id);
 
     res.json({
       msg: "Resource deleted successfully"

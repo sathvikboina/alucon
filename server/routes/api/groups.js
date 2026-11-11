@@ -7,6 +7,10 @@ const Group = require("../../models/Group");
 const Post = require("../../models/Post");
 const User = require("../../models/User");
 const { canViewPost } = require("../../utils/postVisibility");
+const {
+  queueSearchRefresh,
+  removeSearchDocument,
+} = require("../../services/searchIndex");
 
 const router = express.Router();
 const profanity = new Filter();
@@ -252,6 +256,7 @@ router.post("/", auth, async (req, res) => {
       owner: req.user.id,
       members: [{ user: req.user.id, role: "owner" }],
     });
+    queueSearchRefresh("group", group._id);
 
     const populated = await Group.findById(group._id)
       .populate("owner", "name avatar role")
@@ -376,6 +381,7 @@ router.post("/:id/join", auth, async (req, res) => {
         message: String(req.body.message || "").slice(0, 300),
       });
       await group.save();
+      queueSearchRefresh("group", group._id);
       return res.json({ status: "pending" });
     }
 
@@ -386,6 +392,7 @@ router.post("/:id/join", auth, async (req, res) => {
       );
     }
     await group.save();
+    queueSearchRefresh("group", group._id);
     res.json({ status: "joined" });
   } catch (error) {
     console.error("[groups] join failed:", error.message);
@@ -415,6 +422,7 @@ router.post("/:id/leave", auth, async (req, res) => {
       (member) => idOf(member.user) !== userId
     );
     await group.save();
+    queueSearchRefresh("group", group._id);
     res.json({ status: "left" });
   } catch (error) {
     console.error("[groups] leave failed:", error.message);
@@ -492,6 +500,7 @@ router.post("/:id/requests/:requestId", auth, async (req, res) => {
     }
 
     await group.save();
+    queueSearchRefresh("group", group._id);
     res.json({ status: request.status });
   } catch (error) {
     console.error("[groups] request decision failed:", error.message);
@@ -527,6 +536,7 @@ router.post("/:id/invite", auth, async (req, res) => {
 
     group.invites.push({ user: invitee._id, invitedBy: req.user.id });
     await group.save();
+    queueSearchRefresh("group", group._id);
 
     res.json({
       invited: {
@@ -633,6 +643,7 @@ router.delete("/:id", auth, async (req, res) => {
 
     await Post.deleteMany({ group: group._id });
     await group.deleteOne();
+    await removeSearchDocument("group", req.params.id);
     res.json({ deleted: true });
   } catch (error) {
     console.error("[groups] delete failed:", error.message);

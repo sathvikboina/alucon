@@ -11,6 +11,11 @@ require("dotenv").config();
 const sendEmail = require("../../middleware/utils/sendEmail");
 const jwt = require("jsonwebtoken");
 const { rateLimit } = require("../../middleware/rateLimit");
+const {
+	queueSearchRefresh,
+	removeSearchDocument,
+	removeSearchDocumentsForUser,
+} = require("../../services/searchIndex");
 
 // ✅ OTP STORE
 const otpStore = new Map();
@@ -458,6 +463,7 @@ router.delete("/", auth, async (req, res) => {
 	try {
 		await Post.deleteMany({ user: req.user.id });
 		await User.findOneAndRemove({ _id: req.user.id });
+		await removeSearchDocumentsForUser(req.user.id);
 		res.json({ msg: "User Deleted" });
 	} catch (error) {
 		console.error(error.message);
@@ -613,6 +619,7 @@ router.post("/:id/block", authHeadAdmin, async (req, res) => {
 		if (!updatedUser) {
 			return res.status(404).json({ msg: "User not found" });
 		}
+		await removeSearchDocument("alumni", req.params.id);
 		res.json(updatedUser);
 	} catch (err) {
 		console.error(err.message);
@@ -631,6 +638,7 @@ router.post("/:id/unblock", authHeadAdmin, async (req, res) => {
 			{ blocked: false },
 			{ new: true }
 		);
+		queueSearchRefresh("alumni", req.params.id);
 		res.json(updatedUser);
 	} catch (err) {
 		console.error(err.message);

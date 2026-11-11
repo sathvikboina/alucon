@@ -10,6 +10,7 @@ const {
   matchesAnyToken,
   isUpcomingEvent,
   lexicalScore,
+  belongsInIndex,
 } = require("../services/searchIndex");
 
 const jobDoc = {
@@ -88,4 +89,15 @@ test("past events are excluded from upcoming queries", () => {
     isUpcomingEvent({ meta: { startTime: "2026-11-05T13:30:00Z" } }, now),
     false
   );
+});
+
+test("incremental indexing keeps only eligible records", () => {
+  assert.equal(belongsInIndex("alumni", { blocked: false }), true);
+  assert.equal(belongsInIndex("alumni", { blocked: true }), false);
+  assert.equal(belongsInIndex("job", { is_active: true }), true);
+  assert.equal(belongsInIndex("job", { is_active: false }), false);
+  assert.equal(belongsInIndex("post", { group: null }), true);
+  assert.equal(belongsInIndex("post", { group: "group-id" }), false);
+  assert.equal(belongsInIndex("group", {}), true);
+  assert.equal(belongsInIndex("event", null), false);
 });

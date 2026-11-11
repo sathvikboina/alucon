@@ -578,12 +578,132 @@ async function getIndexStats() {
     { $group: { _id: "$sourceType", count: { $sum: 1 } } },
   ]);
   for (const row of rows) byType[row._id] = row.count;
+  const latest = await SearchDocument.findOne()
+    .sort({ indexedAt: -1 })
+    .select("indexedAt")
+    .lean();
   return {
     indexed: rows.reduce((total, row) => total + row.count, 0),
     byType,
     model: MODEL_NAME,
+    lastIndexedAt: latest?.indexedAt || null,
   };
 }
+
+const SOURCE_MODELS = {
+  job: Job,
+  alumni: User,
+  post: Post,
+  resource: Resource,
+  event: Event,
+  group: Group,
+};
+
+const DOCUMENT_BUILDERS = {
+  job: jobDocument,
+  alumni: userDocument,
+  post: postDocument,
+  resource: resourceDocument,
+  event: eventDocument,
+  group: groupDocument,
+};
+
+// Whether a source record still belongs in the public index. Eligibility can
+// change without a delete (blocked member, archived job, group discussion).
+function belongsInIndex(sourceType, record) {
+  if (!record) return false;
+  if (sourceType === "alumni") return record.blocked !== true;
+  if (sourceType === "job") return record.is_active !== false;
+  if (sourceType === "post") return !record.group;
+  return true;
+}
+
+async function removeSearchDocument(sourceType, sourceId) {
+  if (!sourceType || !sourceId) return { removed: false };
+  const result = await SearchDocument.deleteOne({
+    sourceType,
+    sourceId: String(sourceId),
+  });
+  return { removed: result.deletedCount > 0 };
+}
+
+// Index or refresh one record immediately. Used by the on-demand admin
+// reindex route and by queueSearchRefresh after normal writes.
+async function refreshSearchDocument(sourceType, sourceId) {
+  const Model = SOURCE_MODELS[sourceType];
+  const build = DOCUMENT_BUILDERS[sourceType];
+  if (!Model || !build || !sourceId) {
+    return { indexed: false, reason: "unknown source" };
+  }
+
+  let query = Model.findById(sourceId);
+  if (sourceType === "alumni") query = query.select("-password");
+  const record = await query.lean();
+  if (!belongsInIndex(sourceType, record)) {
+    await removeSearchDocument(sourceType, sourceId);
+    return { indexed: false, removed: true };
+  }
+
+  const doc = build(record);
+  let embedding = [];
+  let semantic = false;
+  try {
+    const [vector] = await embedTexts([
+      `${doc.title}. ${doc.subtitle}. ${doc.body}`,
+    ]);
+    embedding = vector || [];
+    semantic = true;
+  } catch (err) {
+    console.warn(
+      "[search] incremental embedding failed; indexing text only:",
+      err.message
+    );
+  }
+
+  await SearchDocument.updateOne(
+    { sourceType, sourceId: doc.sourceId },
+    {
+      $set: {
+        ...doc,
+        embedding,
+        embeddingModel: semantic ? MODEL_NAME : "",
+        indexedAt: new Date(),
+      },
+    },
+    { upsert: true }
+  );
+
+  return {
+    indexed: true,
+    semantic,
+    type: sourceType,
+    id: doc.sourceId,
+  };
+}
+
+// Fire-and-forget refresh so a create/update response never waits on the
+// embedding model. Deletes use removeSearchDocument directly and are awaited.
+function queueSearchRefresh(sourceType, sourceId) {
+  if (!sourceType || !sourceId) return;
+  setImmediate(() => {
+    refreshSearchDocument(sourceType, sourceId).catch((err) => {
+      console.warn("[search] background index refresh failed:", err.message);
+    });
+  });
+}
+
+// A member delete also removes their posts, so drop both kinds of document.
+async function removeSearchDocumentsForUser(userId) {
+  if (!userId) return { removed: 0 };
+  const result = await SearchDocument.deleteMany({
+    $or: [
+      { sourceType: "alumni", sourceId: String(userId) },
+      { sourceType: "post", "meta.authorId": String(userId) },
+    ],
+  });
+  return { removed: result.deletedCount || 0 };
+}
+
 
 async function searchAll(user, rawQuery, { limit = 6, type = "" } = {}) {
   const query = String(rawQuery || "").trim().slice(0, 240);
@@ -712,6 +832,11 @@ module.exports = {
   rebuildSearchIndex,
   ensureSearchIndex,
   getIndexStats,
+  refreshSearchDocument,
+  removeSearchDocument,
+  removeSearchDocumentsForUser,
+  queueSearchRefresh,
+  belongsInIndex,
   detectIntent,
   tokenize,
   contentTokens,

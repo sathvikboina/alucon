@@ -348,17 +348,26 @@ first page after login; search is a separate destination.
 - **Access** — post visibility and private-group membership are enforced before
   ranking. Messenger messages, notifications, mentorship requests, group
   threads and other private records are intentionally excluded.
-- **Operations** — `npm run search:index` rebuilds the index, startup warms it
-  when empty, the seed rebuilds it, and `GET /api/search/status` reports size
-  and model. Indexing is **not yet incremental**: content created after startup
-  becomes searchable after a rebuild, restart or seed.
+- **Operations** — `npm run search:index` rebuilds the whole index, startup
+  warms it when empty, the seed rebuilds it, and `GET /api/search/status`
+  reports size, model and `lastIndexedAt`. Indexing is **incremental**: post,
+  job, member, resource, event and group creates/updates refresh their own
+  document in the background, deletes remove it, and block/archive changes drop
+  ineligible records. Admins can force a full rebuild with
+  `POST /api/search/reindex`.
+- **Evaluation** — `npm run search:eval` runs a 25-query fixture and reports
+  Recall@10, MRR and NDCG@10 (currently 100% / 0.960 / 0.970). Add
+  `-- --rebuild` to evaluate a fresh index; the script exits non-zero below
+  `SEARCH_MIN_RECALL` (default 0.9).
 
 ### Internship & mentor matching
 
 Both matching flows use the same deterministic, explainable pipeline:
 
 1. **Hard constraints** — deadline, active role, eligible program/graduation
-   year, mentor availability and capacity.
+   year, mentor availability and capacity. Programme names are canonicalised,
+   so `B.Tech IT`, `B.Tech (IT)` and `B.Tech (Information Technology)` all mean
+   the same programme.
 2. **Skill overlap** — normalized skills with aliases (`ML` ↔
    `Machine Learning`, `Node` ↔ `Node.js`) plus description/profile token
    overlap.
@@ -538,7 +547,7 @@ Project deployed on **Render**
 
 ## 🔮 Future Scope
 
-- Incremental search indexing and broader public-content coverage
+- Broader public-content search coverage (stories, achievements, doubts)
 - BGE-powered semantic internship and mentor matching
 - Provider-agnostic on-demand AI (Qwen or Gemini, with offline fallback)
 - Advanced Analytics

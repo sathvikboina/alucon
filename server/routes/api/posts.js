@@ -10,6 +10,10 @@ var mongoose = require("mongoose");
 const Channel = require("../../models/Channel");
 const { canViewPost } = require("../../utils/postVisibility");
 const { canViewGroupPost } = require("../../utils/groupAccess");
+const {
+    queueSearchRefresh,
+    removeSearchDocument,
+} = require("../../services/searchIndex");
 
 // Group-scoped posts need a database lookup (membership lives on the group),
 // so every route that touches one loads the viewer once and asks the shared
@@ -99,6 +103,7 @@ router.post(
 
             const savedPost = await post.save();
 
+            queueSearchRefresh("post", savedPost._id);
             console.log("Post Created");
             res.json(savedPost);
 
@@ -207,6 +212,7 @@ router.delete("/:id", auth, async (req, res) => {
     }
 
     await post.deleteOne();
+    await removeSearchDocument("post", req.params.id);
 
     res.json({ msg: "Post removed" });
   } catch (err) {

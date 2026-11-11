@@ -11,6 +11,7 @@ const sendEmail = require("../../middleware/utils/sendEmail");
 const escapeHtml = require("../../middleware/utils/escapeHtml");
 const Channel = require("../../models/Channel");
 const bcrypt = require("bcryptjs");
+const { queueSearchRefresh } = require("../../services/searchIndex");
 
 // get join requests from db
 router.get("/join", authAdmin, async (req, res) => {
@@ -226,6 +227,7 @@ const user = new User(userData);
 	
 
     await user.save();
+    queueSearchRefresh("alumni", user._id);
     console.log("✅ User saved:", user.email);
 
     // 4️⃣ SEND EMAIL (FIXED)

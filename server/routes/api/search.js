@@ -1,9 +1,14 @@
 const express = require("express");
 const router = express.Router();
 const auth = require("../../middleware/auth");
+const authAdmin = require("../../middleware/authAdmin");
 const { rateLimit } = require("../../middleware/rateLimit");
 const User = require("../../models/User");
-const { searchAll, getIndexStats } = require("../../services/searchIndex");
+const {
+  searchAll,
+  getIndexStats,
+  rebuildSearchIndex,
+} = require("../../services/searchIndex");
 
 const searchLimiter = rateLimit({
   windowMs: 60 * 1000,
@@ -42,13 +47,30 @@ router.get("/", auth, searchLimiter, async (req, res) => {
 });
 
 // @route   GET api/search/status
-// @desc    Index size and embedding model, useful for demos and debugging
+// @desc    Index size, embedding model and last indexed time
 router.get("/status", auth, async (req, res) => {
   try {
     res.json(await getIndexStats());
   } catch (err) {
     console.error("[search] status:", err.message);
     res.status(500).json({ msg: "Could not read the search index" });
+  }
+});
+
+// @route   POST api/search/reindex
+// @desc    Rebuild the whole search index (admin only)
+router.post("/reindex", authAdmin, async (req, res) => {
+  try {
+    const started = Date.now();
+    const stats = await rebuildSearchIndex();
+    res.json({
+      ...stats,
+      lastIndexedAt: new Date(),
+      durationMs: Date.now() - started,
+    });
+  } catch (err) {
+    console.error("[search] reindex:", err.message);
+    res.status(500).json({ msg: "Could not rebuild the search index" });
   }
 });
 
