@@ -6,9 +6,7 @@ import {
 	CLEAR_USER,
 	UPDATE_USER,
 	ACCOUNT_DELETED,
-	GET_USERS,
 	GET_REPOS,
-	GET_USERS_ERROR,
 	MAKE_ADMIN,
 	REMOVE_ADMIN,
 	MAKE_ADMIN_ERROR,
@@ -150,20 +148,6 @@ export const getUserById = (userId) => async (dispatch) => {
 	}
 };
 
-export const getUsers = (searchTerm) => async (dispatch) => {
-	dispatch({ type: CLEAR_USER });
-	try {
-		if (searchTerm === "") searchTerm = "all";
-		const res = await api.get(`/api/users/search/${searchTerm}`);
-		dispatch({ type: GET_USERS, payload: res.data });
-	} catch (err) {
-		dispatch({
-			type: GET_USERS_ERROR,
-			payload: { msg: err.response.statusText, status: err.response.status },
-		});
-	}
-};
-
 export const getGithubRepos = (username) => async (dispatch) => {
 	try {
 		const res = await api.get(`/api/users/github/${username}`);
@@ -243,14 +227,5 @@ export const unFollowUser = (user_id) => async (dispatch) => {
 	} catch (err) {
 		console.log(err);
 		return false;
-	}
-};
-
-export const getUsersByType = (user_type) => async (dispatch) => {
-	try {
-		const res = await api.get(`/api/users/type/${user_type}`);
-		return res.data;
-	} catch (err) {
-		console.log(err);
 	}
 };

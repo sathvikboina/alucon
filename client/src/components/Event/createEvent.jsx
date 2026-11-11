@@ -1,4 +1,4 @@
-import { Spinner } from "react-bootstrap";
+import { Loader2 } from "lucide-react";
 import axios from "axios";
 import { useState } from "react";
 
@@ -138,7 +138,7 @@ const CreateEvent = () => {
           <button type="submit" style={{ ...s.btnSubmit, ...(loading ? s.btnDisabled : {}) }} disabled={loading}>
             {loading ? (
               <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <Spinner animation="border" size="sm" /> Creating…
+                <Loader2 size={16} className="spin" /> Creating…
               </span>
             ) : "Submit"}
           </button>

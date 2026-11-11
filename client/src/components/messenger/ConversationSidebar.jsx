@@ -1,5 +1,5 @@
 // src/components/messenger/ConversationSidebar.jsx
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Link, useHistory, useLocation } from "react-router-dom";
 import { connect } from "react-redux";

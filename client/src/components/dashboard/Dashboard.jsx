@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import PropTypes from "prop-types";
 import { connect } from "react-redux";
 import Spinner from "../layouts/Spinner.jsx";
@@ -30,14 +29,6 @@ const Modal = ({ title, onClose, children }) => (
 const inputStyle = { width: "100%", padding: "9px 12px", border: "1px solid #c7d9ee", borderRadius: "7px", fontSize: "0.92rem", boxSizing: "border-box", fontFamily: "inherit", marginTop: "5px", outline: "none" };
 const labelStyle = { fontSize: "0.85rem", color: "#555", display: "block", marginBottom: "14px", fontWeight: 500 };
 const submitBtn = { backgroundColor: "#1a5fa8", color: "#fff", border: "none", padding: "10px 28px", borderRadius: "7px", fontSize: "0.92rem", cursor: "pointer", fontFamily: "inherit", fontWeight: 500, marginTop: "4px" };
-
-// ── Stat pill ────────────────────────────────────────────────────
-const StatPill = ({ count, label }) => (
-  <div style={{ textAlign: "center", padding: "10px 20px", borderRight: "1px solid #e8f0fb" }}>
-    <div style={{ fontSize: "1.3rem", fontWeight: 600, color: "#1a5fa8" }}>{count}</div>
-    <div style={{ fontSize: "0.78rem", color: "#888", textTransform: "uppercase", letterSpacing: "0.06em" }}>{label}</div>
-  </div>
-);
 
 // ── Section heading ──────────────────────────────────────────────
 const SectionHeading = ({ label }) => (

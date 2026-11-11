@@ -206,16 +206,6 @@
   /* nothing special needed — just a passthrough */
 }
 
-.feed-content {
-  /* nothing */
-}
-
-.posts-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
-  gap: 20px;
-}
-
 .no-posts {
   grid-column: 1 / -1;
   text-align: center;
@@ -244,10 +234,6 @@
 
 /* Large mobile — still 2 cols if room */
 @media (max-width: 680px) {
-  .posts-grid {
-    grid-template-columns: 1fr;   /* single column on mobile */
-  }
-
   .feed-hero {
     flex-direction: column;
     align-items: flex-start;
@@ -351,8 +337,6 @@
 
 .rail-nav-item.active { background: var(--navy-800); color: #fff; }
 .rail-nav-item.active i { color: #cfe0f5; }
-
-.rail-compose { width: 100%; margin-top: 2px; }
 
 .rail-eyebrow {
   font-size: 0.68rem;
@@ -489,15 +473,6 @@
 .composer-hint { font-size: 0.75rem; color: var(--grey-400); }
 .composer-buttons { display: flex; align-items: center; gap: 12px; margin-left: auto; }
 
-.composer-link {
-  font-size: 0.8rem;
-  color: var(--navy-500);
-  font-weight: 600;
-  text-decoration: none;
-}
-
-.composer-link:hover { text-decoration: underline; }
-
 /* ── Feed mode tabs ── */
 .feed-tabs {
   display: flex;
@@ -608,20 +583,6 @@
 .rail-link { font-size: 0.76rem; color: var(--navy-500); font-weight: 600; text-decoration: none; }
 .rail-link:hover { text-decoration: underline; }
 .rail-empty { font-size: 0.8rem; color: var(--grey-400); margin: 0; }
-
-.trend-row {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  padding: 8px 0;
-  border-top: 1px solid var(--grey-100);
-  text-decoration: none;
-}
-
-.trend-row:first-of-type { border-top: none; }
-.trend-kicker { font-size: 0.7rem; color: var(--grey-400); }
-.trend-row strong { font-size: 0.85rem; color: var(--navy-800); }
-.trend-row:hover strong { color: var(--navy-500); text-decoration: none; }
 
 .person-row,
 .event-row {

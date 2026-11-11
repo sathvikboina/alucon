@@ -13,9 +13,6 @@ const getAvatarColor = (name = "") => {
   return AVATAR_COLORS[index];
 };
 
-const getInitials = (name = "") =>
-  name.split(" ").slice(0, 2).map((n) => n[0]).join("").toUpperCase();
-
 const BuildingIcon = () => (
   <svg className="detail-icon" viewBox="0 0 16 16" fill="none">
     <rect x="1" y="4" width="14" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.2" />
@@ -70,7 +67,6 @@ const AlumniDirectory = ({
   }, [filters]);
 
   const handleChange  = (e) => setFilters({ ...filters, [e.target.name]: e.target.value });
-  const handleKeyDown = (e) => {}; // No longer needed, search happens as you type
 
   const toggleFollow = async (userId) => {
     if (loadingIds.has(userId)) return;

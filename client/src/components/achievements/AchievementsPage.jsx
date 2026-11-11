@@ -3,7 +3,6 @@ import { connect } from "react-redux";
 import PropTypes from "prop-types";
 import AchievementCard from "./AchievementCard";
 import AchievementFilter from "./AchievementFilter";
-import FeaturedAchievements from "./FeaturedAchievements";
 import SubmitAchievementForm from "./SubmitAchievementForm";
 import { Trophy, Loader2, AlertCircle, Plus, X, Building2, Calendar, Tag, Star } from "lucide-react";
 import api from "../../utils/api";

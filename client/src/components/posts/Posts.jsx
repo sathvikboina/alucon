@@ -93,7 +93,6 @@ const Posts = ({
   const [composerChannel, setComposerChannel] = useState("");
   const [composerError, setComposerError] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const composerRef = useRef(null);
 
   const [open, setOpen] = useState(false);
   const [newChannelName, setChannelName] = useState("");
@@ -350,12 +349,6 @@ const Posts = ({
     loadRankedFeed();
   };
 
-  const openComposer = () => {
-    setComposerOpen(true);
-    composerRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-    composerRef.current?.querySelector("textarea")?.focus();
-  };
-
   const handleCompose = async (e) => {
     e.preventDefault();
     if (submitting) return;
@@ -457,10 +450,6 @@ const Posts = ({
             {/* Ask IIITA (generic chat) is parked until the cited-search phase. */}
           </nav>
 
-          <button className="create-btn rail-compose" onClick={openComposer}>
-            <i className="fas fa-plus" /> Create post
-          </button>
-
           {channelCounts.length > 0 && (
             <div className="rail-section">
               <p className="rail-eyebrow">Active topics</p>
@@ -521,9 +510,6 @@ const Posts = ({
                   + Channel
                 </button>
               )}
-              <button type="button" className="create-btn" onClick={openComposer}>
-                New Post
-              </button>
               <form className="search-box" onSubmit={handleSearch}>
                 <input
                   type="text"
@@ -537,7 +523,7 @@ const Posts = ({
           </div>
 
           {/* ── Composer ── */}
-          <section className="composer-card" ref={composerRef}>
+          <section className="composer-card">
             <div className="composer-avatar" aria-hidden="true">
               {initialsOf(authUser?.name)}
             </div>
@@ -788,29 +774,6 @@ const Posts = ({
 
         {/* ── Right rail ── */}
         <aside className="feed-rail feed-rail-right">
-          <section className="rail-card">
-            <div className="rail-header">
-              <h3>What's happening</h3>
-              <Link to="/feed" className="rail-link">
-                View all
-              </Link>
-            </div>
-            {channelCounts.length === 0 ? (
-              <p className="rail-empty">Topics will appear as the community posts.</p>
-            ) : (
-              channelCounts.map(([name, count]) => (
-                <Link
-                  key={name}
-                  to={`/feed/topic/${encodeURIComponent(name)}?search=`}
-                  className="trend-row"
-                >
-                  <span className="trend-kicker">Topic · {count} posts</span>
-                  <strong>{name}</strong>
-                </Link>
-              ))
-            )}
-          </section>
-
           <section className="rail-card">
             <div className="rail-header">
               <h3>Who to connect with</h3>

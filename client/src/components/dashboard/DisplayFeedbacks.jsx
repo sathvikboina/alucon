@@ -1,6 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
-import Icon from "awesome-react-icons";
+import { Trash2 } from "lucide-react";
 import {
 	deleteAllFeedbacks,
 } from "../../actions/extras";
@@ -27,7 +27,7 @@ const DisplayFeedbacks = ({ feedbacks }) => {
     onClick={() => deleteAll(deleteAllFeedbacks)}
   >
     Delete All
-    <Icon name="trash" />
+    <Trash2 size={16} />
   </button>
 </div>
 				)}

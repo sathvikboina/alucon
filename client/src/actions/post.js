@@ -13,12 +13,6 @@ import {
 	ADD_COMMENT,
 } from "./types";
 import { setAlert } from "./alert";
-const config = {
-  headers: {
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${localStorage.getItem("token")}`,
-  },
-};
 // get posts
 export const getPosts = (query, channel_name) => async (dispatch) => {
 	try {

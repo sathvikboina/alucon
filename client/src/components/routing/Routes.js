@@ -8,7 +8,6 @@ import PrivateRoute from "../routing/PrivateRoute";
 import AdminRoute from "../routing/AdminRoute";
 import AlumniRoute from "../routing/AlumniRoute";
 import Login from "../auth/Login.jsx";
-import CreateProfile from "../profile-form/CreateProfile";
 import EditProfile from "../profile-form/EditProfile";
 import AddExperience from "../profile-form/AddExperience";
 import AddEducation from "../profile-form/AddEducation";
@@ -20,7 +19,6 @@ import Posts from "../posts/Posts";
 import PostDisplay from "../posts/PostDisplay";
 import Groups from "../groups/Groups";
 import GroupDetail from "../groups/GroupDetail";
-import Profiles from "../profiles/Profiles";
 import Help from "../layouts/Help";
 import Messenger from "../messenger/Messenger";
 
@@ -59,7 +57,6 @@ const Routes = () => {
 				<Route exact path="/login" component={Login} />
 
 				<PrivateRoute exact path="/profile/:id" component={Profile} />
-				<PrivateRoute exact path="/profiles" component={Profiles} />
 
 				<Route exact path="/jobs" component={Job} />
 				<PrivateRoute exact path="/internship-matches" component={InternshipMatches} />

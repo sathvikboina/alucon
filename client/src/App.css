@@ -8,8 +8,7 @@ body {
 /* ================= BUTTON BASE ================= */
 /* The single app-wide base button. Component stylesheets only extend it
    (.btn-danger, .btn-secondary, .btn-simple) and the landing page overrides
-   it with `.landing .btn`. It used to live in UserCard.css, which meant a
-   profile-card stylesheet owned the base styling for every button in the app. */
+   it with `.landing .btn`. */
 .btn {
   border-radius: 6px;
   padding: 8px 14px;
@@ -124,3 +123,7 @@ body {
     padding: 20px;
   }
 }
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.spin { animation: spin 0.8s linear infinite; }

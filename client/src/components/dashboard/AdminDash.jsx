@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { connect } from "react-redux";
 import { getJoinRequests } from "../../actions/request";
 import { getFeedbacks } from "../../actions/extras";
-import { Link, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 import JoinRequestCard from "../requests/JoinRequestCard";
 import Spinner from "../layouts/Spinner";
 import Settings from "../layouts/Settings";
@@ -32,7 +32,6 @@ const AdminDash = ({
 }) => {
   const [activeTab, setActiveTab] = useState("all");
   const [pendingAchievementsCount, setPendingAchievementsCount] = useState(0);
-  const location = useLocation();
 
   useEffect(() => {
     getJoinRequests();

@@ -34,18 +34,6 @@ const Login = ({ login, isAuthenticated, closeSideNav }) => {
 		setPasswordType(passwordType === "password" ? "text" : "password");
 	};
 
-	// LinkedIn Login Handler
-	const handleLinkedInLogin = () => {
-		  const params = new URLSearchParams({
-			  response_type:'code',
-			  client_id:process.env.VITE_LINKEDIN_CLIENT_ID,
-			  redirect_uri:'process.env.REACT_APP_BACKEND_URL/api/linkedin/callback',
-			  scope:'openid email profile'
-		  }) // Redirect to backend
-
-		  window.location.href = `https://www.linkedin.com/oauth/v2/authorization?${params}`
-	};
-
 	return (
 		<div className="form-container">
 			<h1>Login</h1>

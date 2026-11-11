@@ -143,20 +143,18 @@ const MAX_VISIBLE = 4;
 
 export default function MediaGallery() {
   const [media,    setMedia]    = useState([]);
-  const [showAll,  setShowAll]  = useState(false);
   const [selected, setSelected] = useState(null);
 
   useEffect(() => {
     axios.get('/api/showcase/media').then(r => setMedia(r.data));
   }, []);
 
-  const visible = showAll ? media : media.slice(0, MAX_VISIBLE);
-  const hasMore = media.length > MAX_VISIBLE;
+  const visible = media.slice(0, MAX_VISIBLE);
 
   const openModal = (item) => setSelected(item);
 
   const navigate = (dir) => {
-    const visibleList = showAll ? media : media.slice(0, MAX_VISIBLE);
+    const visibleList = media.slice(0, MAX_VISIBLE);
     const idx = visibleList.findIndex(m => m._id === selected._id);
     const next = (idx + dir + visibleList.length) % visibleList.length;
     setSelected(visibleList[next]);
@@ -187,18 +185,13 @@ export default function MediaGallery() {
       </div>
 
       <div className="sc-media-footer">
-        {/* {hasMore && (
-          <button className="sc-view-all-btn" onClick={() => setShowAll(v => !v)}>
-            {showAll ? 'Show Less ↑' : `View All ${media.length} →`}
-          </button>
-        )} */}
         <Link to="/gallery" className="sc-view-all">Full Gallery →</Link>
       </div>
 
       {selected && (
         <MediaModal
           item={selected}
-          all={showAll ? media : media.slice(0, MAX_VISIBLE)}
+          all={media}
           onClose={() => setSelected(null)}
           onNav={navigate}
         />

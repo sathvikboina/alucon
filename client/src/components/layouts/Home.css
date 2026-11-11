@@ -275,8 +275,7 @@
   gap: 12px;
   animation: fadeUp 0.8s 1.3s cubic-bezier(0.22,1,0.36,1) both;
 }
-/* Scoped to the landing page: `.btn` is also defined globally by other
-   stylesheets (e.g. UserCard.css), which used to change its size here. */
+/* Scoped to the landing page so it can override the global `.btn`. */
 .landing .btn {
   display: inline-flex;
   align-items: center;
