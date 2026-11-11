@@ -22,6 +22,8 @@ const Resource = require("../models/Resource");
 const MentorShipRequest = require("../models/MentorShipRequest");
 const Door = require("../models/Door");
 const DoorRequest = require("../models/DoorRequest");
+const Company = require("../models/Company");
+const { slugifyCompany } = require("../services/companies");
 const Conversation = require("../models/Conversation");
 const Message = require("../models/Message");
 const JoinRequest = require("../models/JoinRequest");
@@ -92,6 +94,19 @@ const users = [
     working_area: "Distributed Systems",
     skills: ["Go", "Python", "Distributed Systems", "Databases"],
     bio: "Backend engineer working on distributed systems and platform reliability.",
+    // Used only to demonstrate the company hub's past-alumni section. It is
+    // written only when the account has no experience entries yet.
+    pastExperience: [
+      {
+        title: "ML Engineer",
+        company: "Nimbus Labs",
+        location: "Bengaluru, India",
+        from: new Date("2020-07-01"),
+        to: new Date("2022-06-30"),
+        current: false,
+        description: "Demo history (fictional): early production ML work.",
+      },
+    ],
   },
   {
     key: "college",
@@ -291,6 +306,65 @@ const jobs = [
     location: "India",
     work_mode: "Hybrid",
     job_type: "Referral",
+  },
+];
+
+// Company hubs are additive records. Aliases let existing free-text
+// organisations resolve to one hub without rewriting a single profile or job.
+const demoCompanies = [
+  {
+    name: "Nimbus Labs",
+    aliases: ["Nimbus", "Nimbus Labs Pvt. Ltd.", "Nimbus Labs India"],
+  },
+  {
+    name: "Arclight Systems",
+    aliases: ["Arclight", "Arclight Systems Inc."],
+  },
+  {
+    name: "Vision Systems Lab",
+    aliases: ["Vision Systems", "Vision Systems Lab Inc."],
+  },
+  { name: "Collab Works", aliases: ["Collab Works Inc."] },
+  { name: "Google", aliases: ["Google India", "Google LLC"] },
+  {
+    name: "IIIT Allahabad",
+    aliases: ["IIIT", "IIITA", "Indian Institute of Information Technology Allahabad"],
+  },
+  { name: "Demo Labs (fictional)", aliases: ["Demo Labs"] },
+];
+
+// A signal is a dated, non-job note such as a hiring window. One seeded signal
+// is already expired so the read-time hiding rule is visible in the demo.
+const demoSignals = [
+  {
+    owner: "priya",
+    title: "Nimbus Labs spring internship window",
+    description:
+      "Demo signal (fictional): the spring internship window for applied ML and evaluation roles opens next month. No application link yet.",
+    company: "Nimbus Labs",
+    expectedWindow: "Spring 2027",
+    expiresInDays: 30,
+    skills: ["Machine Learning", "Evaluation", "Python"],
+  },
+  {
+    owner: "aditya",
+    title: "Arclight Systems backend hiring window",
+    description:
+      "Demo signal (fictional): backend and distributed-systems roles are expected to open after the current planning cycle.",
+    company: "Arclight Systems",
+    expectedWindow: "Summer 2027",
+    expiresInDays: 45,
+    skills: ["Backend", "Distributed Systems", "SQL"],
+  },
+  {
+    owner: "riya",
+    title: "Arclight Systems winter referrals closed",
+    description:
+      "Demo signal (fictional): the winter referral window has closed. This row stays in the database and is hidden by its expiry date.",
+    company: "Arclight Systems",
+    expectedWindow: "Winter 2026",
+    expiresInDays: -3,
+    skills: ["Referrals", "Backend"],
   },
 ];
 
@@ -846,6 +920,14 @@ async function run() {
       Object.assign(user, fields);
       await user.save();
     }
+    if (
+      spec.pastExperience &&
+      spec.pastExperience.length &&
+      (!user.experience || user.experience.length === 0)
+    ) {
+      user.experience = spec.pastExperience;
+      await user.save();
+    }
     byKey[spec.key] = user;
   }
 
@@ -1038,6 +1120,8 @@ async function run() {
         location: spec.location || "",
         work_mode: spec.work_mode || "",
         job_type: spec.job_type || "Internship",
+        companyName: owner.organisation || "",
+        kind: "job",
         is_active: true,
       });
       createdJobs += 1;
@@ -1050,9 +1134,69 @@ async function run() {
       existing.location = spec.location || "";
       existing.work_mode = spec.work_mode || "";
       existing.job_type = spec.job_type || "Internship";
+      existing.companyName = owner.organisation || "";
+      existing.kind = "job";
       existing.is_active = true;
       await existing.save();
       refreshedJobs += 1;
+    }
+  }
+
+  // ── Company hubs ─────────────────────────────────────────────────────────
+  let createdCompanies = 0;
+  for (const spec of demoCompanies) {
+    const slug = slugifyCompany(spec.name);
+    const existing = await Company.findOne({ slug });
+    if (!existing) {
+      await Company.create({
+        name: spec.name,
+        slug,
+        aliases: spec.aliases || [],
+      });
+      createdCompanies += 1;
+    } else {
+      existing.name = spec.name;
+      existing.aliases = spec.aliases || [];
+      await existing.save();
+    }
+  }
+
+  // ── Signals (non-job notes with an expiry) ───────────────────────────────
+  let createdSignals = 0;
+  for (const spec of demoSignals) {
+    const owner = byKey[spec.owner];
+    if (!owner) continue;
+
+    const expiresAt = inDays(spec.expiresInDays, 23);
+    const fields = {
+      Description: spec.description,
+      expectedWindow: spec.expectedWindow,
+      expiresAt,
+      Job_deadline: expiresAt,
+      skills: spec.skills || [],
+      requirements: spec.skills || [],
+      companyName: spec.company,
+      kind: "signal",
+      is_active: true,
+    };
+
+    const existing = await Job.findOne({ Job_name: spec.title });
+    if (!existing) {
+      await Job.create({
+        created_by_user: owner.name,
+        userID: String(owner._id),
+        Job_name: spec.title,
+        Link: "",
+        Job_post_date: new Date(),
+        location: owner.location || "",
+        work_mode: "",
+        job_type: "Signal",
+        ...fields,
+      });
+      createdSignals += 1;
+    } else {
+      Object.assign(existing, fields);
+      await existing.save();
     }
   }
 
@@ -1401,7 +1545,8 @@ async function run() {
       `${createdMentorship} mentorship requests, ${createdDoors} doors, ` +
       `${createdDoorRequests} door requests, ${createdConversations} conversations, ` +
       `${createdMessages} messages, ${createdJoinRequests} join requests, ` +
-      `${createdEventQuestions} event questions.`
+      `${createdEventQuestions} event questions, ${createdCompanies} companies, ` +
+      `${createdSignals} signals.`
   );
   console.log(
     `Refreshed: ${refreshedPosts} posts, ${refreshedComments} comments, ` +

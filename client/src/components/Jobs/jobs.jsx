@@ -98,6 +98,14 @@ const Job = () => {
             {/* BODY */}
             <div className="job-card-body">
               <div className="job-card-meta">
+                {ele.companyName && ele.companySlug && (
+                  <Link
+                    to={`/company/${ele.companySlug}`}
+                    className="job-company-link"
+                  >
+                    {ele.companyName}
+                  </Link>
+                )}
                 <a
                   href={`/profile/${ele.userID}`}
                   target="_blank"

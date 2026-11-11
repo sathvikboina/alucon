@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const auth = require("../../middleware/auth"); // normal auth (NOT head admin)
 const User = require("../../models/User");
+const { companySlugMap } = require("../../services/companies");
 
 // @route   GET api/directory/alumni
 // @desc    Searchable alumni directory
@@ -36,7 +37,16 @@ router.get("/alumni", auth, async (req, res) => {
       )
       .sort({ passing_year: -1 });
 
-    res.json(alumni);
+    // Link each card to its company hub without changing the stored profile.
+    const slugByName = await companySlugMap(
+      alumni.map((person) => person.organisation).filter(Boolean)
+    );
+    res.json(
+      alumni.map((person) => ({
+        ...person.toObject(),
+        companySlug: slugByName.get(person.organisation) || "",
+      }))
+    );
   } catch (err) {
     console.error(err.message);
     res.status(500).send("Server Error");

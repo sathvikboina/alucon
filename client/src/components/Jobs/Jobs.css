@@ -130,6 +130,18 @@
   color: #1a2a4a;
 }
 
+.job-company-link {
+  font-size: 13px;
+  font-weight: 700;
+  color: #175cd3;
+  text-decoration: none;
+}
+
+.job-company-link:hover {
+  text-decoration: underline;
+  color: #0b4bb3;
+}
+
 .job-post-date {
   font-size: 11px;
   color: #9ca3af;

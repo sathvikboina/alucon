@@ -13,6 +13,11 @@ const {
   queueSearchRefresh,
   removeSearchDocument,
 } = require("../../services/searchIndex");
+const {
+  jobCompanyName,
+  companySlugMap,
+  ensureCompany,
+} = require("../../services/companies");
 
 const Filter = require("bad-words");
 const { check, validationResult } = require("express-validator");
@@ -34,26 +39,55 @@ router.get("/get/getjob", async (req, res) => {
     const data = await Job.find();
     let dt = [];
     let archive = [];
-    let currDate = new Date;
-    console.log("data ",data.length);
-    for(let i = 0;i<data.length;i++){
-      if(data[i].Job_deadline >= currDate) dt.push(data[i]);
-      else{
-        console.log(data[i].Job_name)
-        archive.push(data[i]);
+    let currDate = new Date();
+
+    // Resolve each job's company at read time. Existing rows have no
+    // companyName, so the poster's current organisation is the fallback; no
+    // job or profile document is edited here.
+    const posterIds = [...new Set(data.map((job) => job.userID).filter(Boolean))];
+    const posters = posterIds.length
+      ? await User.find({ _id: { $in: posterIds } })
+          .select("name organisation")
+          .lean()
+      : [];
+    const posterById = Object.fromEntries(
+      posters.map((poster) => [String(poster._id), poster])
+    );
+    const displayNames = data.map((job) =>
+      jobCompanyName(job.toObject(), posterById[String(job.userID)])
+    );
+    const slugByName = await companySlugMap(displayNames);
+
+    for (let i = 0; i < data.length; i++) {
+      const job = data[i].toObject();
+      const companyName = displayNames[i];
+      const enriched = {
+        ...job,
+        companyName,
+        companySlug: slugByName.get(companyName) || "",
+      };
+
+      if (job.kind === "signal") {
+        // Signals disappear when their window closes.
+        if (!job.expiresAt || new Date(job.expiresAt) < currDate) continue;
+        dt.push(enriched);
+      } else if (job.Job_deadline && job.Job_deadline >= currDate) {
+        dt.push(enriched);
+      } else {
+        archive.push(enriched);
       }
     }
-    // const save = await data.save();
-    console.log("dt = " ,dt.length);
-    res.json({dt,archive});
+
+    res.json({ dt, archive });
   } catch (e) {
     console.log(e);
+    res.status(500).json({ error: "Server error" });
   }
 });
 
 router.post("/create-job", auth, createJobLimiter, async (req, res) => {
   try {
-    const author = await User.findById(req.user.id).select("name role isAdmin");
+    const author = await User.findById(req.user.id).select("name role isAdmin organisation");
     if (!author) return res.status(401).json({ error: "Unauthorized" });
     if (author.role === "student" && !author.isAdmin) {
       return res.status(403).json({ error: "Only alumni, faculty and admins can post jobs" });
@@ -67,6 +101,16 @@ router.post("/create-job", auth, createJobLimiter, async (req, res) => {
       return [];
     };
 
+    const requestedCompany = String(
+      req.body.company_name || author.organisation || ""
+    ).trim();
+    let company = null;
+    try {
+      company = await ensureCompany(requestedCompany);
+    } catch (err) {
+      console.warn("[jobs] company ensure failed:", err.message);
+    }
+
     const data = new Job({
       created_by_user: author.name,
       userID: req.user.id,
@@ -75,6 +119,8 @@ router.post("/create-job", auth, createJobLimiter, async (req, res) => {
       Link: req.body.link,
       Job_post_date: Date.now(),
       Job_deadline: req.body.job_deadline,
+      companyName: company?.name || requestedCompany,
+      kind: "job",
       skills: asList(req.body.skills),
       requirements: asList(req.body.requirements || req.body.skills),
       location: req.body.location,

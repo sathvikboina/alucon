@@ -25,6 +25,7 @@ import Messenger from "../messenger/Messenger";
 import Job from "../Jobs/jobs.jsx";
 import ArchiveJobs from "../Jobs/archiveJobs.jsx";
 import CreateJob from "../Jobs/createJob.jsx";
+import CompanyHub from "../company/CompanyHub";
 
 
 // ✅ Story Components
@@ -60,6 +61,7 @@ const Routes = () => {
 				<PrivateRoute exact path="/profile/:id" component={Profile} />
 
 				<Route exact path="/jobs" component={Job} />
+				<Route exact path="/company/:slug" component={CompanyHub} />
 				<PrivateRoute exact path="/internship-matches" component={InternshipMatches} />
 				<PrivateRoute exact path="/mentor-matches" component={MentorMatches} />
 				<PrivateRoute exact path="/doors" component={Doors} />

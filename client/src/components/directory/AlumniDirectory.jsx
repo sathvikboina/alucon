@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { Link } from "react-router-dom";
 import { connect } from "react-redux";
 import PropTypes from "prop-types";
 import { setAlert } from "../../actions/alert";
@@ -182,7 +183,15 @@ const AlumniDirectory = ({
                   <div className="detail-row">
                     <BuildingIcon />
                     <span className="detail-label">Company</span>
-                    <span className="detail-value">{user.organisation || "N/A"}</span>
+                    <span className="detail-value">
+                      {user.companySlug ? (
+                        <Link to={`/company/${user.companySlug}`}>
+                          {user.organisation || "N/A"}
+                        </Link>
+                      ) : (
+                        user.organisation || "N/A"
+                      )}
+                    </span>
                   </div>
                   <div className="detail-row">
                     <PinIcon />

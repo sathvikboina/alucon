@@ -1,0 +1,246 @@
+.company-page {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 28px 18px 64px;
+  color: #1d2939;
+}
+
+.company-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.company-header h2 {
+  margin: 2px 0 6px;
+  color: #0f2044;
+  font-size: 28px;
+}
+
+.company-kicker {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #175cd3;
+}
+
+.company-muted {
+  color: #667085;
+  font-size: 13px;
+  line-height: 1.55;
+  margin: 0;
+}
+
+.company-header .company-muted {
+  max-width: 700px;
+}
+
+.company-back {
+  flex: 0 0 auto;
+  padding: 9px 14px;
+  border-radius: 8px;
+  background: #0f2044;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.company-back:hover {
+  background: #1b356b;
+  color: #fff;
+}
+
+.company-counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.company-counts span {
+  font-size: 12px;
+  font-weight: 600;
+  color: #344054;
+  background: #f2f4f7;
+  border-radius: 999px;
+  padding: 5px 10px;
+}
+
+.company-panel {
+  background: #fff;
+  border: 1px solid #e4e7ec;
+  border-radius: 12px;
+  padding: 18px;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+}
+
+.company-panel h3 {
+  margin: 0 0 4px;
+  font-size: 18px;
+  color: #0f2044;
+}
+
+.company-panel > .company-muted {
+  margin-bottom: 12px;
+}
+
+.company-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.company-card {
+  border: 1px solid #e4e7ec;
+  border-radius: 10px;
+  padding: 13px;
+  background: #fcfcfd;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.company-card h4 {
+  margin: 0;
+  font-size: 15px;
+  color: #0f2044;
+  line-height: 1.35;
+}
+
+.company-card p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #475467;
+}
+
+.company-card-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.company-chip {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #175cd3;
+  background: #eff8ff;
+  border-radius: 999px;
+  padding: 4px 8px;
+}
+
+.company-chip.signal {
+  color: #b54708;
+  background: #fffaeb;
+}
+
+.company-chip.door {
+  color: #067647;
+  background: #ecfdf3;
+}
+
+.company-score {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #067647;
+}
+
+.company-skills {
+  font-size: 12px;
+  color: #344054;
+}
+
+.company-skills.missing {
+  color: #b42318;
+}
+
+.company-apply {
+  align-self: flex-start;
+  margin-top: auto;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #175cd3;
+  text-decoration: none;
+}
+
+.company-apply:hover {
+  text-decoration: underline;
+}
+
+.company-people {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.company-person {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  border: 1px solid #e4e7ec;
+  border-radius: 10px;
+  padding: 10px;
+  background: #fcfcfd;
+  color: #1d2939;
+  text-decoration: none;
+}
+
+.company-person:hover {
+  border-color: #b2ccff;
+  background: #f5f9ff;
+}
+
+.company-person img,
+.company-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #d1e0ff;
+  color: #0f2044;
+  font-weight: 700;
+}
+
+.company-person strong {
+  display: block;
+  font-size: 13.5px;
+}
+
+.company-person small {
+  display: block;
+  color: #667085;
+  font-size: 11.5px;
+  line-height: 1.4;
+}
+
+.company-alert {
+  background: #fef3f2;
+  border: 1px solid #fecdca;
+  color: #b42318;
+  border-radius: 9px;
+  padding: 10px 13px;
+  margin-bottom: 14px;
+  font-size: 13px;
+}
+
+@media (max-width: 720px) {
+  .company-header {
+    flex-direction: column;
+  }
+}
