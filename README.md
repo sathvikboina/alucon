@@ -429,8 +429,9 @@ unified search index does use BGE-small embeddings stored in MongoDB; the two
 systems are independent.) The API returns a `feed.reason` for each post,
 rendered as the `✦` chip on the card. The full technical record is in
 [`AlumniConnect_Changelog_and_Ideas.xlsx`](./AlumniConnect_Changelog_and_Ideas.xlsx)
-— one workbook with the combined changelog, future ideas, stack/algorithms,
-features and verification.
+— the single source of truth, with the combined changelog, future ideas,
+phased schedule, stack/algorithms, features and verification. The older
+`Future_Ideas.xlsx` and `features.xlsx` were merged into it and removed.
 
 Endpoints:
 
