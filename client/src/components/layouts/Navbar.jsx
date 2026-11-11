@@ -149,6 +149,12 @@ const Navbar = ({
         </Link>
       </li>
 
+      <li>
+        <Link to="/search" className="navbar-link" onClick={closeMobile}>
+          <i className="fas fa-search"></i> <span className="hide-sm">Search</span>
+        </Link>
+      </li>
+
       <li className="dropdown">
         <span className="navbar-link" onClick={() => toggleDropdown("opportunities")}>
           Opportunities ▾

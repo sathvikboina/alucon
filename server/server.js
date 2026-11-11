@@ -55,7 +55,22 @@ const io = require("socket.io")(http, {
 });
 app.set("io", io); // ✅ makes io accessible in routes via req.app.get("io")
 
-connectDB();
+connectDB().then(() => {
+	// Build the BGE-small search index in the background when it is empty. The API
+	// is already listening, so the first request is not blocked by indexing.
+	if (process.env.SEARCH_INDEX_AUTO !== "0") {
+		require("./services/searchIndex")
+			.ensureSearchIndex()
+			.then((stats) =>
+				console.log(
+					`Search index ready: ${stats.indexed} documents (${stats.model})`
+				)
+			)
+			.catch((err) =>
+				console.warn("[search] index warm-up failed:", err.message)
+			);
+	}
+});
 
 // init middleware for parsing
 const allowedOrigins = [
@@ -111,6 +126,7 @@ app.use("/api/upload", require("./routes/api/upload"));
 app.use("/api/directory", require("./routes/api/directory"));
 app.use("/api/support", require("./routes/api/support"));
 app.use("/api/groups", require("./routes/api/groups"));
+app.use("/api/search", require("./routes/api/search"));
 
 //ai help
 app.use("/api/ai/insights", require("./routes/api/aiInsights"));

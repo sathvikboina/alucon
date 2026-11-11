@@ -138,8 +138,8 @@ const InternshipMatches = () => {
         </div>
         {data && (
           <div className="match-model-note">
-            <span className={`match-model-dot ${data.model === "offline" ? "offline" : "ai"}`} />
-            {data.model === "offline" ? "Rule-based ranking" : "AI re-ranked"}
+            <span className={`match-model-dot ${data.model === "algorithm" ? "" : "offline"}`} />
+            {data.model === "algorithm" ? "Algorithmic ranking" : "Rule-based ranking"}
             {data.cached ? " · cached" : ""}
           </div>
         )}

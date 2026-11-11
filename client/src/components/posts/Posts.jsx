@@ -52,18 +52,19 @@ const formatEventDate = (value) => {
 };
 
 // Rendered twice: once in the right rail on wide screens and once inside the
-// feed column when the rail is hidden, so the briefing is not lost on mobile.
-const BriefingCard = ({ briefing, loading, canForce, onRefresh }) => (
+// feed column when the rail is hidden. Nothing is generated until the member
+// asks for it, so the feed never spends a model call on page load.
+const BriefingCard = ({ briefing, loading, error, canForce, onGenerate }) => (
   <section className="rail-card ai-briefing">
     <div className="rail-header">
       <h3>
         <span className="ai-spark" aria-hidden="true">✦</span> AI briefing
       </h3>
-      {canForce && (
+      {briefing && canForce && (
         <button
           type="button"
           className="rail-link ai-refresh"
-          onClick={onRefresh}
+          onClick={onGenerate}
           disabled={loading}
         >
           {loading ? "Reading…" : "Refresh"}
@@ -72,9 +73,19 @@ const BriefingCard = ({ briefing, loading, canForce, onRefresh }) => (
     </div>
 
     {!briefing ? (
-      <p className="rail-empty">
-        {loading ? "Reading the community…" : "Briefing unavailable right now."}
-      </p>
+      <div className="ai-briefing-empty">
+        <p className="rail-empty">
+          {loading
+            ? "Reading the community…"
+            : error ||
+              "A summary of what the community is discussing, generated only when you ask."}
+        </p>
+        {!loading && (
+          <button type="button" className="ai-generate" onClick={onGenerate}>
+            Generate briefing
+          </button>
+        )}
+      </div>
     ) : (
       <>
         <p className="ai-headline">{briefing.headline}</p>
@@ -139,8 +150,9 @@ const BriefingCard = ({ briefing, loading, canForce, onRefresh }) => (
 BriefingCard.propTypes = {
   briefing: PropTypes.object,
   loading: PropTypes.bool,
+  error: PropTypes.string,
   canForce: PropTypes.bool,
-  onRefresh: PropTypes.func.isRequired,
+  onGenerate: PropTypes.func.isRequired,
 };
 
 const Posts = ({
@@ -185,11 +197,13 @@ const Posts = ({
   const [upcoming, setUpcoming] = useState([]);
   const [briefing, setBriefing] = useState(null);
   const [briefingLoading, setBriefingLoading] = useState(false);
+  const [briefingError, setBriefingError] = useState("");
   // Cache bypass costs a model call; the server only honours it for admins.
   const canForceBriefing = Boolean(authUser?.isAdmin);
 
   const loadBriefing = async (force = false) => {
     setBriefingLoading(true);
+    setBriefingError("");
     try {
       const { data } = await api.get(
         `/api/ai/insights/briefing${force ? "?force=1" : ""}`
@@ -197,6 +211,9 @@ const Posts = ({
       setBriefing(data);
     } catch (err) {
       // The briefing is additive; the feed remains usable without it.
+      setBriefingError(
+        err?.response?.data?.msg || "Could not generate a briefing right now."
+      );
     } finally {
       setBriefingLoading(false);
     }
@@ -214,10 +231,6 @@ const Posts = ({
       setRankedPosts(null);
       setFeedMeta(null);
     }
-  }, []);
-
-  useEffect(() => {
-    loadBriefing();
   }, []);
 
   useEffect(() => {
@@ -670,8 +683,9 @@ const Posts = ({
             <BriefingCard
               briefing={briefing}
               loading={briefingLoading}
+              error={briefingError}
               canForce={canForceBriefing}
-              onRefresh={() => loadBriefing(true)}
+              onGenerate={() => loadBriefing(canForceBriefing)}
             />
           </div>
 
@@ -779,8 +793,9 @@ const Posts = ({
           <BriefingCard
             briefing={briefing}
             loading={briefingLoading}
+            error={briefingError}
             canForce={canForceBriefing}
-            onRefresh={() => loadBriefing(true)}
+            onGenerate={() => loadBriefing(canForceBriefing)}
           />
 
           <section className="rail-card">

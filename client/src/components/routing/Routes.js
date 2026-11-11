@@ -40,6 +40,7 @@ import MentorDashBoard from "../mentorship/MentorDashBoard";
 import InternshipMatches from "../matching/InternshipMatches";
 import MentorMatches from "../matching/MentorMatches";
 import ResourceHub from "../resource/ResourceHub";
+import AISearch from "../search/AISearch";
 
 import AnalyticsDashboard from "../admin/AnalyticsDashboard.jsx";
 import Event from "../Event/event.jsx";
@@ -77,6 +78,7 @@ const Routes = () => {
 				<PrivateRoute exact path="/add-education" component={AddEducation} />
 				<PrivateRoute exact path="/feed" component={Posts} />
 				<PrivateRoute exact path="/feed/topic/:channel_name" component={Posts} />
+				<PrivateRoute exact path="/search" component={AISearch} />
 				<PrivateRoute exact path="/posts/:id" component={PostDisplay} />
 				<PrivateRoute exact path="/groups" component={Groups} />
 				<PrivateRoute exact path="/groups/:id" component={GroupDetail} />

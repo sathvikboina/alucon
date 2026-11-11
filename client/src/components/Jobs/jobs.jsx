@@ -134,9 +134,9 @@ const Job = () => {
                     <div>
                       <strong>{fits[ele._id].verdict}</strong>
                       <small>
-                        {fits[ele._id].model === "offline"
-                          ? "Offline assessment"
-                          : "AI assessment"}
+                        {fits[ele._id].model === "algorithm"
+                          ? "Algorithmic assessment"
+                          : "Rule-based assessment"}
                       </small>
                     </div>
                   </div>

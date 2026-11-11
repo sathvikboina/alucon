@@ -27,7 +27,7 @@ router.get("/status", auth, (req, res) => {
 });
 
 // @route   GET api/ai/insights/briefing
-// @desc    Grounded weekly briefing for the signed-in member
+// @desc    On-demand grounded community briefing for the signed-in member
 router.get("/briefing", auth, async (req, res) => {
   try {
     const user = await asUser(req);
@@ -119,9 +119,7 @@ router.get("/jobs/:id/fit", auth, async (req, res) => {
     const user = await asUser(req);
     if (!user) return res.status(404).json({ msg: "User not found" });
 
-    const fit = await getJobFit(user, req.params.id, {
-      force: wantsRefresh(req, user),
-    });
+    const fit = await getJobFit(user, req.params.id);
 
     if (fit.error === "not_found") {
       return res.status(404).json({ msg: "Job not found" });

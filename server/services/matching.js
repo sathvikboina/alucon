@@ -1,20 +1,16 @@
 // Explainable matching for internships and mentors.
 //
 // The ranking follows the pipeline described in the project deck:
-//   hard constraints -> semantic / skill overlap -> contextual rerank -> explanation
+//   hard constraints -> skill / text overlap -> contextual signals -> explanation
 //
-// Deterministic ranking always runs first. If a model key is configured, the
-// top candidates are re-ranked once and cached; otherwise the UI explicitly
-// labels the result as rule-based. The model can only reorder candidates it was
-// given, never invent a person, role or skill.
+// Ranking is deterministic. No model re-ranks candidates, so a score is
+// reproducible and the same role scores the same on the job board and on
+// /internship-matches. The UI labels the result as algorithmic.
 
 const Job = require("../models/Jobs");
 const User = require("../models/User");
 const MentorShipRequest = require("../models/MentorShipRequest");
-const AiArtifact = require("../models/AiArtifact");
-const { generateJSON, isConfigured } = require("./aiService");
 
-const CACHE_TTL = 4 * 60 * 60 * 1000;
 const DAY = 24 * 60 * 60 * 1000;
 
 const MENTORSHIP_AREAS = [
@@ -707,165 +703,12 @@ function rankMentors(user, people, { area = "", requests = [], limit = 8 } = {})
 }
 
 /* ------------------------------------------------------------------ */
-/* Optional model re-rank (only reorders candidates it is given)       */
-/* ------------------------------------------------------------------ */
-
-async function readCache(key) {
-  const doc = await AiArtifact.findOne({ key }).lean();
-  if (!doc) return null;
-  if (doc.expiresAt && new Date(doc.expiresAt).getTime() < Date.now()) return null;
-  return doc;
-}
-
-async function writeCache(key, kind, refId, payload, sources, model) {
-  await AiArtifact.findOneAndUpdate(
-    { key },
-    {
-      key,
-      kind,
-      refId,
-      payload,
-      sources,
-      model,
-      generatedAt: new Date(),
-      expiresAt: new Date(Date.now() + CACHE_TTL),
-    },
-    { upsert: true, new: true, setDefaultsOnInsert: true }
-  ).catch((err) => console.warn("[matching] cache write failed:", err.message));
-}
-
-async function rerankWithModel(kind, user, matches) {
-  if (!isConfigured() || matches.length === 0) return null;
-
-  const candidates = matches.slice(0, 10).map((match) =>
-    kind === "internship"
-      ? {
-          id: match.id,
-          title: match.title,
-          type: match.type,
-          skills: match.requirements,
-          matchedSkills: match.matchedSkills,
-          missingSkills: match.missingSkills,
-          baseScore: match.score,
-          baseReasons: match.reasons,
-        }
-      : {
-          id: match.id,
-          name: match.name,
-          role: match.role,
-          organisation: match.organisation,
-          workingArea: match.workingArea,
-          areas: match.areas,
-          skills: match.skills,
-          sharedSkills: match.matchingSkills,
-          baseScore: match.score,
-          baseReasons: match.reasons,
-        }
-  );
-
-  const goalLine =
-    kind === "internship"
-      ? `Member goals: ${inferGoals(user).join(", ")}.`
-      : `Mentorship goal selected by the member: ${matches[0]?.goal || inferGoals(user)[0]}.`;
-
-  const prompt = `You are the matching assistant for the IIIT Allahabad alumni portal.
-${goalLine}
-Rank the candidate ${kind === "internship" ? "opportunities" : "mentors"} for this member using ONLY the evidence below.
-
-Rules:
-- Do not invent candidates, skills, names, employers or facts.
-- Hard constraints have already been applied; never add a candidate.
-- Return every id at most once.
-- score: integer 0-100 for relevance to the member, not personal worth.
-- reason: one specific sentence, max 180 characters, grounded in the evidence.
-- summary: one sentence, max 200 characters, describing the overall recommendation.
-- If evidence is thin, say so instead of guessing.
-
-Member:
-${JSON.stringify({
-    role: user.role,
-    program: user.program,
-    passingYear: user.passing_year,
-    skills: profileSkills(user),
-    workingArea: user.working_area || "",
-    goals: inferGoals(user),
-  })}
-
-Candidates:
-${JSON.stringify(candidates)}
-
-Return strict JSON only:
-{"matches":[{"id":"","score":0,"reason":""}],"summary":""}`;
-
-  const result = await generateJSON(prompt, { maxOutputTokens: 900 });
-  if (!result?.data) return null;
-
-  const byId = new Map(matches.map((match) => [match.id, match]));
-  const seen = new Set();
-  const reranked = [];
-
-  for (const item of Array.isArray(result.data.matches) ? result.data.matches : []) {
-    const id = cleanString(item?.id, 80);
-    if (!id || seen.has(id) || !byId.has(id)) continue;
-    const base = byId.get(id);
-    const aiScore = Number(item?.score);
-    const score = Number.isFinite(aiScore)
-      ? clampScore(base.score * 0.55 + Math.max(0, Math.min(100, aiScore)) * 0.45)
-      : base.score;
-    seen.add(id);
-    reranked.push({
-      ...base,
-      score,
-      verdict:
-        kind === "internship" ? internshipVerdict(score) : mentorVerdict(score),
-      summary: cleanString(item?.reason, 220) || base.summary,
-      reasons: [cleanString(item?.reason, 220) || base.reasons[0], ...base.reasons.slice(1)].filter(Boolean),
-    });
-  }
-
-  // Keep deterministic candidates the model did not mention.
-  matches.forEach((match) => {
-    if (!seen.has(match.id)) reranked.push(match);
-  });
-
-  // The model is asked to rank, but the blended score is the final authority:
-  // sort explicitly so a shuffled model response cannot invert the result.
-  const ordered = reranked
-    .sort((a, b) => {
-      if (b.score !== a.score) return b.score - a.score;
-      if (kind === "internship") return a.title.localeCompare(b.title);
-      return a.name.localeCompare(b.name);
-    })
-    .map((match, index) => ({ ...match, rank: index + 1 }));
-
-  return {
-    matches: ordered,
-    summary: cleanString(result.data.summary, 220),
-    model: result.model,
-  };
-}
-
-/* ------------------------------------------------------------------ */
 /* Public API                                                          */
 /* ------------------------------------------------------------------ */
 
 async function getInternshipMatches(user, options = {}) {
-  const { limit = 6, force = false, type = "", mode = "" } = options;
+  const { limit = 6, type = "", mode = "" } = options;
   const boundedLimit = Math.max(1, Math.min(12, Number(limit) || 6));
-  // The cached payload is already sliced, so limit is part of the key.
-  const cacheKey = `matching:internships:${user._id}:${normalize(type) || "all"}:${normalize(mode) || "all"}:${boundedLimit}`;
-
-  if (!force) {
-    const cached = await readCache(cacheKey);
-    if (cached) {
-      return {
-        ...cached.payload,
-        model: cached.model,
-        generatedAt: cached.generatedAt,
-        cached: true,
-      };
-    }
-  }
 
   const jobs = await Job.find({}).lean();
   const posterIds = [...new Set(jobs.map((job) => job.userID).filter(Boolean))];
@@ -883,17 +726,13 @@ async function getInternshipMatches(user, options = {}) {
     type,
     mode,
   });
-
-  const ai = await rerankWithModel("internship", user, ranked);
-  const finalMatches = (ai?.matches || ranked).slice(0, boundedLimit);
+  const finalMatches = ranked.slice(0, boundedLimit);
   const payload = {
     matches: finalMatches,
     total: ranked.length,
-    summary:
-      ai?.summary ||
-      `${ranked.length} open ${
-        ranked.length === 1 ? "opportunity" : "opportunities"
-      } ranked from your skills, goals and preferences.`,
+    summary: `${ranked.length} open ${
+      ranked.length === 1 ? "opportunity" : "opportunities"
+    } ranked from your skills, goals and preferences.`,
     profile: {
       name: user.name,
       role: user.role,
@@ -905,45 +744,17 @@ async function getInternshipMatches(user, options = {}) {
     },
   };
 
-  if (ai) {
-    await writeCache(
-      cacheKey,
-      "internship_matches",
-      String(user._id),
-      payload,
-      finalMatches.map((match) => ({
-        label: `Job · ${match.title}`,
-        href: "/jobs",
-        type: "job",
-      })),
-      ai.model
-    );
-  }
-
   return {
     ...payload,
-    model: ai?.model || "offline",
+    model: "algorithm",
     generatedAt: new Date(),
     cached: false,
   };
 }
 
 async function getMentorMatches(user, options = {}) {
-  const { limit = 8, force = false, area = "" } = options;
+  const { limit = 8, area = "" } = options;
   const boundedLimit = Math.max(1, Math.min(12, Number(limit) || 8));
-  const cacheKey = `matching:mentors:${user._id}:${MENTORSHIP_AREAS.includes(area) ? area : "auto"}:${boundedLimit}`;
-
-  if (!force) {
-    const cached = await readCache(cacheKey);
-    if (cached) {
-      return {
-        ...cached.payload,
-        model: cached.model,
-        generatedAt: cached.generatedAt,
-        cached: true,
-      };
-    }
-  }
 
   const people = await User.find({
     // Role values are stored lowercase today, but match case-insensitively so a
@@ -966,18 +777,15 @@ async function getMentorMatches(user, options = {}) {
     .lean();
 
   const ranked = rankMentors(user, people, { area, requests, limit: 12 });
-  const ai = await rerankWithModel("mentor", user, ranked);
-  const finalMatches = (ai?.matches || ranked).slice(0, boundedLimit);
+  const finalMatches = ranked.slice(0, boundedLimit);
   const payload = {
     matches: finalMatches,
     total: ranked.length,
     goal: finalMatches[0]?.goal || (MENTORSHIP_AREAS.includes(area) ? area : inferGoals(user)[0]),
     goals: inferGoals(user),
-    summary:
-      ai?.summary ||
-      `${ranked.length} available ${
-        ranked.length === 1 ? "mentor" : "mentors"
-      } ranked by goal, skills and availability.`,
+    summary: `${ranked.length} available ${
+      ranked.length === 1 ? "mentor" : "mentors"
+    } ranked by goal, skills and availability.`,
     profile: {
       name: user.name,
       role: user.role,
@@ -987,24 +795,9 @@ async function getMentorMatches(user, options = {}) {
     },
   };
 
-  if (ai) {
-    await writeCache(
-      cacheKey,
-      "mentor_matches",
-      String(user._id),
-      payload,
-      finalMatches.map((match) => ({
-        label: `Mentor · ${match.name}`,
-        href: `/profile/${match.id}`,
-        type: "person",
-      })),
-      ai.model
-    );
-  }
-
   return {
     ...payload,
-    model: ai?.model || "offline",
+    model: "algorithm",
     generatedAt: new Date(),
     cached: false,
   };

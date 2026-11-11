@@ -1174,6 +1174,19 @@ async function run() {
     "All seeded people, messages and questions are fictional demo data, not real alumni records."
   );
 
+  // Keep the unified search index in step with a fresh seed.
+  try {
+    const { rebuildSearchIndex } = require("../services/searchIndex");
+    const stats = await rebuildSearchIndex();
+    console.log(
+      `Search index: ${stats.indexed} documents (${stats.model}, ${
+        stats.semantic ? "semantic" : "text-only"
+      }).`
+    );
+  } catch (err) {
+    console.warn("Search index build failed:", err.message);
+  }
+
   await mongoose.disconnect();
 }
 

@@ -21,43 +21,9 @@ const { matchInternship, isEligible } = require("./matching");
 const DAY = 24 * 60 * 60 * 1000;
 const BRIEFING_TTL = 6 * 60 * 60 * 1000;
 const THREAD_TTL = 24 * 60 * 60 * 1000;
-const FIT_TTL = 12 * 60 * 60 * 1000;
 // TL;DR is only offered for long-form posts. Short posts are quicker to read
 // than the summary itself, so the button would be noise.
 const MIN_TLDR_WORDS = 750;
-
-const TECH_KEYWORDS = [
-  "python", "javascript", "typescript", "react", "node", "express", "sql",
-  "mongodb", "docker", "kubernetes", "aws", "gcp", "machine learning",
-  "deep learning", "nlp", "computer vision", "distributed systems", "go",
-  "java", "api", "pytorch", "tensorflow", "mlops", "evaluation",
-  "research",
-];
-
-const SKILL_ALIASES = {
-  "machine learning": ["machine learning", "ml"],
-  "computer vision": ["computer vision", "cv"],
-  "deep learning": ["deep learning"],
-  "distributed systems": ["distributed systems", "distributed"],
-  api: ["api", "apis", "rest"],
-  rest: ["rest", "api", "apis"],
-  evaluation: ["evaluation", "evaluate", "eval"],
-  mlops: ["mlops", "ml ops", "model monitoring", "model serving"],
-  research: ["research", "papers", "publication"],
-  internship: ["internship", "intern"],
-};
-
-const normalizeText = (value) =>
-  ` ${String(value || "")
-    .toLowerCase()
-    .replace(/[^a-z0-9+#.]+/g, " ")
-    .replace(/\s+/g, " ")
-    .trim()} `;
-
-const hasKeyword = (text, keyword) => {
-  const aliases = SKILL_ALIASES[keyword] || [keyword];
-  return aliases.some((alias) => text.includes(` ${alias} `));
-};
 
 const stripHtml = (value = "") =>
   String(value)
@@ -594,147 +560,21 @@ async function summarizeThread(user, postId, { force = false } = {}) {
 /* Job fit                                                             */
 /* ------------------------------------------------------------------ */
 
-function scoreToVerdict(score) {
-  if (score >= 82) return "Strong fit";
-  if (score >= 68) return "Good fit";
-  if (score >= 52) return "Worth exploring";
-  return "Different focus";
-}
-
-function fallbackFit(user, job) {
-  const jobText = normalizeText(
-    `${job.Job_name} ${job.Description || ""} ${(job.skills || []).join(" ")}`
-  );
-  const profileText = normalizeText(
-    [
-      ...(user.skills || []),
-      user.working_area,
-      user.bio,
-      user.program,
-      user.designation,
-      user.organisation,
-    ]
-      .filter(Boolean)
-      .join(" ")
-  );
-
-  const matchedSkills = TECH_KEYWORDS.filter(
-    (keyword) => hasKeyword(jobText, keyword) && hasKeyword(profileText, keyword)
-  );
-  const missingSkills = TECH_KEYWORDS.filter(
-    (keyword) => hasKeyword(jobText, keyword) && !hasKeyword(profileText, keyword)
-  ).slice(0, 4);
-
-  const score = Math.max(
-    40,
-    Math.min(95, 58 + matchedSkills.length * 9 - missingSkills.length * 3)
-  );
-
-  return {
-    score,
-    verdict: scoreToVerdict(score),
-    matchedSkills: matchedSkills.slice(0, 6),
-    missingSkills,
-    prepSteps: missingSkills.length
-      ? missingSkills
-          .slice(0, 2)
-          .map((skill) => `Build one small project or note that demonstrates ${skill}.`)
-      : ["Add one measurable outcome (scale, latency, users) to your profile."],
-    summary: `Rule-based match: ${matchedSkills.length} shared skill${
-      matchedSkills.length === 1 ? "" : "s"
-    } and ${missingSkills.length} gap${missingSkills.length === 1 ? "" : "s"} between your profile and this role.`,
-  };
-}
-
-function normalizeFit(aiData, user, job, deterministic) {
-  // Prefer the shared matching engine so a role scores the same on the job
-  // board as it does on /internship-matches.
-  const fallback = deterministic
-    ? {
-        score: deterministic.score,
-        verdict: scoreToVerdict(deterministic.score),
-        matchedSkills: deterministic.matchedSkills,
-        missingSkills: deterministic.missingSkills,
-        prepSteps: deterministic.missingSkills.length
-          ? deterministic.missingSkills
-              .slice(0, 2)
-              .map((skill) => `Build one small project or note that demonstrates ${skill}.`)
-          : ["Add one measurable outcome (scale, latency, users) to your profile."],
-        summary: deterministic.summary,
-      }
-    : fallbackFit(user, job);
-
-  const aiScore = Number(aiData?.score);
-  let score = fallback.score;
-  if (Number.isFinite(aiScore)) {
-    const bounded = Math.max(0, Math.min(100, aiScore));
-    score = deterministic
-      ? Math.round(fallback.score * 0.55 + bounded * 0.45)
-      : Math.round(bounded);
+function prepStepsFor(missingSkills) {
+  if (missingSkills.length) {
+    return missingSkills
+      .slice(0, 2)
+      .map((skill) => `Build one small project or note that demonstrates ${skill}.`);
   }
-  score = Math.max(0, Math.min(100, score));
-
-  const verdict = cleanString(aiData?.verdict, 30);
-  const matchedSkills = cleanList(aiData?.matchedSkills, 6, 40);
-  const missingSkills = cleanList(aiData?.missingSkills, 5, 40);
-  const prepSteps = cleanList(aiData?.prepSteps, 3, 160);
-
-  return {
-    score,
-    verdict: verdict || scoreToVerdict(score),
-    matchedSkills: matchedSkills.length ? matchedSkills : fallback.matchedSkills,
-    missingSkills: missingSkills.length ? missingSkills : fallback.missingSkills,
-    prepSteps: prepSteps.length ? prepSteps : fallback.prepSteps,
-    summary: cleanString(aiData?.summary, 240) || fallback.summary,
-  };
+  return ["Add one measurable outcome (scale, latency, users) to your profile."];
 }
 
-function fitPrompt(user, job) {
-  const payload = {
-    member: {
-      role: user.role,
-      program: user.program,
-      passingYear: user.passing_year,
-      skills: user.skills || [],
-      workingArea: user.working_area || "",
-      designation: user.designation || "",
-      organisation: user.organisation || "",
-      bio: truncate(stripHtml(user.bio), 600),
-    },
-    job: {
-      title: job.Job_name,
-      description: truncate(stripHtml(job.Description), 1400),
-      skills: job.skills || [],
-      type: job.job_type || "",
-      workMode: job.work_mode || "",
-      location: job.location || "",
-      deadline: job.Job_deadline,
-    },
-  };
-
-  return `Compare this member profile with the job and assess fit.
-
-Rules:
-- Use only the evidence below. Do not invent experience, employers or skills.
-- score: integer 0-100 for role fit, not personal worth.
-- verdict: one of "Strong fit", "Good fit", "Stretch", "Different focus".
-- matchedSkills / missingSkills: short skill names, max 6 each.
-- prepSteps: up to 3 concrete actions, each max 150 characters.
-- summary: one sentence, max 220 characters.
-
-Return strict JSON only:
-{"score":0,"verdict":"","matchedSkills":[""],"missingSkills":[""],"prepSteps":[""],"summary":""}
-
-DATA:
-${JSON.stringify(payload)}`;
-}
-
-async function getJobFit(user, jobId, { force = false } = {}) {
+async function getJobFit(user, jobId) {
   const job = await Job.findById(jobId).lean();
   if (!job) return { error: "not_found" };
 
-  // Hard constraints are checked before cache/model work so an ineligible role
-  // can never inherit a stale "strong fit" artifact.
+  // Hard constraints are checked before scoring so an ineligible role can
+  // never inherit a misleading fit score.
   const eligibility = isEligible(user, job);
   if (!eligibility.ok) {
     return {
@@ -746,50 +586,34 @@ async function getJobFit(user, jobId, { force = false } = {}) {
       summary: `You do not meet this role's eligibility constraints: ${eligibility.reason}.`,
       eligible: false,
       job: { jobId: String(job._id), title: job.Job_name },
-      model: "offline",
+      model: "algorithm",
       generatedAt: new Date(),
       cached: false,
     };
   }
 
-  const key = `fit:${user._id}:${jobId}`;
-  if (!force) {
-    const cached = await readCache(key);
-    if (cached) {
-      return {
-        ...cached.payload,
-        job: { jobId: String(job._id), title: job.Job_name },
-        model: cached.model,
-        generatedAt: cached.generatedAt,
-        cached: true,
-      };
-    }
-  }
-
-  const ai = await generateJSON(fitPrompt(user, job), { maxOutputTokens: 700 });
   const poster = job.userID
     ? await User.findById(job.userID).select("name role").lean()
     : null;
-  const deterministic = matchInternship(user, job, poster);
-  const payload = normalizeFit(ai?.data, user, job, deterministic);
-  const model = ai?.model || "offline";
-
-  if (ai?.data) {
-    await writeCache(
-      key,
-      "job_fit",
-      `${user._id}:${jobId}`,
-      payload,
-      [{ label: `Job · ${job.Job_name}`, href: "/jobs", type: "job" }],
-      model,
-      FIT_TTL
-    );
+  const match = matchInternship(user, job, poster);
+  if (!match) {
+    return { error: "not_eligible", reason: eligibility.reason || "" };
   }
+
+  const payload = {
+    score: match.score,
+    verdict: match.verdict,
+    matchedSkills: match.matchedSkills,
+    missingSkills: match.missingSkills,
+    prepSteps: prepStepsFor(match.missingSkills),
+    summary: match.summary,
+  };
 
   return {
     ...payload,
+    eligible: true,
     job: { jobId: String(job._id), title: job.Job_name },
-    model,
+    model: "algorithm",
     generatedAt: new Date(),
     cached: false,
   };
