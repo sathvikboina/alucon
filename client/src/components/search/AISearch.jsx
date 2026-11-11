@@ -8,6 +8,7 @@ const SUGGESTIONS = [
   "Find alumni working at Google",
   "Find posts about placements",
   "Find resources for learning Python",
+  "Find resources",
   "Find upcoming technical events",
 ];
 
@@ -226,6 +227,8 @@ const AISearch = () => {
                 -dim · {data.engine?.indexSize || 0} indexed records
               </span>
             </div>
+
+            {data.notice && <p className="ai-search-notice">{data.notice}</p>}
 
             {data.groups.map((group) => (
               <section key={group.type} className="ai-search-group">

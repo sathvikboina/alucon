@@ -31,6 +31,15 @@ const TYPE_LABELS = {
   group: "Groups & cohorts",
 };
 
+const TYPE_NOUNS = {
+  job: "internships or jobs",
+  alumni: "alumni or members",
+  post: "posts",
+  resource: "resources",
+  event: "events",
+  group: "groups",
+};
+
 const STOPWORDS = new Set([
   "a", "an", "and", "are", "as", "at", "be", "by", "can", "do", "for", "from",
   "find", "get", "give", "help", "how", "i", "in", "is", "it", "me", "my",
@@ -657,6 +666,14 @@ async function searchAll(user, rawQuery, { limit = 6, type = "" } = {}) {
     counts[result.type] = (counts[result.type] || 0) + 1;
   }
 
+  // If the member explicitly asked for one kind of record and none exist, say
+  // so instead of presenting unrelated modules as if they answered the query.
+  const requestedCount = intent.type ? counts[intent.type] || 0 : null;
+  const notice =
+    intent.type && requestedCount === 0 && results.length > 0
+      ? `No ${TYPE_NOUNS[intent.type] || TYPE_LABELS[intent.type]} matched “${query}”. Showing related results from other modules.`
+      : "";
+
   // Put the requested kind first: "posts about placements" should lead with
   // posts, not with an alumnus whose bio happens to mention placements.
   const groupOrder = intent.type
@@ -681,6 +698,9 @@ async function searchAll(user, rawQuery, { limit = 6, type = "" } = {}) {
       dimensions: EMBEDDING_DIM,
     },
     intent,
+    requestedType: intent.type || "",
+    requestedCount,
+    notice,
     total: results.length,
     results: results.slice(0, boundedLimit * 4),
     groups,
