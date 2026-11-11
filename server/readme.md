@@ -8,6 +8,7 @@ root `README.md`.
 npm install
 npm run server   # nodemon, development
 npm start        # plain node
-npm run seed     # refresh demo data
-npm test         # matching, email queue and security tests
+npm run seed     # refresh demo data and rebuild the search index
+npm test         # matching, email queue, security, AI insights and search tests
+npm run search:index  # rebuild the unified BGE search index
 ```

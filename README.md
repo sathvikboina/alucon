@@ -72,7 +72,8 @@ The platform focuses on engagement, collaboration, and alumni tracking in one in
 - Socket.io
 - Cloudinary
 - Brevo (transactional email)
-- Gemini (optional AI layer with an offline fallback)
+- Gemini (on-demand briefing and thread TL;DR only; optional, with an offline fallback)
+- BGE-small-en-v1.5 via `@huggingface/transformers` (local embeddings for unified search)
 - Render
 
 ---
@@ -147,10 +148,13 @@ CLOUDINARY_CLOUD_NAME=your_cloud_name
 CLOUDINARY_API_KEY=your_key
 CLOUDINARY_API_SECRET=your_secret
 
-# AI features (Gemini). Optional: without a key the app uses offline,
-# extractive output so the UI still works.
+# On-demand AI (Gemini). Used only for the feed briefing and thread TL;DR.
+# Optional: without a key the app returns offline, extractive output.
 GEMINI_API_KEY=your_gemini_key
 GEMINI_MODEL=gemini-3-flash-preview
+
+# Unified search embeddings. Downloaded on first use and cached on disk.
+EMBEDDING_MODEL=Xenova/bge-small-en-v1.5
 ```
 
 Frontend `.env`
@@ -229,7 +233,8 @@ The script refuses to run when `NODE_ENV=production`, because every demo
 account shares a public password. It is idempotent (users matched by email,
 posts by heading, groups by name), so it is safe to re-run locally. Re-running also refreshes the demo timestamps
 (post and comment dates, event times and job deadlines), so the feed and the
-7-day AI briefing stay relative to today. It seeds 38 feed posts plus 9 group
+on-demand briefing stay relative to today. The seed also rebuilds the unified
+search index. It seeds 38 feed posts plus 9 group
 discussions and the comment threads behind them: a
 base set of announcements plus longer LinkedIn-style essays and short X-style
 takes written for the demo. All of that content is original fiction, not copied
@@ -278,7 +283,7 @@ access mode:
 
 Group threads are ordinary `Post` documents with a `group` reference. Likes,
 comments and the AI TL;DR therefore work unchanged. They are deliberately
-excluded from `/api/posts/search`, `/api/feed/for-you` and the weekly AI
+excluded from `/api/posts/search`, `/api/feed/for-you` and the on-demand AI
 briefing (`group: null`), and post detail, likes, comments and thread summaries
 all re-check `canViewGroupPost`. The demo seed creates seven hubs, nine
 discussions and two replies.
@@ -288,49 +293,72 @@ discussions and two replies.
 ## ✨ AI Features
 
 AI is attached to existing objects instead of living in a generic chat page.
+Generated text is on demand: the feed briefing and a thread TL;DR. Search, job
+fit and matching are deterministic and never call a model.
 
 | Feature | Where | Endpoint |
 |---|---|---|
-| **Weekly briefing** — themes, a suggested next step, posts worth reading, upcoming events, sources | Feed right rail, moved into the feed below 1180px | `GET /api/ai/insights/briefing` |
-| **Thread TL;DR** — 3 bullets, the open question, a suggested reply | Post card, when a thread has ≥2 replies | `POST /api/ai/insights/posts/:id/summary` |
-| **Job fit** — score, verdict, matched/missing skills, prep steps | Job board, student view | `GET /api/ai/insights/jobs/:id/fit` |
-| **Internship matches** — ranked roles, evidence, gaps, deadline context | `/internship-matches` | `GET /api/ai/insights/jobs/matches` |
-| **Mentor matches** — ranked mentors, shared skills, availability, request flow | `/mentor-matches` | `GET /api/ai/insights/mentors/matches` and `GET /api/mentorship/matches` |
+| **On-demand briefing** — themes, a suggested next step, posts worth reading, upcoming events, sources | Feed right rail; generated only when the member clicks **Generate briefing**, moved into the feed below 1180px | `GET /api/ai/insights/briefing` |
+| **Thread TL;DR** — 3 bullets, the open question, a suggested reply | Post card, when a thread has ≥2 replies and the post is at least 750 words | `POST /api/ai/insights/posts/:id/summary` |
+| **Job fit** — deterministic score, verdict, matched/missing skills, prep steps | Job board, student view | `GET /api/ai/insights/jobs/:id/fit` |
+| **Internship matches** — deterministic ranked roles, evidence, gaps, deadline context | `/internship-matches` | `GET /api/ai/insights/jobs/matches` |
+| **Mentor matches** — deterministic ranked mentors, shared skills, availability, request flow | `/mentor-matches` | `GET /api/ai/insights/mentors/matches` and `GET /api/mentorship/matches` |
 
 Design guarantees:
 
 - **Grounded** — the model only sees posts the signed-in user may view; themes,
   counts, events and people are computed in Mongo, not generated.
 - **Cited** — briefing responses include a `sources[]` array rendered as links.
-- **Cached** — results live in the `ai_artifacts` collection, so repeat views are
-  instant. Offline fallbacks are never cached. Cache bypass (`?force=1`) is
+- **Cached** — only generated text lives in `ai_artifacts` (briefing 6 h, thread
+  TL;DR 24 h). Offline fallbacks are never cached. Cache bypass (`?force=1`) is
   admin-only, so a normal account cannot trigger repeated model calls.
-- **Degrades safely** — with no `GEMINI_API_KEY`, each endpoint returns a
+- **Degrades safely** — with no `GEMINI_API_KEY`, briefing and TL;DR return a
   deterministic extractive result labelled `offline` in the UI.
 - **Time-boxed** — a request may try several Gemini models, but the whole chain
   is capped at 20 seconds before falling back.
 
-The older `/ai-help` institute assistant is still present but parked; it uses
-Mistral and now requires a signed-in account plus a 5-requests/minute limit.
+The legacy Mistral `/ai-help` assistant has been removed; no such route remains.
+
+### Unified search
+
+`/search` is one bar across the public searchable modules: internships and jobs,
+alumni, non-group posts, resources, events and groups. The feed remains the
+first page after login; search is a separate destination.
+
+- **Embeddings** — `Xenova/bge-small-en-v1.5` (384 dims) runs locally through
+  `@huggingface/transformers`. Queries use the BGE retrieval instruction prefix;
+  passages are embedded as-is.
+- **Storage** — one `search_documents` record per source record with searchable
+  text, metadata, URL and a 384-float vector. Vectors stay in MongoDB; there is
+  no Pinecone/Chroma/FAISS dependency.
+- **Ranking** — 0.6 cosine similarity + 0.4 lexical evidence + a 0.1 intent
+  boost, with a content-token guard and an upcoming-event filter. Ranking runs
+  in Node; no LLM generates answers.
+- **Access** — post visibility and private-group membership are enforced before
+  ranking. Messenger messages, notifications, mentorship requests, group
+  threads and other private records are intentionally excluded.
+- **Operations** — `npm run search:index` rebuilds the index, startup warms it
+  when empty, the seed rebuilds it, and `GET /api/search/status` reports size
+  and model. Indexing is **not yet incremental**: content created after startup
+  becomes searchable after a rebuild, restart or seed.
 
 ### Internship & mentor matching
 
-Both matching flows use the same explainable pipeline from the project deck:
+Both matching flows use the same deterministic, explainable pipeline:
 
 1. **Hard constraints** — deadline, active role, eligible program/graduation
    year, mentor availability and capacity.
-2. **Semantic / skill overlap** — normalized skills with aliases (`ML` ↔
+2. **Skill overlap** — normalized skills with aliases (`ML` ↔
    `Machine Learning`, `Node` ↔ `Node.js`) plus description/profile token
    overlap.
-3. **Contextual rerank** — preferred type, work mode, location, recency, poster
+3. **Contextual signals** — preferred type, work mode, location, recency, poster
    role, shared academic background and past mentorship response rate.
 4. **Explanation** — every card exposes reasons, matched skills, gaps and a
    next action.
 
-The deterministic ranker always runs first. If `GEMINI_API_KEY` is configured,
-the top candidates are re-ranked once and cached (`ai_artifacts`); otherwise
-the UI labels the output **Rule-based ranking**. The model can only reorder
-candidates it is given — it cannot invent people, roles or skills.
+There is no model rerank and no `ai_artifacts` match cache. Every response
+returns `model: "algorithm"` and the UI labels it **Algorithmic ranking** /
+**Algorithmic assessment**. The same inputs always produce the same order.
 
 Only a member's listed profile skills count as evidence; internship
 preferences (type, mode, location) affect context, not the skill score. The
@@ -355,7 +383,8 @@ MONGO_URI=mongodb://127.0.0.1:27017/alumniconnect npm run seed
 npm run test:matching
 ```
 
-Set the key in `server/.env`, restart, then pre-compute demo artifacts:
+Set the key in `server/.env` and restart to enable generated text. Briefings are
+on demand, so `npm run ai:warm` pre-computes thread TL;DR artifacts only:
 
 ```bash
 cd server
@@ -395,9 +424,10 @@ seconds, likes, comments, shares, follows, searches, topic views and
 - ε-greedy exploration: 10% of slots, deterministic per user per day
   (mulberry32 PRNG seeded with an FNV-1a hash)
 
-No LLM, embedding model or vector database is involved. The API returns a
-`feed.reason` for each post, rendered as the `✦` chip on the card. The full
-technical record is in
+This ranker uses no LLM, embedding model or vector database. (The separate
+unified search index does use BGE-small embeddings stored in MongoDB; the two
+systems are independent.) The API returns a `feed.reason` for each post,
+rendered as the `✦` chip on the card. The full technical record is in
 [`AlumniConnect_Changelog_and_Ideas.xlsx`](./AlumniConnect_Changelog_and_Ideas.xlsx)
 — one workbook with the combined changelog, future ideas, stack/algorithms,
 features and verification.
@@ -484,10 +514,12 @@ Project deployed on **Render**
 
 ## 🔮 Future Scope
 
-- AI-based Alumni Recommendations  
-- Advanced Analytics  
-- Mobile App Support  
-- Video Mentorship Sessions  
+- Incremental search indexing and broader public-content coverage
+- BGE-powered semantic internship and mentor matching
+- Provider-agnostic on-demand AI (Qwen or Gemini, with offline fallback)
+- Advanced Analytics
+- Mobile App Support
+- Video Mentorship Sessions
 - Enhanced Notification Features  
 
 ---
