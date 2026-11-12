@@ -111,6 +111,27 @@ test("ordinary 'not' phrases are not treated as filters", () => {
   assert.deepEqual(phase.content, ["accessibility", "phase"]);
 });
 
+test("natural exclusion phrases resolve to the right term", () => {
+  const cases = [
+    ["no one from Bangalore", ["bangalore"]],
+    ["nobody from Bangalore", ["bangalore"]],
+    ["no alumni from Bangalore", ["bangalore"]],
+    ["show me alumni except the ones in Bangalore", ["bangalore"]],
+    ["alumni other than those in Bangalore", ["bangalore"]],
+    ["alumni apart from the Bangalore ones", ["bangalore"]],
+    ["exclude alumni from Bangalore", ["bangalore"]],
+    ["no one in Bangalore", ["bangalore"]],
+    ["posts not about placements", ["placements"]],
+  ];
+  for (const [query, expected] of cases) {
+    assert.deepEqual(
+      parseSearchQuery(query).negated.map((entry) => entry.phrase),
+      expected,
+      query
+    );
+  }
+});
+
 test("negated terms exclude matching records and respect synonyms", () => {
   const parsed = parseSearchQuery("alumni who are not working at Google");
   assert.deepEqual(

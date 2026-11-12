@@ -56,7 +56,9 @@ const STOPWORDS = new Set([
   "not", "no", "don", "dont", "doesn", "doesnt", "didn", "didnt", "isn", "isnt",
   "aren", "arent", "wasn", "wasnt", "weren", "werent", "excluding", "except",
   "without", "outside", "other", "than", "apart", "besides", "but", "however",
-  "while", "whereas", "yet", "though", "although",
+  "while", "whereas", "yet", "though", "although", "one", "ones", "those",
+  "these", "anyone", "someone", "everyone", "anybody", "somebody", "nobody",
+  "none",
 ]);
 
 // Query language that flips the meaning of the words that follow it. The
@@ -65,9 +67,10 @@ const STOPWORDS = new Set([
 const NEGATION_CUES = [
   "do not", "does not", "did not", "don t", "doesn t", "didn t",
   "is not", "isn t", "are not", "aren t", "was not", "wasn t",
-  "were not", "weren t", "not", "dont", "doesnt", "didnt", "isnt",
-  "arent", "wasnt", "werent", "excluding", "except", "without",
-  "outside", "other than", "apart from", "besides",
+  "were not", "weren t", "no one", "nobody", "none", "not", "no",
+  "dont", "doesnt", "didnt", "isnt", "arent", "wasnt", "werent",
+  "exclude", "excluded", "excluding", "except", "without", "outside",
+  "other than", "apart from", "besides",
 ];
 
 const NEGATION_BOUNDARIES = [
@@ -81,12 +84,12 @@ const NEGATION_BOUNDARIES = [
 const WEAK_NEGATION_CUES = new Set([
   "do not", "does not", "did not", "don t", "doesn t", "didn t",
   "is not", "isn t", "are not", "aren t", "was not", "wasn t",
-  "were not", "weren t", "not", "no", "dont", "doesnt", "didnt", "isnt",
-  "arent", "wasnt", "werent",
+  "were not", "weren t", "no one", "nobody", "none", "not", "no",
+  "dont", "doesnt", "didnt", "isnt", "arent", "wasnt", "werent",
 ]);
 
 const NEGATION_FILTER_RE =
-  /^(?:(?:currently|actually|really|also)\s+)?(?:work(?:s|ing|ed)?|based|located|live(?:s|d|ing)?|hq|headquartered|in|at|from|for|with)\b/;
+  /^(?:(?:currently|actually|really|also|one|ones|those|these|anyone|someone|everyone|anybody|somebody|nobody|none|alumni|alumnus|people|members|jobs|posts|resources|events|groups|of|the)\s+)*(?:work(?:s|ing|ed)?|based|located|live(?:s|d|ing)?|hq|headquartered|in|at|from|for|with|about)\b/;
 
 const escapeRegexText = (value) =>
   value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -868,6 +871,12 @@ async function searchAll(
   // Honour that instead of filling the page with groups, events and posts that
   // merely mention alumni.
   const restrictToIntent = Boolean(intent.type && parsed.negated.length);
+  // A pure filter such as "not from Bangalore" has no positive subject and no
+  // type. Keep every eligible record except the excluded ones instead of
+  // dropping them all on the relevance threshold.
+  const negationOnly = Boolean(
+    parsed.negated.length && !content.length && !intent.type
+  );
   const wantsUpcoming = /\bupcoming\b/.test(phrase);
   const now = Date.now();
   const results = [];
@@ -910,7 +919,7 @@ async function searchAll(
         includesPhrase(normalize(doc.body), phrase));
     if (exact) score += 0.08;
 
-    if (!exact && score < 0.3 && lexical < 0.35) continue;
+    if (!exact && !negationOnly && score < 0.3 && lexical < 0.35) continue;
 
     results.push({
       type: doc.sourceType,
