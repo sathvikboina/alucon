@@ -131,6 +131,7 @@ before(async () => {
 	app.use(express.json());
 	app.use("/api/users", require("../routes/api/users"));
 	app.use("/api/showcase", require("../routes/showcaseRoutes"));
+	app.use("/api/auth", require("../routes/api/auth"));
 
 	const started = await listen(app);
 	server = started.server;
@@ -250,4 +251,61 @@ test("D8: showcase update still applies whitelisted fields", async () => {
 
 	assert.equal(response.status, 200);
 	assert.equal(response.body.name, "Batch3 Renamed");
+});
+
+/* ------------------------------------------------------------------ */
+/* D11 — bad reset tokens are client errors, not server errors         */
+/* ------------------------------------------------------------------ */
+
+const resetBody = (user, resetToken) => ({
+	password: "new-regression-pass",
+	password_confirm: "new-regression-pass",
+	user_id: String(user._id),
+	reset_token: resetToken,
+});
+
+test("D11: reset-password rejects an invalid token with 400", async () => {
+	const response = await api(baseUrl, "/api/auth/reset-password", {
+		method: "POST",
+		body: resetBody(member, "not-a-valid-jwt"),
+	});
+
+	assert.equal(response.status, 400);
+	assert.ok(
+		Array.isArray(response.body.errors),
+		"invalid reset token should return a validation-style 400 body"
+	);
+});
+
+test("D11: reset-password rejects an expired token with 400", async () => {
+	const withPassword = await User.findById(member._id).select("+password");
+	const expired = jwt.sign(
+		{ user: { id: String(member._id) } },
+		TEST_SECRET + withPassword.password,
+		{ expiresIn: -10 }
+	);
+
+	const response = await api(baseUrl, "/api/auth/reset-password", {
+		method: "POST",
+		body: resetBody(member, expired),
+	});
+
+	assert.equal(response.status, 400);
+	assert.ok(
+		Array.isArray(response.body.errors),
+		"expired reset token should return a validation-style 400 body"
+	);
+});
+
+test("D11: verify-reset-link rejects an invalid token with 400", async () => {
+	const response = await api(baseUrl, "/api/auth/verify-reset-link", {
+		method: "POST",
+		body: { user_id: String(member._id), reset_token: "not-a-valid-jwt" },
+	});
+
+	assert.equal(response.status, 400);
+	assert.ok(
+		Array.isArray(response.body.errors),
+		"invalid reset link should return a validation-style 400 body"
+	);
 });

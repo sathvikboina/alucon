@@ -251,6 +251,16 @@ router.post(
 			
 			return res.status(200).send("Password Reset success");
 		} catch (err) {
+			// A malformed or expired reset token is a client error, not a
+			// server failure. Only unexpected errors stay as 500.
+			if (
+				err instanceof jwt.JsonWebTokenError ||
+				err instanceof jwt.NotBeforeError
+			) {
+				return res
+					.status(400)
+					.json({ errors: [{ msg: "Invalid or expired reset link" }] });
+			}
 			res.status(500).send("Server error.");
 		}
 	}
@@ -258,8 +268,9 @@ router.post(
 
 router.post("/verify-reset-link", resetPasswordLimiter, async (req, res) => {
 	const { user_id, reset_token } = req.body;
+	let user;
 	try {
-		const user = await User.findOne({ _id: user_id }).select("+password");
+		user = await User.findOne({ _id: user_id }).select("+password");
 		if (!user) {
 			return res
 				.status(400)
@@ -278,6 +289,14 @@ router.post("/verify-reset-link", resetPasswordLimiter, async (req, res) => {
 		}
 		return res.json({ valid: true });
 	} catch (err) {
+		if (
+			err instanceof jwt.JsonWebTokenError ||
+			err instanceof jwt.NotBeforeError
+		) {
+			return res
+				.status(400)
+				.json({ errors: [{ msg: "Invalid or expired reset link" }] });
+		}
 		res.status(500).json({ errors: [{ msg: "Invalid Request" }] });
 	}
 });
