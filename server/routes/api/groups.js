@@ -11,6 +11,7 @@ const {
   queueSearchRefresh,
   removeSearchDocument,
 } = require("../../services/searchIndex");
+const { buildThenAndNow } = require("../../services/thenAndNow");
 
 const router = express.Router();
 const profanity = new Filter();
@@ -289,7 +290,7 @@ router.get("/:id", auth, async (req, res) => {
       .populate("owner", "name avatar role designation organisation")
       .populate(
         "members.user",
-        "name avatar role program passing_year designation organisation"
+        "name avatar role program passing_year designation organisation location show_city blocked"
       )
       .populate("joinRequests.user", "name avatar role email")
       .populate("invites.user", "name avatar role email")
@@ -302,6 +303,10 @@ router.get("/:id", auth, async (req, res) => {
     const [discussionsCount] = await Promise.all([
       Post.countDocuments({ group: group._id }),
     ]);
+    const thenAndNow =
+      group.category === "BATCH"
+        ? await buildThenAndNow({ group, viewerId: user._id })
+        : undefined;
 
     res.json({
       group: {
@@ -342,6 +347,7 @@ router.get("/:id", auth, async (req, res) => {
         canManage: manage,
         canViewDiscussions: visible,
         discussionsCount,
+        thenAndNow,
       },
     });
   } catch (error) {

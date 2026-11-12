@@ -997,3 +997,146 @@
     align-items: flex-start;
   }
 }
+
+/* ── Then & Now (BATCH groups) ─────────────────────────────────────────── */
+.group-then-now-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: flex-start;
+  margin-bottom: 18px;
+}
+
+.group-then-now-head h2 {
+  margin: 0 0 6px;
+  color: #0f2044;
+}
+
+.group-then-now-head p {
+  margin: 0;
+  max-width: 620px;
+  color: #667085;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.group-then-now-chip {
+  flex: 0 0 auto;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  background: #f2f4f7;
+  color: #475467;
+  border-radius: 999px;
+  padding: 5px 10px;
+}
+
+.group-then-now-block {
+  border-top: 1px solid #eaecf0;
+  padding-top: 16px;
+  margin-top: 16px;
+}
+
+.group-then-now-block h3 {
+  margin: 0 0 10px;
+  color: #0f2044;
+  font-size: 15px;
+}
+
+.group-city-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 9px;
+}
+
+.group-city-item {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  border: 1px solid #e4e7ec;
+  border-radius: 9px;
+  background: #fcfcfd;
+  padding: 9px 11px;
+}
+
+.group-city-item strong {
+  color: #175cd3;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.group-city-item span {
+  color: #475467;
+  font-size: 12.5px;
+}
+
+.group-then-now-hint {
+  margin: 10px 0 0;
+  color: #98a2b3;
+  font-size: 11.5px;
+  line-height: 1.5;
+}
+
+.group-reconnect-list {
+  display: grid;
+  gap: 10px;
+}
+
+.group-reconnect-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+  border: 1px solid #e4e7ec;
+  border-radius: 10px;
+  background: #fcfcfd;
+  padding: 12px;
+}
+
+.group-reconnect-item .group-member-identity {
+  align-items: flex-start;
+}
+
+.group-reconnect-item .group-member-identity > div > span {
+  display: block;
+  margin-top: 2px;
+  color: #667085;
+  font-size: 11.5px;
+}
+
+.group-reconnect-item .group-member-identity strong {
+  display: block;
+  color: #0f2044;
+  font-size: 12.5px;
+}
+
+.group-reconnect-shared {
+  margin-top: 3px;
+  color: #667085 !important;
+  font-size: 11.5px !important;
+}
+
+.group-reconnect-city {
+  margin-top: 3px;
+  color: #067647 !important;
+  font-size: 11.5px !important;
+  font-weight: 600;
+}
+
+.group-reconnect-actions {
+  display: flex;
+  gap: 7px;
+  flex: 0 0 auto;
+}
+
+@media (max-width: 640px) {
+  .group-then-now-head,
+  .group-reconnect-item {
+    flex-direction: column;
+  }
+
+  .group-reconnect-actions {
+    width: 100%;
+  }
+}

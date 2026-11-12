@@ -66,6 +66,10 @@ router.post(
 		if (organisation !== undefined) profileFields.organisation = organisation;
 		if (website !== undefined) profileFields.website = website;
 		if (location !== undefined) profileFields.location = location;
+		if (req.body.show_city !== undefined) {
+			profileFields.show_city =
+				req.body.show_city === true || req.body.show_city === "true";
+		}
 		if (bio !== undefined) profileFields.bio = bio;
 		if (status !== undefined) profileFields.status = status;
 		if (githubusername !== undefined) profileFields.githubusername = githubusername;

@@ -44,6 +44,7 @@ const Dashboard = ({ closeSideNav, getCurrentUserProfile, addExperience, addEduc
   // Full profile form — all original EditProfile fields
   const [profileForm, setProfileForm] = useState({
     bio: "", website: "", skills: "", location: "",
+    show_city: false,
     status: "", organisation: "", githubusername: "",
     twitter: "", facebook: "", linkedin: "", youtube: "", instagram: "",
     mentor_available: false, mentor_areas: "", mentor_capacity: 3, mentor_mode: "Remote",
@@ -62,6 +63,7 @@ const Dashboard = ({ closeSideNav, getCurrentUserProfile, addExperience, addEduc
         website: authUser.website || "",
         skills: authUser.skills ? authUser.skills.join(", ") : "",
         location: authUser.location || "",
+        show_city: authUser.show_city === true,
         status: authUser.status || "",
         organisation: authUser.organisation || "",
         githubusername: authUser.githubusername || "",
@@ -368,6 +370,21 @@ const Dashboard = ({ closeSideNav, getCurrentUserProfile, addExperience, addEduc
             <label style={labelStyle}>
               Location
               <input style={inputStyle} type="text" placeholder="City, Country" value={profileForm.location} onChange={onChange("location")} />
+            </label>
+
+            <label style={{ ...labelStyle, display: "flex", alignItems: "flex-start", gap: "8px" }}>
+              <input
+                type="checkbox"
+                checked={profileForm.show_city}
+                onChange={onChange("show_city")}
+                style={{ marginTop: "4px" }}
+              />
+              <span>
+                Include my city in BATCH group totals
+                <span style={{ display: "block", color: "#999", fontWeight: 400, fontSize: "0.78rem", marginTop: "3px" }}>
+                  Off by default. In “Then &amp; Now”, only your city-level count appears — never your name or exact location.
+                </span>
+              </span>
             </label>
 
             <label style={labelStyle}>

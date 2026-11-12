@@ -169,6 +169,21 @@ const GroupDetail = () => {
     }
   };
 
+  const sayHi = async (member) => {
+    setBusy(true);
+    setError("");
+    setNotice("");
+    try {
+      const { data } = await api.post("/api/conversations/start", {
+        memberIds: [member.id],
+      });
+      history.push(`/messenger/chat/${data._id}`);
+    } catch (err) {
+      setError(err?.response?.data?.msg || "Could not open Messenger.");
+      setBusy(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="groups-page">
@@ -279,6 +294,9 @@ const GroupDetail = () => {
           {[
             ["discussions", `Discussions (${group.discussionsCount || 0})`],
             ["members", `Members (${group.membersCount || 0})`],
+            ...(group.category === "BATCH" && group.thenAndNow?.enabled
+              ? [["then-now", "Then & Now"]]
+              : []),
             ["guidelines", "Guidelines & Rules"],
           ].map(([key, label]) => (
             <button
@@ -408,6 +426,119 @@ const GroupDetail = () => {
                 ))}
               </div>
             )}
+          </section>
+        )}
+
+        {tab === "then-now" && group.thenAndNow?.enabled && (
+          <section className="group-panel group-then-now">
+            <div className="group-then-now-head">
+              <div>
+                <h2>Then &amp; Now</h2>
+                <p>
+                  A read-only snapshot of where this batch is today, built from
+                  existing member profiles and shared groups. Nothing here
+                  creates a feed or a new profile.
+                </p>
+              </div>
+              <span className="group-then-now-chip">Read-only</span>
+            </div>
+
+            <div className="group-then-now-block">
+              <h3>Where the batch is now</h3>
+              {group.thenAndNow.cityCounts?.length ? (
+                <div className="group-city-list">
+                  {group.thenAndNow.cityCounts.map((entry) => (
+                    <div className="group-city-item" key={entry.city}>
+                      <strong>{entry.count}</strong>
+                      <span>
+                        {entry.city}
+                        {entry.count === 1 ? " member" : " members"}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="groups-empty">
+                  No city totals yet. Members choose to share their city from
+                  their profile.
+                </p>
+              )}
+              <p className="group-then-now-hint">
+                Only city-level totals appear, and only for members who opted
+                in. {group.thenAndNow.cityOptIn
+                  ? "Your city is included."
+                  : "Your city is not included; you can change that in your profile."}
+              </p>
+            </div>
+
+            <div className="group-then-now-block">
+              <h3>Reconnect through shared groups</h3>
+              {group.thenAndNow.reconnect?.length ? (
+                <div className="group-reconnect-list">
+                  {group.thenAndNow.reconnect.map((member) => (
+                    <div className="group-reconnect-item" key={member.id}>
+                      <div className="group-member-identity">
+                        <span className="group-member-avatar">
+                          {(member.name || "II")
+                            .split(/\s+/)
+                            .filter(Boolean)
+                            .slice(0, 2)
+                            .map((part) => part[0])
+                            .join("")
+                            .toUpperCase()}
+                        </span>
+                        <div>
+                          <strong>{member.name}</strong>
+                          <span>
+                            {[member.designation, member.organisation]
+                              .filter(Boolean)
+                              .join(" · ") ||
+                              [member.program, member.passing_year]
+                                .filter(Boolean)
+                                .join(" · ") ||
+                              "IIITA member"}
+                          </span>
+                          <span className="group-reconnect-shared">
+                            Also in{" "}
+                            {member.sharedGroups.join(", ")}
+                            {member.sharedGroupCount > member.sharedGroups.length
+                              ? ` +${member.sharedGroupCount - member.sharedGroups.length} more`
+                              : ""}
+                          </span>
+                          {member.city && (
+                            <span className="group-reconnect-city">
+                              {member.city}
+                              {member.sameCity ? " · same city" : ""}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="group-reconnect-actions">
+                        <Link
+                          to={`/profile/${member.id}`}
+                          className="group-btn tiny"
+                        >
+                          Profile
+                        </Link>
+                        <button
+                          type="button"
+                          className="group-btn tiny primary"
+                          disabled={busy}
+                          onClick={() => sayHi(member)}
+                        >
+                          Say hi
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="groups-empty">
+                  No shared-group reconnects yet. Join another hub alongside
+                  your batchmates to create a prompt.
+                </p>
+              )}
+            </div>
           </section>
         )}
 

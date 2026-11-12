@@ -73,6 +73,12 @@ const UserSchema = new mongoose.Schema({
 		type: String,
 		required: false,
 	},
+	// Opt-in: a member's city is included only in aggregate BATCH counts when
+	// this is true. Legacy accounts stay opted out.
+	show_city: {
+		type: Boolean,
+		default: false,
+	},
 	designation: {
 		type: String,
 		required: false,

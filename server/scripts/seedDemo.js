@@ -619,6 +619,17 @@ const connectorOptInKeys = new Set([
   "tara",
 ]);
 
+const showCityKeys = new Set([
+  "sathvik",
+  "rahul",
+  "ananya",
+  "priya",
+  "aditya",
+  "meera",
+  "kabir",
+  "tara",
+]);
+
 const mentorDefaultsFor = (spec) => {
   if (!["alumni", "faculty"].includes(spec.role)) {
     return { available: false, areas: [], capacity: 0, mode: "Remote" };
@@ -917,6 +928,7 @@ async function run() {
   const password = await bcrypt.hash(DEMO_PASSWORD, 10);
   const byKey = {};
   let createdUsers = 0;
+  let seededCityOptIns = 0;
 
   for (const spec of allUsers) {
     const matching = matchingProfiles[spec.key] || {};
@@ -942,13 +954,21 @@ async function run() {
     };
 
     let user = await User.findOne({ email: spec.email });
+    const seedShowCity =
+      showCityKeys.has(spec.key) && (!user || user.$isDefault("show_city"));
     if (!user) {
       user = await User.create({ ...fields, password });
       createdUsers += 1;
+      if (seedShowCity) {
+        user.show_city = true;
+        await user.save();
+      }
     } else {
       Object.assign(user, fields);
+      if (seedShowCity) user.show_city = true;
       await user.save();
     }
+    if (seedShowCity) seededCityOptIns += 1;
     if (
       spec.pastExperience &&
       spec.pastExperience.length &&
@@ -1579,7 +1599,7 @@ async function run() {
       `${createdDoorRequests} door requests, ${createdConversations} conversations, ` +
       `${createdMessages} messages, ${createdJoinRequests} join requests, ` +
       `${createdEventQuestions} event questions, ${createdCompanies} companies, ` +
-      `${createdSignals} signals.`
+      `${createdSignals} signals, ${seededCityOptIns} city opt-ins.`
   );
   console.log(
     `Refreshed: ${refreshedPosts} posts, ${refreshedComments} comments, ` +
