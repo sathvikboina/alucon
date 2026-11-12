@@ -1,0 +1,262 @@
+/* Persistent application sidebar. Sits below the sticky Navbar and replaces the
+   feed-only left rail so every signed-in page has the same navigation. */
+
+.app-shell {
+  display: flex;
+  align-items: flex-start;
+  min-height: calc(100vh - 64px);
+}
+
+.app-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.app-sidebar {
+  --sidebar-width: 232px;
+  position: sticky;
+  top: 64px;
+  display: flex;
+  flex-direction: column;
+  width: var(--sidebar-width);
+  min-width: var(--sidebar-width);
+  height: calc(100vh - 64px);
+  padding: 14px 10px 16px;
+  background: #ffffff;
+  border-right: 1px solid #e5ebf3;
+  font-family: "Montserrat", sans-serif;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  transition: width 0.18s ease, min-width 0.18s ease;
+  z-index: 30;
+}
+
+.app-sidebar.collapsed {
+  --sidebar-width: 68px;
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
+.app-sidebar-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 30px;
+  margin-bottom: 10px;
+  padding: 0 4px;
+}
+
+.app-sidebar-eyebrow {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #98a6ba;
+  white-space: nowrap;
+}
+
+.app-sidebar-toggle {
+  margin-left: auto;
+  width: 28px;
+  height: 28px;
+  border: 1px solid #dfe7f1;
+  border-radius: 7px;
+  background: #f8fbff;
+  color: #4a6a92;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  flex-shrink: 0;
+  transition: background 0.16s ease, border-color 0.16s ease;
+}
+
+.app-sidebar-toggle:hover {
+  background: #eef4fc;
+  border-color: #b9cfe8;
+}
+
+.app-sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.app-sidebar-section {
+  padding: 8px 0;
+}
+
+.app-sidebar-section + .app-sidebar-section {
+  border-top: 1px solid #f0f4f9;
+}
+
+.app-sidebar-label {
+  margin: 0 0 6px;
+  padding: 0 10px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #a1adbf;
+}
+
+.app-sidebar-link {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 9px 10px;
+  border-radius: 8px;
+  color: #46566d;
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.app-sidebar-link i {
+  width: 17px;
+  text-align: center;
+  font-size: 14px;
+  color: #7a8ba3;
+  flex-shrink: 0;
+}
+
+.app-sidebar-link:hover {
+  background: #f3f7fc;
+  color: #143f70;
+  text-decoration: none;
+}
+
+.app-sidebar-link:hover i {
+  color: #1a5fa8;
+}
+
+.app-sidebar-link.active {
+  background: #eaf2fb;
+  color: #123f73;
+  font-weight: 700;
+}
+
+.app-sidebar-link.active i {
+  color: #1a5fa8;
+}
+
+.app-sidebar-link.active::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: #1a5fa8;
+}
+
+.app-sidebar.collapsed .app-sidebar-link {
+  justify-content: center;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.app-sidebar.collapsed .app-sidebar-link i {
+  width: auto;
+  font-size: 16px;
+}
+
+.app-sidebar-admin {
+  margin-top: auto;
+}
+
+.app-sidebar-admin .app-sidebar-link {
+  color: #7a4b12;
+}
+
+.app-sidebar-admin .app-sidebar-link i {
+  color: #b7791f;
+}
+
+.app-sidebar-footer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+  padding: 10px;
+  border-top: 1px solid #f0f4f9;
+  border-radius: 8px;
+  text-decoration: none;
+  color: inherit;
+  min-width: 0;
+}
+
+.app-sidebar-footer:hover {
+  background: #f6f9fd;
+  text-decoration: none;
+}
+
+.app-sidebar-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #eaf2fb;
+  color: #1a5fa8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.app-sidebar-user {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-sidebar-user strong {
+  font-size: 12.5px;
+  color: #1f334f;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.app-sidebar-user small {
+  font-size: 10.5px;
+  color: #8a99ad;
+  text-transform: capitalize;
+}
+
+/* The feed no longer needs its own left rail when the global sidebar is
+   present; the channel strip already covers topic navigation. */
+.app-shell.has-sidebar .feed-shell {
+  grid-template-columns: minmax(0, 1fr) 300px;
+}
+
+.app-shell.has-sidebar .feed-rail-left {
+  display: none;
+}
+
+@media (max-width: 1300px) {
+  .app-shell.has-sidebar .feed-shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .app-shell.has-sidebar .feed-rail-right {
+    display: none;
+  }
+}
+
+@media (max-width: 900px) {
+  .app-sidebar {
+    display: none;
+  }
+
+  .app-main {
+    width: 100%;
+  }
+}
