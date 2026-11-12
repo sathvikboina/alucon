@@ -19,6 +19,7 @@ const bcrypt = require("bcryptjs");
 const mongoose = require("mongoose");
 
 const User = require("../models/User");
+const Infra = require("../models/Infra");
 
 function mongoParts(raw) {
 	const match = String(raw).match(
@@ -104,6 +105,7 @@ let member;
 let mutualA;
 let mutualB;
 let oneWay;
+let admin;
 
 before(async () => {
 	mongoUri = buildTestUri("routes");
@@ -113,6 +115,12 @@ before(async () => {
 	mutualA = await makeUser("mutual-a", { name: "Batch3 Mutual A" });
 	mutualB = await makeUser("mutual-b", { name: "Batch3 Mutual B" });
 	oneWay = await makeUser("one-way", { name: "Batch3 One Way" });
+	admin = await makeUser("admin", {
+		name: "Batch3 Admin",
+		role: "Admin",
+		isAdmin: true,
+		adminType: "head",
+	});
 
 	// Mutual A and B follow the member back; oneWay does not.
 	member.followings = [mutualA._id, mutualB._id, oneWay._id];
@@ -122,6 +130,7 @@ before(async () => {
 	const app = express();
 	app.use(express.json());
 	app.use("/api/users", require("../routes/api/users"));
+	app.use("/api/showcase", require("../routes/showcaseRoutes"));
 
 	const started = await listen(app);
 	server = started.server;
@@ -174,4 +183,71 @@ test("D5: friends list resolves mutual follows with a single user lookup", async
 		2,
 		`expected 2 findById calls (auth + target user), saw ${findByIdCalls}`
 	);
+});
+
+/* ------------------------------------------------------------------ */
+/* D8 — showcase create/update only accept known model fields          */
+/* ------------------------------------------------------------------ */
+
+test("D8: showcase create ignores client-supplied _id and unknown fields", async () => {
+	const suppliedId = new mongoose.Types.ObjectId();
+	const response = await api(baseUrl, "/api/showcase/infra", {
+		method: "POST",
+		token: tokenFor(admin),
+		body: {
+			name: "Batch3 Whitelist Lab",
+			_id: suppliedId,
+			injected: "should be dropped",
+		},
+	});
+
+	assert.equal(response.status, 201);
+	assert.notEqual(
+		String(response.body._id),
+		String(suppliedId),
+		"create must not accept a caller-supplied _id"
+	);
+	assert.equal(
+		"injected" in response.body,
+		false,
+		"create must drop fields outside the model schema"
+	);
+
+	const saved = await Infra.findById(response.body._id);
+	assert.ok(saved, "created document should exist");
+	assert.equal(saved.name, "Batch3 Whitelist Lab");
+});
+
+test("D8: showcase update drops update operators from req.body", async () => {
+	const created = await Infra.create({
+		name: "Batch3 Update Target",
+		description: "Description must survive a filter attempt",
+	});
+
+	const response = await api(baseUrl, `/api/showcase/infra/${created._id}`, {
+		method: "PUT",
+		token: tokenFor(admin),
+		body: { $unset: { description: "" } },
+	});
+
+	assert.equal(response.status, 200);
+	const saved = await Infra.findById(created._id);
+	assert.equal(
+		saved.description,
+		"Description must survive a filter attempt",
+		"update operators must not reach the database"
+	);
+});
+
+test("D8: showcase update still applies whitelisted fields", async () => {
+	const created = await Infra.create({ name: "Batch3 Rename Target" });
+
+	const response = await api(baseUrl, `/api/showcase/infra/${created._id}`, {
+		method: "PUT",
+		token: tokenFor(admin),
+		body: { name: "Batch3 Renamed" },
+	});
+
+	assert.equal(response.status, 200);
+	assert.equal(response.body.name, "Batch3 Renamed");
 });

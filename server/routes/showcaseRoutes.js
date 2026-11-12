@@ -9,6 +9,19 @@ const Timeline = require('../models/TimeLine');
 const Media = require('../models/Media');
 const escapeRegex = require('../middleware/utils/escapeRegex');
 
+// Only model-defined fields may be written. Reserved bookkeeping paths are
+// excluded, and anything else (unknown keys, update operators) is dropped.
+const pickAllowedFields = (Model, body) => {
+  const allowed = new Set(Object.keys(Model.schema.paths));
+  ['_id', '__v', 'createdAt', 'updatedAt'].forEach((key) => allowed.delete(key));
+
+  const data = {};
+  for (const [key, value] of Object.entries(body || {})) {
+    if (allowed.has(key)) data[key] = value;
+  }
+  return data;
+};
+
 const crudRoutes = (router, path, Model) => {
 
   // GET all — supports ?category=&isFeatured=&search=
@@ -44,7 +57,7 @@ const crudRoutes = (router, path, Model) => {
   // POST create
   router.post(path, authAdmin, async (req, res) => {
     try {
-      const doc = await new Model(req.body).save();
+      const doc = await new Model(pickAllowedFields(Model, req.body)).save();
       res.status(201).json(doc);
     } catch (err) {
       res.status(400).json({ error: err.message });
@@ -56,7 +69,7 @@ const crudRoutes = (router, path, Model) => {
     try {
       const doc = await Model.findByIdAndUpdate(
         req.params.id,
-        req.body,
+        pickAllowedFields(Model, req.body),
         { new: true, runValidators: true }
       );
       if (!doc) return res.status(404).json({ error: 'Not found' });
