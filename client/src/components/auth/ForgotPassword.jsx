@@ -27,7 +27,7 @@ const ForgotPassword = ({ closeSideNav, history, forgotPassword }) => {
 			setSubmitted(true);
 		}).catch(err => {
 			setLoading(false);
-			console.log(err);
+			console.error(err);
 		});
 	};
 

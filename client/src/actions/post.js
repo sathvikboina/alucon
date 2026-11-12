@@ -18,7 +18,6 @@ export const getPosts = (query, channel_name) => async (dispatch) => {
 	try {
 		const params = { query, channel_name};
 		const res = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/posts/search`, { params });
-		console.log(res.data);
 		dispatch({
 			type: GET_POSTS,
 			payload: res.data,
@@ -73,7 +72,7 @@ export const toggleLike = (post_id) => async (dispatch) => {
       payload: res.data,
     });
   } catch (err) {
-    console.log("LIKE ERROR:", err.response?.data);
+    console.error("LIKE ERROR:", err.response?.data);
 
     dispatch({
       type: LIKE_ERROR,
@@ -110,7 +109,7 @@ export const getPost = (post_id) => async (dispatch) => {
 			payload: res.data,
 		});
 	} catch (err) {
-		console.log(err);
+		console.error(err);
 		dispatch({
 			type: POST_ERROR,
 			payload: {
@@ -163,7 +162,7 @@ export const createPost = (formData) => async (dispatch) => {
 		dispatch(setAlert("Post created", "safe"));
 		return 1;
 	} catch (err) {
-		console.log(err.response);
+		console.error(err.response);
 		const errors = err.response.data.errors;
 		if (errors) {
 			errors.forEach((e) => {

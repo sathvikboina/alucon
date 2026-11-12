@@ -34,7 +34,7 @@ const Notifications = () => {
         setNewCount(res.data.newCount || 0);
 
       } catch (err) {
-        console.log(err);
+        console.error(err);
       }
     };
 
@@ -73,7 +73,7 @@ const Notifications = () => {
       history.push(ele.Notification_link);
 
     } catch (err) {
-      console.log(err);
+      console.error(err);
     }
   };
 

@@ -214,7 +214,7 @@ export const followUser = (user_id) => async (dispatch) => {
 		dispatch({ type: FOLLOW_USER, payload: res.data });
 		return true;
 	} catch (err) {
-		console.log(err);
+		console.error(err);
 		return false;
 	}
 };
@@ -225,7 +225,7 @@ export const unFollowUser = (user_id) => async (dispatch) => {
 		dispatch({ type: UNFOLLOW_USER, payload: res.data });
 		return true;
 	} catch (err) {
-		console.log(err);
+		console.error(err);
 		return false;
 	}
 };

@@ -115,7 +115,7 @@ const Event = () => {
   useEffect(() => {
     axios.get(`/api/event/get/getevent`)
       .then(({ data }) => setEventData([...data].reverse()))
-      .catch(console.log);
+      .catch((err) => console.error(err));
   }, []);
 
   useEffect(() => {
@@ -133,7 +133,7 @@ const Event = () => {
     try {
       const { data } = await axios.get(`/api/event-questions/${eventId}/questions`);
       setQuestionsMap((prev) => ({ ...prev, [eventId]: data }));
-    } catch (err) { console.log(err); }
+    } catch (err) { console.error(err); }
   };
 
   const askQuestion = async (eventId) => {

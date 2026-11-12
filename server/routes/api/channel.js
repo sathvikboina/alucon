@@ -25,7 +25,7 @@ router.post("/create-channel", authHeadAdmin, async (req, res) => {
 router.get("/all", auth, async (req, res) => {
 	try {
 		const channels = await Channel.find();
-		console.log("channels = ", channels);
+		console.error("channels = ", channels);
 		res.status(200).json(channels);
 	} catch (err) {
 		console.error(err);

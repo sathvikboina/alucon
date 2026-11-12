@@ -47,17 +47,6 @@ router.post('/:id/answer', auth, async (req, res) => {
 
 
   // Upvote a Doubt
-// router.post('/:id/upvote', auth, async (req, res) => {
-//     try {
-//       const doubt = await Doubt.findById(req.params.id);
-//       doubt.upvotes++;
-//       await doubt.save();
-//       res.json(doubt);
-//     } catch (err) {
-//       console.error(err.message);
-//       res.status(500).send('Server error');
-//     }
-//   });
 router.post('/:id/upvote', auth, async (req, res) => {
   try {
     const doubt = await Doubt.findById(req.params.id);

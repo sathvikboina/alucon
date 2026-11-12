@@ -38,7 +38,7 @@ router.post(
 	async (req, res) => {
 		const errors = validationResult(req);
 		if (!errors.isEmpty()) {
-			console.log("error1 = ", errors)
+			console.error("error1 = ", errors)
 			return res.status(400).json({ errors: errors.array() });
 		}
 
@@ -74,7 +74,7 @@ router.post(
 		if (status !== undefined) profileFields.status = status;
 		if (githubusername !== undefined) profileFields.githubusername = githubusername;
 		if (timages && timages.length > 0) {
-			console.log("img found", timages)
+			console.error("img found", timages)
 			profileFields.images = timages;
 		}
 		// if (skills) {
@@ -149,7 +149,7 @@ router.post(
 				return res.json(profile);
 			}
 			else {
-				console.log("User not found !!!!");
+				console.error("User not found !!!!");
 			}
 
 			// create

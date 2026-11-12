@@ -41,7 +41,6 @@ const resetPasswordLimiter = rateLimit({
 router.get("/", auth, async (req, res) => {
 	try {
 		// .select('-passowrd') leaves the password and returns left data
-		console.log("user id ", req);
 		const user = await User.findById(req.user.id).select("-password");
 		res.json(user);
 	} catch (error) {
@@ -140,8 +139,6 @@ router.post(
 	async (req, res) => {
 		const errors = validationResult(req);
 		if (!errors.isEmpty()) {
-			console.log("found errors");
-			console.log(errors);
 			return res.status(400).json({ errors: errors.array() });
 		}
 		const { email } = req.body;
@@ -264,7 +261,6 @@ router.post("/verify-reset-link", resetPasswordLimiter, async (req, res) => {
 	try {
 		const user = await User.findOne({ _id: user_id }).select("+password");
 		if (!user) {
-			console.log("hello");
 			return res
 				.status(400)
 				.json({ errors: [{ msg: "Invalid Request" }] });
@@ -275,7 +271,6 @@ router.post("/verify-reset-link", resetPasswordLimiter, async (req, res) => {
 	try {
 		const secret = (process.env.ACCESS_TOKEN_SECRET || process.env.JWT_SECRET) + user.password;
 		const payload = jwt.verify(reset_token, secret);
-		console.log("payload" + payload);
 		if (!payload) {
 			return res
 				.status(400)

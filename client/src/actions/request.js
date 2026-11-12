@@ -96,7 +96,6 @@ export const approveJoinRequest = (requestId) => async (dispatch) => {
       config
     );
 
-    console.log("🔥 APPROVE CALLED", res);
 
     dispatch({
       type: APPROVE_JOIN_REQUEST,

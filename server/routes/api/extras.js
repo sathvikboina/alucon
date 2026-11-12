@@ -55,7 +55,7 @@ router.post("/submit-feedback", feedbackLimiter, async (req, res) => {
 
     // ✅ Send email (non-blocking)
     sendEmail(emailOptions).catch((err) => {
-      console.log("Email failed:", err.message);
+      console.error("Email failed:", err.message);
     });
 
     // ✅ Send response

@@ -18,7 +18,6 @@ const Filter = require("bad-words");
 const { check, validationResult } = require("express-validator");
 var mongoose = require("mongoose");
 const Channel = require("../../models/Channel");
-// console.log("hi");    
 
 // Event announcements also email the community; cap the trigger rate.
 const createEventLimiter = rateLimit({
@@ -32,12 +31,10 @@ const createEventLimiter = rateLimit({
 router.get("/get/getevent", async (req, res) => {
   try {
     const data = await Event.find();
-    // const save = await data.save();
-    // console.log("events = " ,data);
 
     res.json(data);
   } catch (e) {
-    console.log(e);
+    console.error(e);
   }
 });
 
@@ -121,7 +118,7 @@ Description: ${req.body.description}`,
     res.json(data);
 
   } catch (e) {
-    console.log(e);
+    console.error(e);
     res.status(500).json({ error: "Server error" });
   }
 });
@@ -141,7 +138,7 @@ router.post("/deleteevent", auth, async (req, res) => {
     await removeSearchDocument("event", req.body.eventID);
     res.json({ invalid_msg: "valid" });
   } catch (e) {
-    console.log(e);
+    console.error(e);
     res.status(500).json({ invalid_msg: "error" });
   }
 });

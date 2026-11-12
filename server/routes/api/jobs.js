@@ -80,7 +80,7 @@ router.get("/get/getjob", async (req, res) => {
 
     res.json({ dt, archive });
   } catch (e) {
-    console.log(e);
+    console.error(e);
     res.status(500).json({ error: "Server error" });
   }
 });
@@ -180,7 +180,7 @@ Deadline: ${req.body.job_deadline}`,
 
     res.json(data);
   } catch (e) {
-    console.log(e);
+    console.error(e);
     res.status(500).json({ error: "Server error" });
   }
 });
@@ -200,7 +200,7 @@ router.post("/deletejob", auth, async (req, res) => {
     await removeSearchDocument("job", req.body.jobID);
     res.json({ invalid_msg: "valid" });
   } catch (e) {
-    console.log(e);
+    console.error(e);
     res.status(500).json({ invalid_msg: "error" });
   }
 });

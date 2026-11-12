@@ -159,7 +159,7 @@ async function generateJSON(prompt, options = {}) {
     const elapsed = Date.now() - started;
     if (result.data) {
       if (process.env.AI_DEBUG === "true") {
-        console.log(`[ai] ${model} answered in ${elapsed}ms`);
+        console.error(`[ai] ${model} answered in ${elapsed}ms`);
       }
       return { data: result.data, model };
     }

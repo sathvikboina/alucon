@@ -225,22 +225,6 @@ const UserSchema = new mongoose.Schema({
 
 
 const adminData = new mongoose.model("user", UserSchema);
-// const fun = async() =>{
-
-// 	const salt = await bcrypt.genSalt(10);
-// 	const pass = await bcrypt.hash("alumni123#", salt);
-// 	const ppp = await new adminData({
-// 		email: "iiita.alumniconnect@gmail.com",
-// 		password: pass,
-// 		isAdmin: true,
-// 		adminType : "head",
-// 		name: "AlumniConnect",
-// 		role :"Admin"
-// 	})
-// 	const updating2 = await ppp.save();
-// }
-
-// 	fun();
 // The first head admin is created from environment variables. Local
 // development falls back to the shared demo password; production must set
 // ADMIN_EMAIL and ADMIN_PASSWORD explicitly, otherwise no admin is created.

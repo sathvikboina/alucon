@@ -72,7 +72,6 @@ export const login =
 		const body = JSON.stringify({ email, password });
 		try {
 			const res = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/auth`, body, config);
-			console.log("login details :- " , res);
 			localStorage.setItem("_user_data" , JSON.stringify(res.data.user_data));
 
 			dispatch({
@@ -84,7 +83,7 @@ dispatch(loadUser());
 
 
 		} catch (e) {
-			console.log(e.response);
+			console.error(e.response);
 			const errors = e?.response?.data?.errors;
 			if (errors) {
 				errors.forEach((err) => {
@@ -157,7 +156,6 @@ export const register =
 		}
 		try {
 			const res = await axios.post(`/api/users/register`, body, config);
-			console.log("register details :- " , res.data?.savedRequest);
 			dispatch({
 				type: REGISTER_SUCCESS,
 				payload: res.data?.savedRequest,
@@ -172,7 +170,7 @@ export const register =
 					dispatch(setAlert(err.msg, "danger"));
 				});
 			}
-			console.log(e," inside client actions auth.js register");
+			console.error(e," inside client actions auth.js register");
 			dispatch({
 				type: REGISTER_FAIL,
 			});

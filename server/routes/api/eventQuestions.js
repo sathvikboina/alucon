@@ -100,7 +100,7 @@ router.post("/reply/:questionId", authMiddleware, async (req, res) => {
 // ==============================
 router.delete("/:questionId", authMiddleware, async (req, res) => {
   try {
-    console.log("USER:", req.user);
+    console.error("USER:", req.user);
     const question = await EventQuestion.findById(req.params.questionId);
 
     if (!question) {

@@ -37,6 +37,6 @@ export const createChannel = (new_channel_name) => async (dispatch) => {
 		);
 		dispatch(setAlert("Channel Created", "safe"));
 	} catch (err) {
-		console.log(err);
+		console.error(err);
 	}
 };
