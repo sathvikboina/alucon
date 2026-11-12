@@ -5,6 +5,7 @@
   --blue: #1a5fa8;
   --blue-dark: #123f73;
   --blue-soft: #eef4fc;
+  --gutter: clamp(20px, 6vw, 88px);
   background:
     radial-gradient(circle at 8% 0%, rgba(63, 121, 191, 0.08), transparent 34rem),
     #f4f7fb;
@@ -18,7 +19,7 @@
   justify-content: space-between;
   align-items: flex-end;
   gap: 28px;
-  padding: 42px 8% 34px;
+  padding: 42px var(--gutter) 34px;
   background:
     linear-gradient(120deg, rgba(11, 30, 56, 0.97), rgba(24, 64, 112, 0.92)),
     #10233f;
@@ -85,7 +86,7 @@
   justify-content: space-between;
   align-items: center;
   gap: 22px;
-  margin: -20px 8% 0;
+  margin: -20px var(--gutter) 0;
   position: relative;
   background: #fff;
   border: 1px solid var(--line);
@@ -146,7 +147,7 @@
   justify-content: space-between;
   align-items: flex-end;
   gap: 18px;
-  padding: 28px 8% 16px;
+  padding: 28px var(--gutter) 16px;
   flex-wrap: wrap;
 }
 
@@ -216,6 +217,7 @@
   gap: 10px;
   flex-wrap: wrap;
   align-items: baseline;
+  padding: 0 var(--gutter) 14px;
   color: var(--muted);
   font-size: 12.5px;
 }
@@ -229,7 +231,7 @@
   display: flex;
   align-items: center;
   gap: 18px;
-  padding: 22px 8% 0;
+  padding: 22px var(--gutter) 0;
   flex-wrap: wrap;
 }
 
@@ -274,7 +276,7 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 20px;
-  padding: 0 8%;
+  padding: 0 var(--gutter);
 }
 
 .match-card {
@@ -302,6 +304,7 @@
 }
 
 .match-card-title {
+  flex: 1;
   min-width: 0;
 }
 
@@ -591,7 +594,7 @@
 .match-notice,
 .match-error,
 .match-empty {
-  margin: 0 8%;
+  margin: 0 var(--gutter);
   border-radius: 9px;
   padding: 13px 16px;
   font-size: 12.5px;
@@ -736,13 +739,10 @@
 
 @media (max-width: 900px) {
   .match-hero,
-  .match-context,
   .match-toolbar,
   .match-goal-bar,
   .match-grid,
-  .match-notice,
-  .match-error,
-  .match-empty {
+  .match-summary-line {
     padding-left: 5%;
     padding-right: 5%;
   }
@@ -762,6 +762,13 @@
     margin-right: 5%;
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .match-notice,
+  .match-error,
+  .match-empty {
+    margin-left: 5%;
+    margin-right: 5%;
   }
 
   .match-pipeline {
