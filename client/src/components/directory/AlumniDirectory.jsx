@@ -42,6 +42,8 @@ const AlumniDirectory = ({
   unFollowUser,
 }) => {
   const [alumni,     setAlumni]     = useState([]);
+  const [page,       setPage]       = useState(1);
+  const [meta,       setMeta]       = useState({ total: 0, page: 1, pageSize: 40, hasMore: false });
   const [filters,    setFilters]    = useState({ search: "", batch: "", company: "", domain: "", location: "" });
   const [loadingIds, setLoadingIds] = useState(new Set());
 
@@ -50,11 +52,21 @@ const AlumniDirectory = ({
   const fetchAlumni = async () => {
     try {
       const token = localStorage.getItem("token");
-      const query = new URLSearchParams(filters).toString();
+      const query = new URLSearchParams({
+        ...filters,
+        page: String(page),
+        pageSize: "40",
+      }).toString();
       const res = await axios.get(`/api/directory/alumni?${query}`, {
         headers: { "x-auth-token": token },
       });
-      setAlumni(res.data);
+      setAlumni(res.data?.items || []);
+      setMeta({
+        total: res.data?.total || 0,
+        page: res.data?.page || 1,
+        pageSize: res.data?.pageSize || 40,
+        hasMore: Boolean(res.data?.hasMore),
+      });
     } catch (err) {
       console.error(err);
     }
@@ -65,9 +77,12 @@ const AlumniDirectory = ({
       fetchAlumni();
     }, 400); // 400ms debounce
     return () => clearTimeout(timer);
-  }, [filters]);
+  }, [filters, page]);
 
-  const handleChange  = (e) => setFilters({ ...filters, [e.target.name]: e.target.value });
+  const handleChange  = (e) => {
+    setPage(1);
+    setFilters({ ...filters, [e.target.name]: e.target.value });
+  };
 
   const toggleFollow = async (userId) => {
     if (loadingIds.has(userId)) return;
@@ -128,8 +143,10 @@ const AlumniDirectory = ({
       </div>
 
       {/* Results meta */}
-      {alumni.length > 0 && (
-        <p className="results-meta">Showing {alumni.length} alumni</p>
+      {meta.total > 0 && (
+        <p className="results-meta">
+          Showing {alumni.length} of {meta.total} alumni
+        </p>
       )}
 
       {/* Cards */}
@@ -222,6 +239,30 @@ const AlumniDirectory = ({
           <p className="no-data">No alumni found</p>
         )}
       </div>
+
+      {meta.total > 0 && (
+        <div className="directory-pagination">
+          <button
+            type="button"
+            className="pagination-btn"
+            disabled={page <= 1}
+            onClick={() => setPage((current) => Math.max(1, current - 1))}
+          >
+            Previous
+          </button>
+          <span className="pagination-info">
+            Page {meta.page} of {Math.max(1, Math.ceil(meta.total / meta.pageSize))}
+          </span>
+          <button
+            type="button"
+            className="pagination-btn"
+            disabled={!meta.hasMore}
+            onClick={() => setPage((current) => current + 1)}
+          >
+            Next
+          </button>
+        </div>
+      )}
     </div>
   );
 };

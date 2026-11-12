@@ -206,7 +206,7 @@ const Posts = ({
     api
       .get("/api/directory/alumni")
       .then((res) => {
-        if (alive) setPeople((res.data || []).slice(0, 4));
+        if (alive) setPeople((res.data?.items || []).slice(0, 4));
       })
       .catch(() => {});
 

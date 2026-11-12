@@ -482,10 +482,11 @@ test("directory search escapes regex metacharacters (D1)", async () => {
 
 	assert.equal(response.status, 200);
 	assert.deepEqual(
-		response.body,
+		response.body.items,
 		[],
 		"a literal '.*' search must not match every alumni"
 	);
+	assert.equal(response.body.total, 0);
 });
 
 test("achievement search escapes regex metacharacters (D1)", async () => {
@@ -518,8 +519,11 @@ test("directory and user search do not expose emails (D2)", async () => {
 		token: tokenFor(users.mentee1),
 	});
 	assert.equal(directory.status, 200);
-	assert.ok(directory.body.length > 0, "directory should return the alumni fixture");
-	for (const person of directory.body) {
+	assert.ok(
+		directory.body.items.length > 0,
+		"directory should return the alumni fixture"
+	);
+	for (const person of directory.body.items) {
 		assert.equal("email" in person, false, "directory leaks an email field");
 	}
 
