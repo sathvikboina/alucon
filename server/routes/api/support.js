@@ -39,23 +39,27 @@ const isNotStudent = async (req, res, next) => {
 // @access  Private (Non-Student)
 router.get('/', [auth, isNotStudent], async (req, res) => {
     try {
-        let form = await SupportForm.findOne();
-        if (!form) {
-            form = new SupportForm({ options: [], responses: [] });
-            await form.save();
-        }
-        
         const user = await User.findById(req.user.id);
-        
+        const form = await SupportForm.findOne();
+
+        // Reading must not create rows. An empty workspace is a valid state
+        // until an admin adds the first option.
+        if (!form) {
+            if (user.isAdmin) {
+                return res.json({ options: [], responses: [] });
+            }
+            return res.json({ options: [], userResponse: [] });
+        }
+
         // If the user is an admin, they get everything including populated responses
         if (user.isAdmin) {
-            form = await SupportForm.findOne().populate('responses.user', ['name', 'email', 'avatar']);
-            return res.json(form);
+            const populated = await SupportForm.findOne().populate('responses.user', ['name', 'email', 'avatar']);
+            return res.json(populated);
         }
-        
+
         // If not admin, just return options and only THEIR response
         const userResponse = form.responses.find(r => r.user.toString() === req.user.id);
-        
+
         res.json({
             options: form.options,
             userResponse: userResponse ? userResponse.selectedOptions : []

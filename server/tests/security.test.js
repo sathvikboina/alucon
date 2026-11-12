@@ -24,6 +24,10 @@ const MentorShipRequest = require("../models/MentorShipRequest");
 const User = require("../models/User");
 const Group = require("../models/Group");
 const Post = require("../models/Post");
+const SupportForm = require("../models/SupportForm");
+const Notification = require("../models/Notifications");
+const EventQuestion = require("../models/EventQuestion");
+const Achievement = require("../models/Achievement");
 
 const SERVER_DIR = path.resolve(__dirname, "..");
 
@@ -466,3 +470,146 @@ test("parallel accepts cannot exceed mentor capacity (F-12 race)", async () => {
 	});
 	assert.equal(acceptedRows, 1);
 });
+
+/* ------------------------------------------------------------------ */
+/* Phase D hardening regressions                                       */
+/* ------------------------------------------------------------------ */
+
+test("directory search escapes regex metacharacters (D1)", async () => {
+	const response = await api("/api/directory/alumni?search=.*", {
+		token: tokenFor(users.mentee1),
+	});
+
+	assert.equal(response.status, 200);
+	assert.deepEqual(
+		response.body,
+		[],
+		"a literal '.*' search must not match every alumni"
+	);
+});
+
+test("achievement search escapes regex metacharacters (D1)", async () => {
+	await Achievement.create({
+		title: "Regression award",
+		description: "Search escaping fixture",
+		recipientType: "alumni",
+		recipient: users.mentor._id,
+		submittedBy: users.mentor._id,
+		recipientName: users.mentor.name,
+		category: new mongoose.Types.ObjectId(),
+		achievementDate: new Date(),
+		status: "approved",
+	});
+
+	const response = await api("/api/achievements?search=.*", {
+		token: tokenFor(users.mentee1),
+	});
+
+	assert.equal(response.status, 200);
+	assert.equal(
+		response.body.total,
+		0,
+		"a literal '.*' search must not match every achievement"
+	);
+});
+
+test("directory and user search do not expose emails (D2)", async () => {
+	const directory = await api("/api/directory/alumni", {
+		token: tokenFor(users.mentee1),
+	});
+	assert.equal(directory.status, 200);
+	assert.ok(directory.body.length > 0, "directory should return the alumni fixture");
+	for (const person of directory.body) {
+		assert.equal("email" in person, false, "directory leaks an email field");
+	}
+
+	const search = await api("/api/users/search/all", {
+		token: tokenFor(users.mentee1),
+	});
+	assert.equal(search.status, 200);
+	for (const person of search.body) {
+		assert.equal("email" in person, false, "user search leaks an email field");
+	}
+});
+
+test("GET /api/support does not create a form row (D3)", async () => {
+	await SupportForm.deleteMany({});
+	const response = await api("/api/support", {
+		token: tokenFor(users.mentor),
+	});
+
+	assert.equal(response.status, 200);
+	assert.deepEqual(response.body.options, []);
+	assert.equal(
+		await SupportForm.countDocuments({}),
+		0,
+		"a read request must not create a support form"
+	);
+});
+
+test("admin notification creation satisfies the required owner field (D6)", async () => {
+	const response = await api("/api/notifications/addNotifications", {
+		method: "POST",
+		token: tokenFor(users.admin),
+		body: {
+			name: "Regression notice",
+			description: "Created by the hardening test",
+			link: "/showcase",
+		},
+	});
+
+	assert.equal(response.status, 200);
+	const saved = await Notification.findOne({ Notification_name: "Regression notice" });
+	assert.ok(saved, "notification should be saved");
+	assert.equal(String(saved.userID), String(users.admin._id));
+});
+
+test("stale admin claims in a JWT cannot delete another user's post (D7)", async () => {
+	const post = await Post.create({
+		user: users.mentor._id,
+		heading: "Stale admin check",
+		text: "Only the owner or a current admin may delete this.",
+		name: users.mentor.name,
+		channel: "General",
+	});
+
+	const forgedAdmin = tokenFor({
+		_id: users.mentee1._id,
+		role: "head_admin",
+		isAdmin: true,
+		adminType: "head",
+	});
+
+	const response = await api(`/api/posts/${post._id}`, {
+		method: "DELETE",
+		token: forgedAdmin,
+	});
+
+	assert.equal(response.status, 401);
+	assert.ok(await Post.findById(post._id), "post must still exist");
+});
+
+test("stale admin claims in a JWT cannot delete someone else's question (D7)", async () => {
+	const question = await EventQuestion.create({
+		eventId: new mongoose.Types.ObjectId(),
+		studentId: users.mentor._id,
+		question: "Stale admin check",
+	});
+
+	const forgedAdmin = tokenFor({
+		_id: users.mentee1._id,
+		role: "Admin",
+		isAdmin: true,
+		adminType: "head",
+	});
+
+	const response = await api(`/api/event-questions/${question._id}`, {
+		method: "DELETE",
+		token: forgedAdmin,
+	});
+
+	assert.equal(response.status, 403);
+	assert.ok(await EventQuestion.findById(question._id), "question must still exist");
+});
+
+

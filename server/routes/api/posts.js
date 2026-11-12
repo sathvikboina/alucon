@@ -104,7 +104,6 @@ router.post(
             const savedPost = await post.save();
 
             queueSearchRefresh("post", savedPost._id);
-            console.log("Post Created");
             res.json(savedPost);
 
         } catch (error) {
@@ -203,11 +202,12 @@ router.delete("/:id", auth, async (req, res) => {
       return res.status(404).json({ msg: "Post not found" });
     }
 
-    // ✅ allow: creator OR head admin
-    if (
-      post.user.toString() !== req.user.id &&
-      req.user.role !== "head_admin"
-    ) {
+    // ✅ allow: creator OR head admin (role is reloaded from the DB by auth)
+    const isHeadAdmin =
+      req.user.role === "head_admin" ||
+      (req.user.isAdmin === true && req.user.adminType === "head");
+
+    if (post.user.toString() !== req.user.id && !isHeadAdmin) {
       return res.status(401).json({ msg: "User not authorized" });
     }
 
@@ -225,62 +225,6 @@ router.delete("/:id", auth, async (req, res) => {
 // @desc     Toggle Like of a post
 // @access   Private
 
-// router.post("/:id/likes", auth, async (req, res) => {
-// 	try {
-// 		const post = await Post.findById(req.params.id);
-// 		if (post === null) {
-// 			return res.status(404).json({ msg: "Post Not found" });
-// 		}
-// 		if (post.user.toString() === req.user.id) {
-// 			return res
-// 				.status(400)
-// 				.json({ msg: "You can't like your own post" });
-// 		}
-// 		const liked = await Post.find({
-// 			_id: req.params.id, //  match post id
-// 			likes: {
-// 				$elemMatch: { user: mongoose.Types.ObjectId(req.user.id) },
-// 			},
-// 		});
-
-// 		if (liked.length) {
-// 			return res.status(400).json({ msg: "Post already liked" });
-// 		} else {
-// 			// remove from dislikes
-// 			await Post.findOneAndUpdate(
-// 				{ _id: req.params.id },
-// 				{
-// 					$pull: {
-// 						dislikes: {
-// 							user: mongoose.Types.ObjectId(req.user.id),
-// 						},
-// 					},
-// 				}
-// 			);
-
-// 			await Post.updateOne(
-// 				{ _id: req.params.id },
-// 				{
-// 					$push: {
-// 						likes: { user: mongoose.Types.ObjectId(req.user.id) },
-// 					},
-// 				}
-// 			);
-// 			const updatedPost = await Post.findById(req.params.id);
-
-// 			const payload = {
-// 				id: post._id,
-// 				likes: updatedPost.likes,
-// 				dislikes: updatedPost.dislikes,
-// 			};
-
-// 			return res.status(200).json(payload);
-// 		}
-// 	} catch (error) {
-// 		console.error(error.message);
-// 		res.status(500).send("Server Error");
-// 	}
-// });
 router.post("/:id/likes", auth, async (req, res) => {
   try {
     const post = await Post.findById(req.params.id);
@@ -399,7 +343,6 @@ router.post(
 	async (req, res) => {
 		const errors = validationResult(req);
 		if (!errors.isEmpty()) {
-			console.log("validation check");
 
 			return res.status(400).json({ errors: errors.array() });
 		}
@@ -409,7 +352,6 @@ router.post(
 		var containsBadWords = filter.isProfane(req.body.text);
 
 		if (containsBadWords) {
-			console.log();
 			return res
 				.status(400)
 				.json({ errors: [{ msg: "Bad word detected" }] });
@@ -436,10 +378,8 @@ router.post(
 			post.comments.unshift(newComment);
 
 			await post.save();
-			console.log("comment added to db");
 			res.json(post.comments);
 		} catch (error) {
-			console.log("err block routes");
 			console.error(error.message);
 			res.status(500).send("server error");
 		}
@@ -472,17 +412,5 @@ router.delete("/:id/comments/:comment_id", auth, async (req, res) => {
 	}
 });
 
-// router.get("/search/:query_string", auth, async (req, res) => {
-// 	try {
-// 		const posts = await Post.find(
-// 			{ $text: { $search: req.params.query_string } },
-// 			{ score: { $meta: "textScore" } }
-// 		).sort({ score: { $meta: "textScore" } });
-// 		res.json(posts);
-// 	} catch (err) {
-// 		console.error(error.message);
-// 		res.status(500).send("server error  in posts search");
-// 	}
-// });
 
 module.exports = router;

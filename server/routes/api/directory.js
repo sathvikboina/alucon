@@ -3,6 +3,7 @@ const router = express.Router();
 const auth = require("../../middleware/auth"); // normal auth (NOT head admin)
 const User = require("../../models/User");
 const { companySlugMap } = require("../../services/companies");
+const escapeRegex = require("../../middleware/utils/escapeRegex");
 
 // @route   GET api/directory/alumni
 // @desc    Searchable alumni directory
@@ -15,26 +16,26 @@ router.get("/alumni", auth, async (req, res) => {
 
     // 🔍 Search (name / company / domain)
     if (search) {
+      const safeSearch = escapeRegex(search);
       query.$or = [
-        { name: { $regex: search, $options: "i" } },
-        { organisation: { $regex: search, $options: "i" } },
-        { working_area: { $regex: search, $options: "i" } },
+        { name: { $regex: safeSearch, $options: "i" } },
+        { organisation: { $regex: safeSearch, $options: "i" } },
+        { working_area: { $regex: safeSearch, $options: "i" } },
       ];
     }
 
     // 🎯 Filters
     if (batch) query.passing_year = batch;
     if (company)
-      query.organisation = { $regex: company, $options: "i" };
+      query.organisation = { $regex: escapeRegex(company), $options: "i" };
     if (domain)
-      query.working_area = { $regex: domain, $options: "i" };
+      query.working_area = { $regex: escapeRegex(domain), $options: "i" };
     if (location)
-      query.location = { $regex: location, $options: "i" };
+      query.location = { $regex: escapeRegex(location), $options: "i" };
 
+    // Email stays private; members can reach out through the platform.
     const alumni = await User.find(query)
-      .select(
-        "name email avatar organisation working_area location passing_year"
-      )
+      .select("name avatar organisation working_area location passing_year")
       .sort({ passing_year: -1 });
 
     // Link each card to its company hub without changing the stored profile.

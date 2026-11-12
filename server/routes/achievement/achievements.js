@@ -5,6 +5,7 @@ const FeaturedAchievement = require("../../models/FeaturedAchievement");
 const authenticate = require("../../middleware/auth"); // default export
 const { Parser } = require("json2csv");
 const User = require("../../models/User"); 
+const escapeRegex = require("../../middleware/utils/escapeRegex");
 
 // ─── Role helpers (matches your JWT: { id, isAdmin, adminType, role }) ────────
 const isAdmin     = (u) => u?.isAdmin === true;
@@ -20,10 +21,11 @@ router.get("/",  async (req, res) => {
     if (category)      filter.category = category;
     if (recipientType) filter.recipientType = recipientType;
     if (search) {
+      const safeSearch = escapeRegex(search);
       filter.$or = [
-        { title:         { $regex: search, $options: "i" } },
-        { recipientName: { $regex: search, $options: "i" } },
-        { awardingBody:  { $regex: search, $options: "i" } },
+        { title:         { $regex: safeSearch, $options: "i" } },
+        { recipientName: { $regex: safeSearch, $options: "i" } },
+        { awardingBody:  { $regex: safeSearch, $options: "i" } },
       ];
     }
 

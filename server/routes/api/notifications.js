@@ -24,7 +24,7 @@ router.post("/getNotifications", auth, async (req, res) => {
     });
 
   } catch (err) {
-    console.log(err);
+    console.error(err);
     res.status(500).send("Server error");
   }
 });
@@ -33,7 +33,8 @@ router.post("/addNotifications", authAdmin, async (req, res) => {
   try {
     const notification = new Notification({
       created_by_user: req.user.id,
-      // userID: req.body.userID,
+      // The schema still requires an owner field; use the creating admin.
+      userID: req.user.id,
       Notification_name: req.body.name,
       Notification_description: req.body.description,
       Notification_link: req.body.link
@@ -44,7 +45,7 @@ router.post("/addNotifications", authAdmin, async (req, res) => {
     res.json({ msg: "Notification added" });
 
   } catch (err) {
-    console.log(err);
+    console.error(err);
     res.status(500).json({ msg: "Server error" });
   }
 });
@@ -53,7 +54,7 @@ router.post("/markSingleRead", auth, async (req, res) => {
     const { id } = req.body;
     const userID = req.user.id;
 
-    console.log(`Marking notification ${id} as read for user: ${userID}`);
+    console.error(`Marking notification ${id} as read for user: ${userID}`);
 
     const marked = await Notification.findByIdAndUpdate(
       id,

@@ -339,7 +339,7 @@ router.get("/search/:query", auth, async (req, res) => {
 		}
 
 		if (searchTerm === "all") {
-			users = await User.find().select("-password").sort({ date: -1 });
+			users = await User.find().select("-password -email").sort({ date: -1 });
 		} else {
 			// Escape regex metacharacters so a query cannot change the match
 			// semantics or trigger expensive backtracking.
@@ -347,11 +347,10 @@ router.get("/search/:query", auth, async (req, res) => {
 			users = await User.find({
 				$or: [
 					{ name: { $regex: safeTerm, $options: "i" } },
-					{ email: { $regex: safeTerm, $options: "i" } },
 					{ company: { $regex: safeTerm, $options: "i" } },
 					{ organisation: { $regex: safeTerm, $options: "i" } },
 				]
-			}).select("-password").sort({ date: -1 });
+			}).select("-password -email").sort({ date: -1 });
 		}
 
 		res.json(users);
@@ -707,7 +706,7 @@ router.put("/:id/follow", auth, async (req, res) => {
 				res.status(403).json("you allready follow this user");
 			}
 		} catch (err) {
-			console.log(err);
+			console.error(err);
 			res.status(500).json(err);
 		}
 	} else {

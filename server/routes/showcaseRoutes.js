@@ -7,6 +7,7 @@ const ShowcaseEvent = require('../models/ShowcaseEvent');
 const Infra = require('../models/Infra');
 const Timeline = require('../models/TimeLine');
 const Media = require('../models/Media');
+const escapeRegex = require('../middleware/utils/escapeRegex');
 
 const crudRoutes = (router, path, Model) => {
 
@@ -19,8 +20,8 @@ const crudRoutes = (router, path, Model) => {
       if (isFeatured)  filter.isFeatured  = isFeatured === 'true';
       if (isHighlight) filter.isHighlight = isHighlight === 'true';
       if (search)      filter.$or = [
-        { title:  { $regex: search, $options: 'i' } },
-        { name:   { $regex: search, $options: 'i' } },
+        { title:  { $regex: escapeRegex(search), $options: 'i' } },
+        { name:   { $regex: escapeRegex(search), $options: 'i' } },
       ];
       const data = await Model.find(filter).sort({ createdAt: -1 });
       res.json(data);
