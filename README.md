@@ -249,7 +249,9 @@ search index. It seeds 38 feed posts plus 9 group
 discussions and the comment threads behind them: a
 base set of announcements plus longer LinkedIn-style essays and short X-style
 takes written for the demo. All of that content is original fiction, not copied
-from real people. Every seeded account uses the password `alumni123#`:
+from real people. Every seeded account uses the password `alumni123#`.
+This is a **local demo credential only** — it is public in the repository and
+must never be used for a deployed environment (see the warning below):
 
 | Account | Role |
 |---|---|
