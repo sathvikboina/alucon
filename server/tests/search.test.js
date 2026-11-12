@@ -101,6 +101,16 @@ test("negated phrases are separated from the positive query", () => {
   );
 });
 
+test("ordinary 'not' phrases are not treated as filters", () => {
+  const kafka = parseSearchQuery("Kafka is not a queue");
+  assert.deepEqual(kafka.negated, []);
+  assert.deepEqual(kafka.content, ["kafka", "queue"]);
+
+  const phase = parseSearchQuery("Accessibility is not a phase");
+  assert.deepEqual(phase.negated, []);
+  assert.deepEqual(phase.content, ["accessibility", "phase"]);
+});
+
 test("negated terms exclude matching records and respect synonyms", () => {
   const parsed = parseSearchQuery("alumni who are not working at Google");
   assert.deepEqual(

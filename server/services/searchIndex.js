@@ -21,6 +21,14 @@ const {
   cosineSimilarity,
 } = require("./embeddings");
 
+// Blend used when both the BGE vector and lexical evidence are available.
+// Kept in one place so ranking can be tuned and evaluated without touching the
+// scoring pipeline.
+const RANKING_WEIGHTS = Object.freeze({
+  semantic: 0.6,
+  lexical: 0.4,
+});
+
 const TYPE_ORDER = ["job", "alumni", "post", "resource", "event", "group"];
 const TYPE_LABELS = {
   job: "Internships & jobs",
@@ -65,6 +73,20 @@ const NEGATION_CUES = [
 const NEGATION_BOUNDARIES = [
   "but", "however", "while", "whereas", "yet", "though", "although",
 ];
+
+// "Kafka is not a queue" is a title, not a request to exclude queues. Cues
+// such as "not" and "no" only act as filters when the words after them look
+// like a filter phrase ("not in Bangalore", "not working at Google").
+// Explicit exclusion words do not need that guard.
+const WEAK_NEGATION_CUES = new Set([
+  "do not", "does not", "did not", "don t", "doesn t", "didn t",
+  "is not", "isn t", "are not", "aren t", "was not", "wasn t",
+  "were not", "weren t", "not", "no", "dont", "doesnt", "didnt", "isnt",
+  "arent", "wasnt", "werent",
+]);
+
+const NEGATION_FILTER_RE =
+  /^(?:(?:currently|actually|really|also)\s+)?(?:work(?:s|ing|ed)?|based|located|live(?:s|d|ing)?|hq|headquartered|in|at|from|for|with)\b/;
 
 const escapeRegexText = (value) =>
   value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -233,6 +255,13 @@ function parseSearchQuery(rawQuery) {
     const boundary = rest.match(NEGATION_BOUNDARY_RE);
     const spanEnd = boundary ? cueEnd + boundary.index : normalized.length;
     const span = normalized.slice(cueEnd, spanEnd).trim();
+
+    // Ignore a weak cue that is just part of a phrase, not a filter.
+    if (WEAK_NEGATION_CUES.has(match[0]) && !NEGATION_FILTER_RE.test(span)) {
+      NEGATION_RE.lastIndex = cueEnd;
+      match = NEGATION_RE.exec(normalized);
+      continue;
+    }
 
     positiveParts.push(normalized.slice(cursor, cueStart));
     negated.push(...negatedAlternatives(span));
@@ -804,9 +833,19 @@ async function removeSearchDocumentsForUser(userId) {
 }
 
 
-async function searchAll(user, rawQuery, { limit = 6, type = "" } = {}) {
+async function searchAll(
+  user,
+  rawQuery,
+  { limit = 6, type = "", weights = {} } = {}
+) {
   const query = String(rawQuery || "").trim().slice(0, 240);
   const boundedLimit = Math.max(1, Math.min(10, Number(limit) || 6));
+  const semanticWeight = Number.isFinite(Number(weights.semantic))
+    ? Math.max(0, Number(weights.semantic))
+    : RANKING_WEIGHTS.semantic;
+  const lexicalWeight = Number.isFinite(Number(weights.lexical))
+    ? Math.max(0, Number(weights.lexical))
+    : RANKING_WEIGHTS.lexical;
 
   await ensureSearchIndex();
   let documents = await SearchDocument.find({}).lean();
@@ -855,7 +894,7 @@ async function searchAll(user, rawQuery, { limit = 6, type = "" } = {}) {
         : 0;
 
     let score = semantic
-      ? 0.6 * semanticScore + 0.4 * lexical
+      ? semanticWeight * semanticScore + lexicalWeight * lexical
       : lexical;
     if (intent.type === doc.sourceType) score += 0.1;
 
