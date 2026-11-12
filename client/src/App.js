@@ -39,7 +39,11 @@ const App = () => {
 						<Route component={Routes} />
 					</Switch>
 
-					<Footer />
+					<Route
+						render={({ location }) =>
+							location.pathname.startsWith("/messenger") ? null : <Footer />
+						}
+					/>
 				</React.Fragment>
 			</Router>
 		</Provider>
