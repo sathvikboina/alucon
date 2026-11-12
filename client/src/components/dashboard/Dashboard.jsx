@@ -6,7 +6,7 @@ import Experience from "./Experience";
 import Education from "./Education.jsx";
 import DashboardActions from "./DashboardActions";
 import { getCurrentUserProfile, addExperience, addEducation, createProfile } from "../../actions/users";
-import { closeSideNav } from "../../actions/alert";
+import { closeSideNav, setAlert } from "../../actions/alert";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import api from "../../utils/api";
 
@@ -36,7 +36,7 @@ const SectionHeading = ({ label }) => (
 );
 
 // ── Main component ───────────────────────────────────────────────
-const Dashboard = ({ closeSideNav, getCurrentUserProfile, addExperience, addEducation, createProfile, auth: { authUser, loadingAuth } }) => {
+const Dashboard = ({ closeSideNav, setAlert, getCurrentUserProfile, addExperience, addEducation, createProfile, auth: { authUser, loadingAuth } }) => {
   const [modal, setModal] = useState(null);
   const [expForm, setExpForm] = useState({ title: "", company: "", location: "", from: "", to: "", current: false, description: "" });
   const [eduForm, setEduForm] = useState({ school: "", degree: "", fieldofstudy: "", from: "", to: "", current: false, description: "" });
@@ -192,15 +192,25 @@ const Dashboard = ({ closeSideNav, getCurrentUserProfile, addExperience, addEduc
         const formData = new FormData();
         formData.append("file", image);
         const res = await api.post("/api/upload", formData);
-        payload.images = [res.data.url];
+        const url = res.data?.url;
+        if (!url) throw new Error("Upload did not return an image URL");
+        payload.images = [url];
       } catch (err) {
-        console.error("Image upload failed", err);
+        // Do not silently save the rest of the form and pretend the photo
+        // changed. Tell the member what happened and leave the modal open.
+        setAlert(
+          err?.response?.data?.msg ||
+            "Could not upload your profile photo. Please try again with a smaller image.",
+          "danger"
+        );
+        return;
       } finally {
         setImageUploading(false);
       }
     }
 
     createProfile(payload, noRedirect, true);
+    setImage("");
     closeModal();
   };
 
@@ -657,6 +667,7 @@ const Dashboard = ({ closeSideNav, getCurrentUserProfile, addExperience, addEduc
 };
 
 Dashboard.propTypes = {
+  setAlert: PropTypes.func.isRequired,
   getCurrentUserProfile: PropTypes.func.isRequired,
   addExperience: PropTypes.func.isRequired,
   addEducation: PropTypes.func.isRequired,
@@ -667,4 +678,4 @@ Dashboard.propTypes = {
 
 const mapStateToProps = (state) => ({ auth: state.auth });
 
-export default connect(mapStateToProps, { getCurrentUserProfile, closeSideNav, addExperience, addEducation, createProfile })(Dashboard);
+export default connect(mapStateToProps, { getCurrentUserProfile, closeSideNav, setAlert, addExperience, addEducation, createProfile })(Dashboard);

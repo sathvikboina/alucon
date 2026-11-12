@@ -17,6 +17,9 @@ dist/
 *.log
 npm-debug.log*
 
+# Local upload fallback (used when Cloudinary is not configured)
+server/uploads/
+
 # OS noise
 .DS_Store
 Thumbs.db

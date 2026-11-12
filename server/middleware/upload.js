@@ -22,7 +22,12 @@ const upload = multer({
     if (allowed.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error("Only JPEG, PNG, WEBP and GIF files are allowed"), false);
+      cb(
+        new Error(
+          "Unsupported file type. Upload an image, PDF, Word or PowerPoint file."
+        ),
+        false
+      );
     }
   },
 });
