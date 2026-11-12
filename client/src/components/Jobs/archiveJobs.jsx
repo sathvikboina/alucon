@@ -1,5 +1,7 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import "./Jobs.css";
 
 const cardStyle = {
   width: "35%",
@@ -48,7 +50,21 @@ const Job = () => {
   const generateLink = (link) => `/profile/${link}`;
 
   return (
-    <div className="row" style={{ minHeight: "100vh" }}>
+    <div className="jobs-page">
+      <div className="job-top-bar">
+        <div className="job-top-bar-left">
+          <span className="job-top-kicker">Past Opportunities</span>
+          <h1 className="job-top-bar-title">Job Archive</h1>
+          <p className="job-top-bar-sub">Browse expired or archived positions from the alumni network</p>
+        </div>
+        <div className="job-top-actions">
+          <Link className="job-btn-create" to="/jobs">
+            ← Active Jobs
+          </Link>
+        </div>
+      </div>
+
+      <div className="row" style={{ minHeight: "80vh", padding: "0 8%", margin: 0, justifyContent: "flex-start" }}>
       {ArchiveJobData.map((ele) => (
         <div key={ele._id} style={cardStyle}>
           <div style={{ display: "flex", justifyContent: "space-between" }}>
@@ -110,6 +126,7 @@ const Job = () => {
           </div>
         </div>
       ))}
+      </div>
     </div>
   );
 };

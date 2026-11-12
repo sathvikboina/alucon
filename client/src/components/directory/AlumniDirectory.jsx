@@ -130,8 +130,9 @@ const AlumniDirectory = ({
 
       {/* Header */}
       <div className="page-header">
+        <span className="directory-kicker">IIITA Network</span>
         <h1 className="directory-title">Alumni Directory</h1>
-        <p className="directory-subtitle">Connect with fellow graduates from your institution</p>
+        <p className="directory-subtitle">Connect with graduates across industries, batches, and locations worldwide</p>
       </div>
 
       {/* Filter Bar */}

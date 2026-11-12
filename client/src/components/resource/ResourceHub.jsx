@@ -229,15 +229,11 @@ return(
 <div className="resource-container">
 
 <div className="resource-header">
-
-<h2 className="resource-title">
-Resource Hub
-</h2>
-
-<p className="resource-subtitle">
-Share and explore useful materials from the community
-</p>
-
+  <span className="resource-kicker">Academic &amp; Career Library</span>
+  <h1 className="resource-title">Resource Hub</h1>
+  <p className="resource-subtitle">
+    Share and explore useful materials, interview prep, and notes from the community
+  </p>
 </div>
 
 

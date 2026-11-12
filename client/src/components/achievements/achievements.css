@@ -3,34 +3,40 @@
 /* Hero */
 .achievements-hero {
   text-align: center;
-  padding: 52px 24px 36px;
-  background:rgba(26, 65, 143, 0.75);
+  padding: 44px 28px 36px;
+  background: linear-gradient(135deg, #07152b 0%, #0f244a 45%, #1b3d75 100%);
   color: #ffffff;
   border-radius: 16px;
   margin-bottom: 32px;
   position: relative;
   overflow: hidden;
+  box-shadow: 0 4px 24px rgba(7, 21, 43, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 .achievements-hero::before {
   content: "";
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse at 70% 0%, rgba(11, 23, 45, 0.75)0%, transparent 60%);
+  background: radial-gradient(ellipse at 50% 0%, rgba(245, 158, 11, 0.18) 0%, transparent 65%);
   pointer-events: none;
 }
 .achievements-hero .hero-icon {
   margin-bottom: 12px;
-  color: #94a3b8;
+  color: #fbbf24;
+  filter: drop-shadow(0 0 12px rgba(245, 158, 11, 0.45));
 }
 .achievements-hero h1 {
   font-size: 2rem;
   font-weight: 700;
   margin: 0 0 8px;
   letter-spacing: -0.02em;
+  color: #ffffff;
 }
 .achievements-hero p {
-  color: #94a3b8;
-  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.95rem;
+  max-width: 600px;
+  margin: 0 auto;
 }
 
 /* ── Featured Section ────────────────────────────────────────────────────── */

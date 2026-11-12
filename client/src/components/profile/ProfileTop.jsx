@@ -13,8 +13,8 @@ import {
 
 const s = {
   card: {
-    background: "linear-gradient(135deg, #0c1f57 0%, #1e3a8a 100%)", // Navy blue gradient
-    border: "0.5px solid #1e3a8a",
+    background: "linear-gradient(135deg, #091830 0%, #132a52 50%, #1d3e75 100%)",
+    border: "1px solid rgba(255, 255, 255, 0.08)",
     borderRadius: "16px",
     padding: "1.5rem",
     display: "flex",

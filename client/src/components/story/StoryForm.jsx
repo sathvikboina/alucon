@@ -8,31 +8,43 @@ import uploadImage from "../../utils/uploadImage";
 
 const S = {
   hero: {
-    background: "#1e3a5f",
-    padding: "1.1rem 2rem",
-    width: "100%",
+    background: "linear-gradient(135deg, #0b1e3b 0%, #16325c 55%, #1d437e 100%)",
+    padding: "24px 30px",
+    maxWidth: 1100,
+    margin: "20px auto 24px",
+    borderRadius: 14,
+    boxShadow: "0 4px 20px rgba(11, 30, 59, 0.14)",
+    border: "1px solid rgba(255, 255, 255, 0.08)",
+    boxSizing: "border-box",
   },
   heroInner: {
-    maxWidth: 1100,
-    margin: "0 auto",
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
     flexWrap: "wrap",
     gap: "0.5rem",
-    padding: "0 0.5rem",
+  },
+  heroKicker: {
+    fontSize: "0.68rem",
+    fontWeight: 700,
+    letterSpacing: "0.14em",
+    textTransform: "uppercase",
+    color: "#93c5fd",
+    marginBottom: 4,
+    display: "block",
   },
   heroTitle: {
-    fontSize: "1.4rem",
+    fontSize: "1.65rem",
     fontWeight: 700,
     color: "#ffffff",
     margin: 0,
     lineHeight: 1.2,
+    letterSpacing: "-0.01em",
   },
   heroSubtitle: {
-    fontSize: "0.8rem",
-    color: "rgba(255,255,255,0.65)",
-    margin: "0.2rem 0 0",
+    fontSize: "0.85rem",
+    color: "rgba(255, 255, 255, 0.68)",
+    margin: "4px 0 0",
   },
 };
 
@@ -92,8 +104,9 @@ const StoryForm = ({ addStory, setAlert, auth: { authUser } }) => {
 			<div style={S.hero}>
 				<div style={S.heroInner}>
 					<div>
+						<span style={S.heroKicker}>Voices &amp; Perspectives</span>
 						<h1 style={S.heroTitle}>Share Your Story</h1>
-						<p style={S.heroSubtitle}>Add your journey to our community of graduates</p>
+						<p style={S.heroSubtitle}>Contribute your journey, milestones, and lessons to the alumni network</p>
 					</div>
 				</div>
 			</div>

@@ -184,10 +184,53 @@ const Event = () => {
     <div style={{ background: "#f0f2f5", minHeight: "100vh", paddingBottom: 48 }}>
 
       {/* TOP BAR */}
-      <div style={{ background: "#1a2a4a", padding: "22px 8%", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 36 }}>
-        <div style={{ fontSize: 22, fontWeight: 600, color: "#fff", letterSpacing: "0.3px" }}>Events</div>
+      <div style={{
+        maxWidth: "66%",
+        width: "100%",
+        margin: "20px auto 24px",
+        padding: "24px 30px",
+        background: "linear-gradient(135deg, #0b1e3b 0%, #16325c 55%, #1d437e 100%)",
+        borderRadius: 14,
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        flexWrap: "wrap",
+        gap: 16,
+        boxShadow: "0 4px 20px rgba(11, 30, 59, 0.14)",
+        border: "1px solid rgba(255, 255, 255, 0.08)",
+        boxSizing: "border-box"
+      }}>
+        <div>
+          <span style={{
+            fontSize: "0.68rem",
+            fontWeight: 700,
+            letterSpacing: "0.14em",
+            textTransform: "uppercase",
+            color: "#93c5fd",
+            marginBottom: 4,
+            display: "block"
+          }}>
+            Campus &amp; Alumni Sessions
+          </span>
+          <div style={{ fontSize: "1.65rem", fontWeight: 700, color: "#fff", letterSpacing: "-0.01em" }}>Events &amp; Webinars</div>
+          <p style={{ margin: "4px 0 0", color: "rgba(255,255,255,0.68)", fontSize: "0.85rem" }}>
+            Join live sessions, speaker series, and reunions hosted by faculty and alumni
+          </p>
+        </div>
         {userRole === "Admin" && (
-          <Link to="/createEvent" style={{ background: "transparent", color: "#fff", padding: "8px 18px", borderRadius: 6, fontSize: 13, fontWeight: 500, border: "1px solid rgba(255,255,255,0.5)", textDecoration: "none", letterSpacing: "0.3px" }}>
+          <Link to="/createEvent" style={{
+            background: "rgba(255,255,255,0.1)",
+            color: "#fff",
+            padding: "8px 18px",
+            borderRadius: 8,
+            fontSize: 13,
+            fontWeight: 600,
+            border: "1px solid rgba(255,255,255,0.22)",
+            textDecoration: "none",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 6
+          }}>
             + Create Event
           </Link>
         )}

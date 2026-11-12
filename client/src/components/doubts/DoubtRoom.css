@@ -7,21 +7,48 @@
 
 /* ===== HEADER ===== */
 .doubt-room-header {
-  background: #1a2a4a;
-  padding: 10px 8%;
-  margin-bottom: 10px;
+  background: linear-gradient(135deg, #0b1e3b 0%, #16325c 55%, #1d437e 100%);
+  margin: 20px 8% 22px;
+  padding: 24px 30px;
+  border-radius: 14px;
+  box-shadow: 0 4px 20px rgba(11, 30, 59, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  position: relative;
+  overflow: hidden;
+}
+
+.doubt-room-header::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(96, 165, 250, 0.45), transparent);
+}
+
+.doubt-kicker {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #93c5fd;
+  margin-bottom: 4px;
+  display: inline-block;
 }
 
 .doubt-room-header h1 {
-  font-size: 26px;
+  font-size: 1.65rem;
+  font-weight: 700;
   color: #fff;
+  letter-spacing: -0.01em;
   margin: 0;
 }
 
 .doubt-subtext {
-  font-size: 15px;
-  color: rgba(255,255,255,0.7);
-  margin-top: 6px;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.68);
+  margin-top: 4px;
 }
 
 /* ===== FORM CONTAINER ===== */
@@ -39,7 +66,8 @@
 /* RESPONSIVE */
 @media (max-width: 768px) {
   .doubt-room-header {
-    padding: 18px 5%;
+    margin: 14px 5% 18px;
+    padding: 18px 20px;
   }
 
   .doubt-form-container {

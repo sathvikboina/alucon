@@ -62,18 +62,25 @@ const Job = () => {
 
       {/* TOP BAR */}
       <div className="job-top-bar">
-        <div className="job-top-bar-title">Job Board</div>
+        <div className="job-top-bar-left">
+          <span className="job-top-kicker">Opportunities &amp; Careers</span>
+          <h1 className="job-top-bar-title">Job Board</h1>
+          <p className="job-top-bar-sub">Explore openings, internships, and referrals posted by alumni</p>
+        </div>
         <div className="job-top-actions">
           {userRole === "student" && (
-            <Link className="job-btn-create" to="/internship-matches">
+            <Link className="job-btn-create job-btn-match" to="/internship-matches">
               ✦ My internship matches
             </Link>
           )}
           {userRole !== "student" && (
             <Link className="job-btn-create" to="/createjob">
-              + Create Job
+              + Post a Job
             </Link>
           )}
+          <Link className="job-btn-archive" to="/archivejobs">
+            Past Jobs
+          </Link>
         </div>
       </div>
 

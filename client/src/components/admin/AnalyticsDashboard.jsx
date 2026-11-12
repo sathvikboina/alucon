@@ -65,8 +65,9 @@ const AnalyticsDashboard = ({
       {/* ── Header ── */}
       <div className="analytics-hero">
         <div>
+          <span className="analytics-kicker">Administration &amp; Telemetry</span>
           <h1 className="analytics-title">Analytics Dashboard</h1>
-          <p className="analytics-subtitle">Head Admin · Real-time insights</p>
+          <p className="analytics-subtitle">Head Admin · Real-time portal metrics &amp; community growth</p>
         </div>
         <div className="hero-badge">
           <span className="hero-badge-dot" />

@@ -94,22 +94,72 @@ const MentorDashBoard = () => {
     <div className="container mt-4" style={{ paddingBottom: "3rem" }}>
       <div
         style={{
+          background: "linear-gradient(135deg, #0b1e3b 0%, #16325c 55%, #1d437e 100%)",
+          padding: "24px 30px",
+          borderRadius: 14,
           display: "flex",
           justifyContent: "space-between",
-          gap: "12px",
-          flexWrap: "wrap",
           alignItems: "center",
+          gap: 16,
+          flexWrap: "wrap",
+          marginBottom: 24,
+          boxShadow: "0 4px 20px rgba(11, 30, 59, 0.14)",
+          border: "1px solid rgba(255, 255, 255, 0.08)",
+          boxSizing: "border-box",
         }}
       >
         <div>
-          <h2 style={{ marginBottom: "4px" }}>Mentorship Dashboard</h2>
-          <p style={{ color: "#667085", margin: 0, fontSize: "13px" }}>
-            Request → accept → active → completed. Mentors stay in control of
-            every request.
+          <span
+            style={{
+              fontSize: "0.68rem",
+              fontWeight: 700,
+              letterSpacing: "0.14em",
+              textTransform: "uppercase",
+              color: "#93c5fd",
+              marginBottom: 4,
+              display: "block",
+            }}
+          >
+            Guidance &amp; Collaboration
+          </span>
+          <h1
+            style={{
+              margin: 0,
+              fontSize: "1.65rem",
+              fontWeight: 700,
+              color: "#ffffff",
+              letterSpacing: "-0.01em",
+            }}
+          >
+            Mentorship Dashboard
+          </h1>
+          <p
+            style={{
+              color: "rgba(255, 255, 255, 0.68)",
+              margin: "4px 0 0",
+              fontSize: "0.85rem",
+            }}
+          >
+            Connect 1-on-1 with industry alumni, track active mentorship requests, and grow your career
           </p>
         </div>
-        <Link className="btn btn-primary" to="/mentor-matches">
-          Find a mentor
+        <Link
+          to="/mentor-matches"
+          style={{
+            background: "rgba(255, 255, 255, 0.12)",
+            color: "#fff",
+            padding: "8px 18px",
+            borderRadius: 8,
+            fontSize: "13px",
+            fontWeight: 600,
+            border: "1px solid rgba(255, 255, 255, 0.25)",
+            textDecoration: "none",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 6,
+          }}
+        >
+          ✦ Find a mentor
         </Link>
       </div>
 

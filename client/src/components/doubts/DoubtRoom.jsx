@@ -11,12 +11,13 @@ const DoubtRoom = () => {
   return (
     <div className="doubt-room">
 
-  <div className="doubt-room-header">
-    <h1>Doubt Room</h1>
-    <p className="doubt-subtext">
-      Ask doubts and get help from the community
-    </p>
-  </div>
+      <div className="doubt-room-header">
+        <span className="doubt-kicker">Peer-to-Peer Help</span>
+        <h1>Doubt Room</h1>
+        <p className="doubt-subtext">
+          Ask questions, unblock technical challenges, and get guidance from seniors and alumni
+        </p>
+      </div>
 
   {/* rest stays SAME */}
 

@@ -230,20 +230,26 @@ const Dashboard = ({ closeSideNav, setAlert, getCurrentUserProfile, addExperienc
     <div style={{ backgroundColor: "#fff", minHeight: "100vh", fontFamily: "inherit" }}>
 
       {/* ── Hero banner ──────────────────────────────────────── */}
-      <div style={{ background: "linear-gradient(135deg, #26415e 0%, #b4cdf0 100%)", padding: "2.5rem 2rem 4rem" }}>
-        <p style={{ margin: "0 0 1.5rem", color: "rgba(255,255,255,0.55)", fontSize: "0.8rem", textTransform: "uppercase", letterSpacing: "0.12em" }}>
+      <div style={{
+        background: "linear-gradient(135deg, #091830 0%, #132a52 50%, #1d3e75 100%)",
+        padding: "2.5rem 2.5rem 3.5rem",
+        borderBottom: "1px solid rgba(255,255,255,0.08)",
+        boxShadow: "0 4px 20px rgba(9, 24, 48, 0.16)",
+        position: "relative"
+      }}>
+        <p style={{ margin: "0 0 1.2rem", color: "#93c5fd", fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.14em", fontWeight: 700 }}>
           My Profile
         </p>
         <div style={{ display: "flex", alignItems: "center", gap: "1.5rem", flexWrap: "wrap" }}>
           {authUser.images && authUser.images.length > 0 ? (
-            <img alt="Profile" src={authUser.images[0]} style={{ height: "88px", width: "88px", borderRadius: "50%", border: "3px solid rgba(255,255,255,0.7)", objectFit: "cover", flexShrink: 0 }} />
+            <img alt="Profile" src={authUser.images[0]} style={{ height: "92px", width: "92px", borderRadius: "50%", border: "3px solid #60a5fa", objectFit: "cover", flexShrink: 0, boxShadow: "0 4px 14px rgba(0,0,0,0.25)" }} />
           ) : (
-            <div style={{ height: "88px", width: "88px", borderRadius: "50%", border: "3px solid rgba(255,255,255,0.4)", backgroundColor: "rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.6rem", color: "#fff", fontWeight: 600, flexShrink: 0 }}>
+            <div style={{ height: "92px", width: "92px", borderRadius: "50%", border: "3px solid #60a5fa", backgroundColor: "rgba(255,255,255,0.12)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.6rem", color: "#fff", fontWeight: 600, flexShrink: 0, boxShadow: "0 4px 14px rgba(0,0,0,0.25)" }}>
               {initials}
             </div>
           )}
           <div>
-            <h1 style={{ margin: "0 0 6px", color: "#fff", fontSize: "1.8rem", fontWeight: 600 }}>{authUser.name}</h1>
+            <h1 style={{ margin: "0 0 6px", color: "#fff", fontSize: "1.85rem", fontWeight: 700, letterSpacing: "-0.01em" }}>{authUser.name}</h1>
             <p style={{ margin: 0, color: "rgba(255,255,255,0.72)", fontSize: "0.95rem" }}>{roleSubtitle}</p>
             <div style={{ display: "flex", gap: "14px", marginTop: "12px" }}>
               {authUser.social?.instagram && <FontAwesomeIcon icon={["fab", "instagram"]} style={{ fontSize: "17px", color: "rgba(255,255,255,0.65)", cursor: "pointer" }} />}

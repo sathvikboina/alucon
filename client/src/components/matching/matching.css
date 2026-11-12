@@ -20,16 +20,20 @@
   justify-content: space-between;
   align-items: flex-end;
   gap: 28px;
-  padding: 42px var(--gutter) 34px;
+  padding: 34px var(--gutter) 30px;
+  margin: 20px var(--gutter) 24px;
+  border-radius: 14px;
   background:
-    linear-gradient(120deg, rgba(11, 30, 56, 0.97), rgba(24, 64, 112, 0.92)),
+    linear-gradient(120deg, rgba(11, 30, 56, 0.98), rgba(24, 64, 112, 0.94)),
     #10233f;
   color: #fff;
+  box-shadow: 0 4px 20px rgba(11, 30, 56, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .match-hero.mentor-hero {
   background:
-    linear-gradient(120deg, rgba(20, 42, 67, 0.98), rgba(29, 84, 92, 0.9)),
+    linear-gradient(120deg, rgba(15, 34, 60, 0.98), rgba(22, 68, 88, 0.92)),
     #10233f;
 }
 

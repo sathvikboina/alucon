@@ -12,26 +12,53 @@
 
 /* ── Hero ── */
 .analytics-hero {
-  background: #1a3a6b;
-  padding: 22px 32px;
+  background: linear-gradient(135deg, #0b1e3b 0%, #16325c 55%, #1d437e 100%);
+  margin: 20px 32px 28px;
+  padding: 24px 30px;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 28px;
+  gap: 16px;
+  box-shadow: 0 4px 20px rgba(11, 30, 59, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  position: relative;
+  overflow: hidden;
+}
+
+.analytics-hero::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(96, 165, 250, 0.45), transparent);
+}
+
+.analytics-kicker {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #93c5fd;
+  margin-bottom: 4px;
+  display: inline-block;
 }
 
 .analytics-title {
-  font-size: 1.5rem;
+  font-size: 1.65rem;
   font-weight: 700;
   color: #ffffff;
-  margin: 0 0 3px;
+  margin: 0;
+  letter-spacing: -0.01em;
 }
 
 .analytics-subtitle {
-  font-size: 0.8rem;
-  color: rgba(255,255,255,0.55);
-  margin: 0;
-  letter-spacing: 0.04em;
+  font-size: 0.85rem;
+  color: rgba(255,255,255,0.68);
+  margin: 4px 0 0;
+  letter-spacing: 0.01em;
 }
 
 .hero-badge {
@@ -229,7 +256,7 @@
 }
 
 @media (max-width: 640px) {
-  .analytics-hero { padding: 16px 16px; flex-wrap: wrap; gap: 10px; }
+  .analytics-hero { margin: 14px 14px 20px; padding: 18px 20px; flex-wrap: wrap; gap: 10px; }
   .stats-row { grid-template-columns: repeat(2, 1fr); padding: 0 14px; gap: 12px; }
   .charts-row { padding: 0 14px; }
   .members-section { margin: 0 14px; }

@@ -1,176 +1,286 @@
-/* ================= FOOTER ================= */
-.footer-class{
-background:#0f172a;
-color:#e2e8f0;
-padding-top:50px;
-font-family:"Segoe UI",sans-serif;
+/* ================================================================
+   FOOTER — Classy, Compact, Executive Academic Style
+   ================================================================ */
+
+.footer-class {
+  background: #0b1324;
+  color: #94a3b8;
+  padding-top: 32px;
+  font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  position: relative;
+  overflow: hidden;
 }
 
-.footer-container{
-max-width:1200px;
-margin:auto;
-padding:0 40px;
+.footer-class::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(56, 189, 248, 0.35), transparent);
 }
 
-/* FORCE LEFT-RIGHT ALIGNMENT */
-.footer-container .row{
-display:flex;
-flex-direction:row;
-justify-content:space-between;
-align-items:flex-start;
-flex-wrap:nowrap;
-gap:70px;
+.footer-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px 28px;
 }
 
-/* LEFT COLUMN */
-.footer-left{
-flex:1;
-max-width:40%;
-text-align:left;
+/* ── 3-Column Balanced Grid ── */
+.footer-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 0.9fr 1.5fr;
+  gap: 36px;
+  align-items: flex-start;
 }
 
-/* RIGHT COLUMN */
-.footer-right{
-flex:1;
-max-width:60%;
-text-align:left;
+/* ── Column 1: Brand ── */
+.footer-col-brand {
+  display: flex;
+  flex-direction: column;
 }
 
-/* Headings */
-.footer-heading{
-font-size:24px;
-font-weight:700;
-margin-bottom:25px;
-color:#fff;
+.footer-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
 }
 
-/* SOCIAL ICONS */
-.social-icons{
-display:flex;
-gap:16px;
-margin-bottom:30px;
+.footer-logo-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #38bdf8;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.6);
 }
 
-.social-icons a{
-width:45px;
-height:45px;
-border-radius:50%;
-background:#1e293b;
-display:flex;
-justify-content:center;
-align-items:center;
-font-size:18px;
-color:#dbeafe;
-transition:.3s;
+.footer-logo-text {
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: #ffffff;
 }
 
-.social-icons a:hover{
-background:#2563eb;
-transform:translateY(-3px);
+.footer-tagline {
+  font-size: 0.82rem;
+  line-height: 1.55;
+  color: #64748b;
+  margin: 0 0 16px;
+  max-width: 320px;
 }
 
-/* LINKS */
-.footer-links{
-list-style:none;
-padding:0;
-margin:0;
+/* Social Icons */
+.social-icons {
+  display: flex;
+  gap: 10px;
 }
 
-.footer-links li{
-margin-bottom:22px;
+.social-icons a {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 13px;
+  color: #94a3b8;
+  text-decoration: none;
+  transition: all 0.2s ease;
 }
 
-.footer-links a{
-text-decoration:none;
-color:#dbeafe;
-font-size:17px;
-transition:.3s;
+.social-icons a:hover {
+  background: rgba(56, 189, 248, 0.15);
+  border-color: rgba(56, 189, 248, 0.4);
+  color: #38bdf8;
+  transform: translateY(-2px);
 }
 
-.footer-links a:hover{
-color:#60a5fa;
+/* ── Headings ── */
+.footer-heading {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #cbd5e1;
+  margin: 0 0 14px;
 }
 
-/* DOWNLOAD MANUAL BUTTON */
-.manual-btn{
-display:inline-block;
-background:#e1d012;
-color:#111827 !important;
-padding:12px 24px;
-border-radius:8px;
-font-weight:800;
-letter-spacing:1px;
-box-shadow:0 4px 15px rgba(250,204,21,.45);
-text-transform:uppercase;
+/* ── Column 2: Links ── */
+.footer-links {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
 }
 
-.manual-btn:hover{
-background:#fde047;
-transform:translateY(-2px);
+.footer-links a {
+  color: #94a3b8;
+  font-size: 0.84rem;
+  text-decoration: none;
+  transition: color 0.18s ease;
+  display: inline-flex;
+  align-items: center;
 }
 
-/* CONTACT SECTION */
-.help-section{
-display:flex;
-align-items:flex-start;
-gap:16px;
-margin-bottom:26px;
+.footer-links a:hover {
+  color: #38bdf8;
+  text-decoration: none;
 }
 
-.help-section i{
-font-size:20px;
-color:#60a5fa;
-margin-top:4px;
+/* Download Manual Pill Button */
+.manual-btn {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 7px;
+  background: rgba(245, 158, 11, 0.1) !important;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  color: #fbbf24 !important;
+  padding: 5px 12px;
+  border-radius: 6px;
+  font-size: 0.78rem !important;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  margin-top: 4px;
+  width: fit-content;
+  transition: all 0.2s ease;
 }
 
-.contact-info-text{
-margin:0;
-font-size:17px;
-line-height:1.7;
-color:#dbeafe;
+.manual-btn i {
+  font-size: 0.85rem;
 }
 
-/* COPYRIGHT */
-.footer-copyright{
-margin-top:40px;
-background:#020617;
-border-top:1px solid #1e293b;
-font-size:14px;
-color:#94a3b8;
+.manual-btn:hover {
+  background: rgba(245, 158, 11, 0.2) !important;
+  border-color: rgba(245, 158, 11, 0.6);
+  color: #fde68a !important;
+  transform: translateY(-1px);
 }
 
-.footer-copyright a{
-color:#60a5fa;
-text-decoration:none;
+/* ── Column 3: Contact ── */
+.footer-col-contact {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
-.footer-copyright a:hover{
-text-decoration:underline;
+.contact-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: #94a3b8;
 }
 
-/* MOBILE */
-@media(max-width:768px){
-
-.footer-container .row{
-flex-direction:column;
-flex-wrap:wrap;
-gap:35px;
+.contact-icon {
+  font-size: 0.82rem;
+  color: #38bdf8;
+  margin-top: 3px;
+  flex-shrink: 0;
+  width: 14px;
+  text-align: center;
 }
 
-.footer-left,
-.footer-right{
-max-width:100%;
-width:100%;
-padding:0;
-text-align:center;
+.contact-text {
+  flex: 1;
 }
 
-.social-icons{
-justify-content:center;
+.contact-text a {
+  color: #94a3b8;
+  text-decoration: none;
+  transition: color 0.18s ease;
 }
 
-.help-section{
-justify-content:center;
-text-align:left;
+.contact-text a:hover {
+  color: #38bdf8;
 }
+
+.contact-separator {
+  margin: 0 8px;
+  color: #475569;
+}
+
+.contact-phones {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.whatsapp-line {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #4ade80;
+}
+
+/* ── Bottom Copyright Bar ── */
+.footer-copyright {
+  background: #070d18;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 12px 24px;
+  font-size: 0.74rem;
+  color: #64748b;
+}
+
+.footer-copyright-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0;
+}
+
+.footer-affairs-link {
+  color: #94a3b8;
+  text-decoration: none;
+  transition: color 0.18s ease;
+}
+
+.footer-affairs-link:hover {
+  color: #38bdf8;
+  text-decoration: underline;
+}
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .footer-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 28px;
+  }
+
+  .footer-col-contact {
+    grid-column: span 2;
+  }
+}
+
+@media (max-width: 600px) {
+  .footer-class {
+    padding-top: 24px;
+  }
+
+  .footer-grid {
+    grid-template-columns: 1fr;
+    gap: 22px;
+  }
+
+  .footer-col-contact {
+    grid-column: span 1;
+  }
+
+  .footer-copyright-inner {
+    flex-direction: column;
+    text-align: center;
+    gap: 4px;
+  }
 }

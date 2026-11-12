@@ -12,10 +12,22 @@
 }
 
 .ai-search-hero {
-  background: linear-gradient(135deg, #0f2044 0%, #1a3a6b 100%);
-  padding: 34px max(6%, calc((100% - 1120px) / 2)) 30px;
+  background: linear-gradient(135deg, #0b1e3b 0%, #16325c 55%, #1d437e 100%);
+  padding: 36px max(6%, calc((100% - 1120px) / 2)) 34px;
   color: #ffffff;
-  box-shadow: 0 2px 12px rgba(13, 27, 54, 0.18);
+  box-shadow: 0 4px 20px rgba(11, 30, 59, 0.16);
+  position: relative;
+  overflow: hidden;
+}
+
+.ai-search-hero::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(96, 165, 250, 0.45), transparent);
 }
 
 .ai-search-kicker {

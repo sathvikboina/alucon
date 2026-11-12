@@ -1,109 +1,116 @@
 import React from "react";
 import "./Footer.css";
-// import { FaWhatsapp } from "react-icons/fa";
+
 function Footer() {
-return (
-<footer className="footer-class">
+  return (
+    <footer className="footer-class">
+      <div className="container footer-container">
+        <div className="footer-grid">
 
-<div className="container footer-container">
-<div className="row align-items-start">
+          {/* COLUMN 1: BRAND & MISSION */}
+          <div className="footer-col footer-col-brand">
+            <div className="footer-brand">
+              <span className="footer-logo-dot" />
+              <span className="footer-logo-text">AlumniConnect</span>
+            </div>
+            <p className="footer-tagline">
+              Official alumni network of the Indian Institute of Information Technology, Allahabad.
+            </p>
+            <div className="social-icons">
+              <a
+                href="https://www.linkedin.com/school/indian-institute-of-information-technology-allahabad-india/"
+                target="_blank"
+                rel="noreferrer"
+                aria-label="LinkedIn"
+              >
+                <i className="fab fa-linkedin-in" />
+              </a>
+              <a href="https://facebook.com" target="_blank" rel="noreferrer" aria-label="Facebook">
+                <i className="fab fa-facebook-f" />
+              </a>
+              <a href="https://twitter.com" target="_blank" rel="noreferrer" aria-label="Twitter">
+                <i className="fab fa-twitter" />
+              </a>
+            </div>
+          </div>
 
-{/* LEFT SIDE */}
-<div className="col-md-5 footer-left">
-<h6 className="footer-heading">Connect With Us</h6>
+          {/* COLUMN 2: QUICK LINKS */}
+          <div className="footer-col">
+            <h6 className="footer-heading">Quick Links</h6>
+            <ul className="footer-links">
+              <li>
+                <a href="https://iiita.ac.in" target="_blank" rel="noreferrer">
+                  IIITA Official Website
+                </a>
+              </li>
+              <li>
+                <a href="https://alumni.iiita.ac.in" target="_blank" rel="noreferrer">
+                  Central Alumni Portal
+                </a>
+              </li>
+              <li>
+                <a
+                  href="/Manual.pdf"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="manual-btn"
+                >
+                  <i className="fas fa-file-pdf" />
+                  <span>User Manual</span>
+                </a>
+              </li>
+            </ul>
+          </div>
 
-<div className="social-icons">
-<a href="https://www.linkedin.com/school/indian-institute-of-information-technology-allahabad-india/" target="_blank" rel="noreferrer">
-<i className="fab fa-linkedin"></i>
-</a>
+          {/* COLUMN 3: CONTACT & OFFICE */}
+          <div className="footer-col footer-col-contact">
+            <h6 className="footer-heading">Contact &amp; Location</h6>
+            <div className="contact-item">
+              <i className="fas fa-map-marker-alt contact-icon" />
+              <span className="contact-text">
+                Office of Alumni &amp; External Relations, Admin Ext-1, IIIT Allahabad, Prayagraj - 211015, UP, India
+              </span>
+            </div>
 
-<a href="https://facebook.com" target="_blank" rel="noreferrer">
-<i className="fab fa-facebook"></i>
-</a>
+            <div className="contact-item">
+              <i className="fas fa-envelope contact-icon" />
+              <div className="contact-text">
+                <a href="mailto:iiita.alumniconnect@gmail.com">iiita.alumniconnect@gmail.com</a>
+                <span className="contact-separator">·</span>
+                <a href="mailto:alumni.coordinator@iiita.ac.in">alumni.coordinator@iiita.ac.in</a>
+              </div>
+            </div>
 
-<a href="https://twitter.com" target="_blank" rel="noreferrer">
-<i className="fab fa-twitter"></i>
-</a>
-</div>
+            <div className="contact-item">
+              <i className="fas fa-phone-alt contact-icon" />
+              <div className="contact-text contact-phones">
+                <span>0532-292-2599</span>
+                <span className="contact-separator">·</span>
+                <span className="whatsapp-line">
+                  <i className="fab fa-whatsapp" /> +91 9305653537
+                </span>
+              </div>
+            </div>
+          </div>
 
-<ul className="footer-links">
-<li>
-<a href="https://iiita.ac.in" target="_blank" rel="noreferrer">
-IIITA Official Website
-</a>
-</li>
+        </div>
+      </div>
 
-<li>
-<a href="https://alumni.iiita.ac.in" target="_blank" rel="noreferrer">
-Alumni Portal
-</a>
-</li>
-
-<li>
-<a
-href="/Manual.pdf"
-target="_blank"
-rel="noopener noreferrer"
-className="manual-btn"
->
-📄 DOWNLOAD MANUAL
-</a>
-</li>
-</ul>
-</div>
-
-
-{/* RIGHT SIDE */}
-<div className="col-md-7 footer-right">
-<h6 className="footer-heading">Contact Us</h6>
-
-<div className="help-section">
-<i className="fas fa-map-marker-alt"></i>
-<p className="contact-info-text">
-Office of Alumni and External Relations, Admin Extension-1,
-IIIT Allahabad, Devghat, Jhalwa Prayagraj - 211015 Uttar Pradesh, India
-</p>
-</div>
-
-<div className="help-section">
-<i className="fa fa-envelope"></i>
-<div>
-<p className="contact-info-text">
-iiita.alumniconnect@gmail.com
-</p>
-<p className="contact-info-text">
-alumni.coordinator@iiita.ac.in
-</p>
-</div>
-</div>
-
-<div className="help-section">
-<i className="fa fa-phone"></i>
-<div>
-<p className="contact-info-text">☎️ Landline: 0532-292-2599</p>
-<p className="contact-info-text">💬 WhatsApp: +91 9305653537</p>
-</div>
-</div>
-
-</div>
-
-</div>
-</div>
-
-
-<div className="footer-copyright text-center py-3">
-© 2026 Copyright:
-<a
-href="https://www.linkedin.com/in/iiita-alumni-affairs/"
-target="_blank"
-rel="noreferrer"
->
-{" "}IIITA Alumni Affairs
-</a>
-</div>
-
-</footer>
-);
+      <div className="footer-copyright">
+        <div className="container footer-copyright-inner">
+          <span>&copy; {new Date().getFullYear()} IIITA Alumni Affairs. All rights reserved.</span>
+          <a
+            href="https://www.linkedin.com/in/iiita-alumni-affairs/"
+            target="_blank"
+            rel="noreferrer"
+            className="footer-affairs-link"
+          >
+            IIITA Alumni Affairs
+          </a>
+        </div>
+      </div>
+    </footer>
+  );
 }
 
 export default Footer;
