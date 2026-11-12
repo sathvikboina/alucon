@@ -13,6 +13,8 @@ process.env.ACCESS_TOKEN_SECRET = TEST_SECRET;
 
 const { test, before, after } = require("node:test");
 const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const path = require("node:path");
 const express = require("express");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
@@ -308,4 +310,54 @@ test("D11: verify-reset-link rejects an invalid token with 400", async () => {
 		Array.isArray(response.body.errors),
 		"invalid reset link should return a validation-style 400 body"
 	);
+});
+
+/* ------------------------------------------------------------------ */
+/* D15 — messenger date helpers are shared, not duplicated             */
+/* ------------------------------------------------------------------ */
+
+const CLIENT_SRC = path.resolve(__dirname, "../../client/src");
+
+async function loadSharedTimeUtil() {
+	const file = path.join(CLIENT_SRC, "utils/messageTime.js");
+	assert.ok(fs.existsSync(file), "shared messenger time util is missing");
+	const source = fs.readFileSync(file, "utf8");
+	// The client ships ES modules; load the real source without a bundler.
+	const encoded = Buffer.from(source, "utf8").toString("base64");
+	return import(`data:text/javascript;base64,${encoded}`);
+}
+
+test("D15: timeAgo and formatDateLabel live in one shared util", async () => {
+	const util = await loadSharedTimeUtil();
+
+	assert.equal(typeof util.timeAgo, "function");
+	assert.equal(typeof util.formatDateLabel, "function");
+
+	const now = Date.now();
+	assert.equal(util.timeAgo(new Date(now - 30 * 1000).toISOString()), "now");
+	assert.equal(util.timeAgo(new Date(now - 5 * 60 * 1000).toISOString()), "5m");
+	assert.equal(util.timeAgo(new Date(now - 3 * 60 * 60 * 1000).toISOString()), "3h");
+	assert.equal(util.timeAgo(new Date(now - 4 * 24 * 60 * 60 * 1000).toISOString()), "4d");
+	assert.equal(util.timeAgo(""), "");
+
+	assert.equal(util.formatDateLabel(new Date(now).toISOString()), "Today");
+	assert.equal(
+		util.formatDateLabel(new Date(now - 24 * 60 * 60 * 1000).toISOString()),
+		"Yesterday"
+	);
+	assert.equal(util.formatDateLabel(""), "");
+
+	const sidebar = fs.readFileSync(
+		path.join(CLIENT_SRC, "components/messenger/ConversationSidebar.jsx"),
+		"utf8"
+	);
+	const chatWindow = fs.readFileSync(
+		path.join(CLIENT_SRC, "components/messenger/ChatWindow.jsx"),
+		"utf8"
+	);
+
+	assert.match(sidebar, /from "\.\.\/\.\.\/utils\/messageTime"/);
+	assert.match(chatWindow, /from "\.\.\/\.\.\/utils\/messageTime"/);
+	assert.doesNotMatch(sidebar, /function timeAgo/);
+	assert.doesNotMatch(chatWindow, /function formatDateLabel/);
 });

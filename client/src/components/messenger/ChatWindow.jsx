@@ -19,6 +19,7 @@ import {
 
 import TypingIndicator from "./TypingIndicator";
 import { notificationStore } from "../../socket";
+import { formatDateLabel } from "../../utils/messageTime";
 import "./chatwindow.css";
 
 const EMOJI_LIST = ["👍","❤️","😂","😮","😢","🔥"];
@@ -29,16 +30,6 @@ const BASE = process.env.REACT_APP_BACKEND_URL || "";
 function formatTime(iso) {
   if (!iso) return "";
   return new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-}
-
-function formatDateLabel(iso) {
-  if (!iso) return "";
-  const d   = new Date(iso);
-  const now = new Date();
-  const diffDays = Math.floor((now - d) / 86400000);
-  if (diffDays === 0) return "Today";
-  if (diffDays === 1) return "Yesterday";
-  return d.toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" });
 }
 
 function sameDay(a, b) {

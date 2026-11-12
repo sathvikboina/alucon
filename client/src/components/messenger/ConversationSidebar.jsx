@@ -5,6 +5,7 @@ import { Link, useHistory, useLocation } from "react-router-dom";
 import { connect } from "react-redux";
 import { getConversations } from "../../actions/chat";
 import { notificationStore } from "../../socket";
+import { timeAgo } from "../../utils/messageTime";
 import "./sidebar.css";
 
 const BASE = process.env.REACT_APP_BACKEND_URL || "";
@@ -14,15 +15,6 @@ const BASE = process.env.REACT_APP_BACKEND_URL || "";
 function truncate(str, max = 30) {
   if (!str) return "";
   return str.length > max ? str.slice(0, max) + "…" : str;
-}
-
-function timeAgo(iso) {
-  if (!iso) return "";
-  const diff = (Date.now() - new Date(iso)) / 1000;
-  if (diff < 60)    return "now";
-  if (diff < 3600)  return Math.floor(diff / 60) + "m";
-  if (diff < 86400) return Math.floor(diff / 3600) + "h";
-  return Math.floor(diff / 86400) + "d";
 }
 
 function Avatar({ src, name, size = 42, online = false }) {
