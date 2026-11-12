@@ -20,11 +20,15 @@ module.exports = async function (req, res, next) {
     );
 
     const dbUser = await User.findById(decoded.user.id)
-      .select("isAdmin adminType role")
+      .select("isAdmin adminType role blocked")
       .lean();
 
     if (!dbUser) {
       return res.status(401).json({ msg: "Token is not Valid" });
+    }
+
+    if (dbUser.blocked) {
+      return res.status(403).json({ msg: "Account is blocked" });
     }
 
     req.user = {

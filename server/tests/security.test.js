@@ -612,4 +612,30 @@ test("stale admin claims in a JWT cannot delete someone else's question (D7)", a
 	assert.ok(await EventQuestion.findById(question._id), "question must still exist");
 });
 
+test("auth reload rejects blocked accounts and deleted users (D7)", async () => {
+	const blocked = await makeUser("blocked", {
+		name: "Regression Blocked",
+		email: "blocked@regression.test",
+		role: "alumni",
+		blocked: true,
+	});
+	const blockedResponse = await api("/api/users/me", {
+		token: tokenFor(blocked),
+	});
+	assert.equal(blockedResponse.status, 403);
+
+	const deleted = await makeUser("deleted", {
+		name: "Regression Deleted",
+		email: "deleted@regression.test",
+		role: "alumni",
+	});
+	const deletedToken = tokenFor(deleted);
+	await User.findByIdAndDelete(deleted._id);
+
+	const deletedResponse = await api("/api/users/me", {
+		token: deletedToken,
+	});
+	assert.equal(deletedResponse.status, 401);
+});
+
 
