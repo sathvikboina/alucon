@@ -45,7 +45,38 @@ const STOPWORDS = new Set([
   "find", "get", "give", "help", "how", "i", "in", "is", "it", "me", "my",
   "need", "of", "on", "or", "our", "please", "show", "the", "to", "up", "want",
   "what", "where", "who", "with", "you", "your", "about", "all", "any", "looking",
+  "not", "no", "don", "dont", "doesn", "doesnt", "didn", "didnt", "isn", "isnt",
+  "aren", "arent", "wasn", "wasnt", "weren", "werent", "excluding", "except",
+  "without", "outside", "other", "than", "apart", "besides", "but", "however",
+  "while", "whereas", "yet", "though", "although",
 ]);
+
+// Query language that flips the meaning of the words that follow it. The
+// normalized form splits apostrophes into spaces, so "don't" arrives as
+// "don t"; both spellings are listed.
+const NEGATION_CUES = [
+  "do not", "does not", "did not", "don t", "doesn t", "didn t",
+  "is not", "isn t", "are not", "aren t", "was not", "wasn t",
+  "were not", "weren t", "not", "dont", "doesnt", "didnt", "isnt",
+  "arent", "wasnt", "werent", "excluding", "except", "without",
+  "outside", "other than", "apart from", "besides",
+];
+
+const NEGATION_BOUNDARIES = [
+  "but", "however", "while", "whereas", "yet", "though", "although",
+];
+
+const escapeRegexText = (value) =>
+  value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+const NEGATION_RE = new RegExp(
+  `\\b(?:${NEGATION_CUES.map(escapeRegexText).join("|")})\\b`,
+  "g"
+);
+
+const NEGATION_BOUNDARY_RE = new RegExp(
+  `\\b(?:${NEGATION_BOUNDARIES.map(escapeRegexText).join("|")})\\b`
+);
 
 // Words that describe *what kind* of record the user wants rather than *what*
 // it should be about. They steer the intent boost but must not count as
@@ -171,12 +202,80 @@ function contentTokens(tokens) {
   return tokens.filter((token) => !INTENT_WORDS.has(token));
 }
 
+// Split a negated span into alternatives: "not in Bangalore or Pune" should
+// exclude either city, not require both.
+function negatedAlternatives(span) {
+  return span
+    .split(/\s+(?:or|and)\s+/)
+    .map((part) => contentTokens(tokenize(part)).join(" "))
+    .filter(Boolean)
+    .map((phrase) => ({ phrase, tokens: phrase.split(" ") }));
+}
+
+// Separate the positive part of a query from the part that excludes records.
+// Examples:
+//   "alumni who don't work in Bangalore" -> positive "the alumni who",
+//     negated [{ phrase: "bangalore" }]
+//   "alumni in India not in Bangalore or Pune" -> positive "alumni in India",
+//     negated ["bangalore", "pune"]
+function parseSearchQuery(rawQuery) {
+  const normalized = normalize(rawQuery);
+  const negated = [];
+  const positiveParts = [];
+  let cursor = 0;
+
+  NEGATION_RE.lastIndex = 0;
+  let match = NEGATION_RE.exec(normalized);
+  while (match) {
+    const cueStart = match.index;
+    const cueEnd = cueStart + match[0].length;
+    const rest = normalized.slice(cueEnd);
+    const boundary = rest.match(NEGATION_BOUNDARY_RE);
+    const spanEnd = boundary ? cueEnd + boundary.index : normalized.length;
+    const span = normalized.slice(cueEnd, spanEnd).trim();
+
+    positiveParts.push(normalized.slice(cursor, cueStart));
+    negated.push(...negatedAlternatives(span));
+
+    cursor = spanEnd;
+    NEGATION_RE.lastIndex = spanEnd;
+    match = NEGATION_RE.exec(normalized);
+  }
+  positiveParts.push(normalized.slice(cursor));
+
+  const positive = positiveParts.join(" ").replace(/\s+/g, " ").trim();
+  const queryTokens = tokenize(positive);
+
+  return {
+    positive,
+    queryTokens,
+    content: contentTokens(queryTokens),
+    negated,
+  };
+}
+
+// A negated phrase matches when every one of its words appears in the record.
+// Synonyms still apply, so "not in Bangalore" also excludes "Bengaluru".
+function matchesNegated(doc, negated = []) {
+  if (!negated.length) return false;
+  const text = docText(doc);
+  return negated.some(({ tokens }) =>
+    tokens.length > 0 &&
+    tokens.every((token) =>
+      tokenVariants(token).some((variant) => includesPhrase(text, variant))
+    )
+  );
+}
+
 function docText(doc) {
   return normalize(
     `${doc.title || ""} ${doc.subtitle || ""} ${doc.body || ""} ${(
       doc.keywords || []
     ).join(" ")}`
-  );
+  )
+    // Sentence-ending periods otherwise stick to the final word and defeat
+    // the space-padded phrase check ("Bengaluru." versus "bengaluru").
+    .replace(/\.(?=\s|$)/g, "");
 }
 
 // Space-padded comparison so "ml" does not match "html" and "go" does not
@@ -721,17 +820,25 @@ async function searchAll(user, rawQuery, { limit = 6, type = "" } = {}) {
     console.warn("[search] query embedding failed; using lexical only:", err.message);
   }
 
-  const queryTokens = tokenize(query);
-  const phrase = normalize(query);
+  const parsed = parseSearchQuery(query);
+  const queryTokens = parsed.queryTokens;
+  const phrase = parsed.positive;
   const intent = detectIntent(query);
-  const content = contentTokens(queryTokens);
+  const content = parsed.content;
+  // "Alumni who do not work in Bangalore" names the record type explicitly.
+  // Honour that instead of filling the page with groups, events and posts that
+  // merely mention alumni.
+  const restrictToIntent = Boolean(intent.type && parsed.negated.length);
   const wantsUpcoming = /\bupcoming\b/.test(phrase);
   const now = Date.now();
   const results = [];
 
   for (const doc of documents) {
     if (type && doc.sourceType !== type) continue;
+    if (restrictToIntent && doc.sourceType !== intent.type) continue;
     if (!canSee(user, doc)) continue;
+    // "Not in Bangalore" must remove those people, not rank them first.
+    if (matchesNegated(doc, parsed.negated)) continue;
     if (wantsUpcoming && doc.sourceType === "event" && !isUpcomingEvent(doc, now)) {
       continue;
     }
@@ -838,6 +945,8 @@ module.exports = {
   queueSearchRefresh,
   belongsInIndex,
   detectIntent,
+  parseSearchQuery,
+  matchesNegated,
   tokenize,
   contentTokens,
   matchesAnyToken,

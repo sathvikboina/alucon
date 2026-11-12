@@ -5,6 +5,8 @@ const assert = require("node:assert/strict");
 
 const {
   detectIntent,
+  parseSearchQuery,
+  matchesNegated,
   tokenize,
   contentTokens,
   matchesAnyToken,
@@ -77,6 +79,65 @@ test("content coverage beats an incidental single-word hit", () => {
     queryTokens
   );
   assert.ok(allFour > onlyTwo, `${allFour} should be greater than ${onlyTwo}`);
+});
+
+test("negated phrases are separated from the positive query", () => {
+  const parsed = parseSearchQuery(
+    "the alumni who DON'T work in Bangalore"
+  );
+  assert.deepEqual(parsed.content, []);
+  assert.deepEqual(
+    parsed.negated.map((entry) => entry.phrase),
+    ["bangalore"]
+  );
+
+  const filtered = parseSearchQuery(
+    "alumni in India not in Bangalore or Pune"
+  );
+  assert.deepEqual(filtered.content, ["india"]);
+  assert.deepEqual(
+    filtered.negated.map((entry) => entry.phrase),
+    ["bangalore", "pune"]
+  );
+});
+
+test("negated terms exclude matching records and respect synonyms", () => {
+  const parsed = parseSearchQuery("alumni who are not working at Google");
+  assert.deepEqual(
+    parsed.negated.map((entry) => entry.phrase),
+    ["google"]
+  );
+
+  const atGoogle = {
+    title: "Nikhil Sethi",
+    subtitle: "Engineer at Google",
+    body: "Working on search infrastructure.",
+    keywords: [],
+  };
+  const elsewhere = {
+    title: "Rahul Nair",
+    subtitle: "Engineer at Meridian Cloud",
+    body: "Working on reliability.",
+    keywords: [],
+  };
+  assert.equal(matchesNegated(atGoogle, parsed.negated), true);
+  assert.equal(matchesNegated(elsewhere, parsed.negated), false);
+
+  const notBangalore = parseSearchQuery("alumni outside Bangalore");
+  assert.equal(
+    matchesNegated(
+      { title: "A", subtitle: "", body: "Based in Bengaluru.", keywords: [] },
+      notBangalore.negated
+    ),
+    true
+  );
+  assert.equal(
+    matchesNegated(
+      { title: "B", subtitle: "", body: "Based in Delhi.", keywords: [] },
+      notBangalore.negated
+    ),
+    false
+  );
 });
 
 test("past events are excluded from upcoming queries", () => {
