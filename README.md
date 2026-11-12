@@ -96,16 +96,16 @@ delivery path and effort estimates.
 AlumniConnect/
 │
 ├── client/
+│   ├── .env
 │   ├── src/
 │   ├── public/
 │
 ├── server/
+│   ├── .env
 │   ├── routes/
-│   ├── controllers/
 │   ├── models/
 │   ├── middleware/
 │
-├── .env
 ├── package.json
 └── README.md
 ```
@@ -161,7 +161,6 @@ CLOUDINARY_API_KEY=your_key
 CLOUDINARY_API_SECRET=your_secret
 
 # Thread TL;DR (Gemini). Optional: without a key the app returns offline, extractive output.
-# Optional: without a key the app returns offline, extractive output.
 GEMINI_API_KEY=your_gemini_key
 GEMINI_MODEL=gemini-3-flash-preview
 
