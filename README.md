@@ -344,8 +344,11 @@ first page after login; search is a separate destination.
   text, metadata, URL and a 384-float vector. Vectors stay in MongoDB; there is
   no Pinecone/Chroma/FAISS dependency.
 - **Ranking** — 0.6 cosine similarity + 0.4 lexical evidence + a 0.1 intent
-  boost, with a content-token guard and an upcoming-event filter. Ranking runs
-  in Node; no LLM generates answers.
+  boost, with a content-token guard and an upcoming-event filter. The 0.6/0.4
+  blend was the best of 21 tested ratios on the current evaluation set. Negated
+  filters such as “not in Bangalore” are removed before ranking, while ordinary
+  phrases such as “not a queue” remain searchable. Ranking runs in Node; no LLM
+  generates answers.
 - **Access** — post visibility and private-group membership are enforced before
   ranking. Messenger messages, notifications, mentorship requests, group
   threads and other private records are intentionally excluded.
@@ -356,8 +359,8 @@ first page after login; search is a separate destination.
   document in the background, deletes remove it, and block/archive changes drop
   ineligible records. Admins can force a full rebuild with
   `POST /api/search/reindex`.
-- **Evaluation** — `npm run search:eval` runs a 25-query fixture and reports
-  Recall@10, MRR and NDCG@10 (currently 100% / 0.960 / 0.970). Add
+- **Evaluation** — `npm run search:eval` runs a 67-query fixture and reports
+  Recall@10, MRR and NDCG@10 (currently 100% / 0.985 / 0.989). Add
   `-- --rebuild` to evaluate a fresh index; the script exits non-zero below
   `SEARCH_MIN_RECALL` (default 0.9).
 
