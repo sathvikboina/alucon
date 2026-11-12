@@ -63,7 +63,9 @@
 
 .messenger-wrapper {
   display: flex;
-  height: calc(100vh - 60px); /* adjust if your navbar differs */
+  /* The navbar is exactly 64px tall; matching it keeps the chat from
+     overflowing the viewport and adding a stray scrollbar. */
+  height: calc(100vh - 64px);
   background: var(--grey-100);
   overflow: hidden;
   font-family: var(--font);

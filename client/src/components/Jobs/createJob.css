@@ -1,6 +1,6 @@
 /* PAGE */
 .create-job-page {
-  min-height: 100vh;
+  min-height: calc(100vh - 64px);
   padding: 30px;
   display: flex;
   flex-direction: column;

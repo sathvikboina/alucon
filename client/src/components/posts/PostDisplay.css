@@ -31,7 +31,7 @@
 
 /* ── Page ── */
 .post-page {
-  min-height: 100vh;
+  min-height: calc(100vh - 64px);
   background:
     radial-gradient(circle at 8% 0%, rgba(63, 121, 191, 0.08), transparent 34rem),
     #f4f7fb;

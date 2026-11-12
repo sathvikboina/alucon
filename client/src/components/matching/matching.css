@@ -9,7 +9,8 @@
   background:
     radial-gradient(circle at 8% 0%, rgba(63, 121, 191, 0.08), transparent 34rem),
     #f4f7fb;
-  min-height: 100vh;
+  /* The page starts below the 64px navbar, so 100vh would always overflow. */
+  min-height: calc(100vh - 64px);
   padding-bottom: 64px;
   color: var(--ink);
 }
@@ -86,13 +87,20 @@
   justify-content: space-between;
   align-items: center;
   gap: 22px;
-  margin: -20px var(--gutter) 0;
+  margin: 0 var(--gutter) 0;
   position: relative;
   background: #fff;
   border: 1px solid var(--line);
   border-radius: 12px;
   padding: 18px 22px;
   box-shadow: 0 12px 32px rgba(16, 35, 63, 0.08);
+}
+
+/* Tuck the context card under the hero only when it directly follows it. On
+   the mentorship page a goal bar sits in between, so a negative margin would
+   slide the card over that row and clip its heading. */
+.match-hero + .match-context {
+  margin-top: -20px;
 }
 
 .match-context-profile {

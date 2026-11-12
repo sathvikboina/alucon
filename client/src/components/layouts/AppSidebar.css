@@ -25,8 +25,7 @@
   background: #ffffff;
   border-right: 1px solid #e5ebf3;
   font-family: "Montserrat", sans-serif;
-  overflow-y: auto;
-  scrollbar-width: thin;
+  overflow: hidden;
   transition: width 0.18s ease, min-width 0.18s ease;
   z-index: 30;
 }
@@ -79,9 +78,16 @@
 }
 
 .app-sidebar-nav {
+  /* Links scroll on their own so the account footer stays pinned to the
+     bottom of the rail on short laptop screens. */
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 2px;
   display: flex;
   flex-direction: column;
   gap: 2px;
+  scrollbar-width: thin;
 }
 
 .app-sidebar-section {
@@ -168,7 +174,7 @@
 }
 
 .app-sidebar-admin {
-  margin-top: auto;
+  margin-top: 8px;
 }
 
 .app-sidebar-admin .app-sidebar-link {
@@ -183,7 +189,8 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-top: 14px;
+  flex-shrink: 0;
+  margin-top: 10px;
   padding: 10px;
   border-top: 1px solid #f0f4f9;
   border-radius: 8px;

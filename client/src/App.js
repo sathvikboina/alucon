@@ -36,9 +36,10 @@ const PUBLIC_PREFIXES = [
 	"/admin/showcase",
 ];
 
-// Admin tools already have a dedicated sidebar; keeping the global rail too
-// would leave two navigation columns on the same screen.
-const OWN_SIDEBAR_PREFIXES = ["/dashboard", "/analytics"];
+// These screens already render their own full-height side column: the admin
+// dashboards and the messenger conversation list. Stacking the global rail next
+// to them leaves two navigation columns and squeezes the actual content.
+const OWN_SIDEBAR_PREFIXES = ["/dashboard", "/analytics", "/messenger"];
 
 const AppShell = ({ isAuthenticated, children }) => {
 	const location = useLocation();

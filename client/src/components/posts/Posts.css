@@ -144,15 +144,11 @@
 .channel-strip {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
-  overflow-x: auto;
   padding-bottom: 2px;
   margin-bottom: 20px;
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
 }
-
-.channel-strip::-webkit-scrollbar { display: none; }
 
 .channel-pill {
   display: inline-flex;
