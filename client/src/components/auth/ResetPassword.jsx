@@ -15,7 +15,12 @@ const ResetPassword = ({
 	useEffect(() => {
 		closeSideNav();
 		verifyResetLink(match.params.user_id, match.params.reset_token);
-	}, []);
+	}, [
+		closeSideNav,
+		verifyResetLink,
+		match.params.user_id,
+		match.params.reset_token,
+	]);
 
 	const [formInput, setFormInput] = useState({
 		password: "",

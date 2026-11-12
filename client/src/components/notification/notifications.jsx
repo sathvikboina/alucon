@@ -22,7 +22,7 @@ const Notifications = () => {
   // ✅ Fetch notifications
   useEffect(() => {
     const getData = async () => {
-      if (userData === "none") return;
+      if (!userID) return;
 
       try {
         const res = await axios.post("/api/notifications/getNotifications", {
@@ -39,7 +39,7 @@ const Notifications = () => {
     };
 
     getData();
-  }, []);
+  }, [userID]);
 
   // ✅ Close dropdown on outside click
   useEffect(() => {

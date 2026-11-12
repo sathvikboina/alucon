@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import axios from "axios";
 import "./ResourceHub.css";
 
@@ -20,7 +20,7 @@ const currentUserId = user?._id;
 
 // ================= FETCH =================
 
-const fetchResources = async()=>{
+const fetchResources = useCallback(async()=>{
 
 try{
 
@@ -35,11 +35,11 @@ try{
  console.error(err);
 }
 
-};
+},[filter]);
 
 useEffect(()=>{
  fetchResources();
-},[filter]);
+},[fetchResources]);
 
 
 

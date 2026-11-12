@@ -22,7 +22,7 @@ const getStrength = (checks) => {
 };
 
 const Register = ({ setAlert, register, closeSideNav }) => {
-  useEffect(() => closeSideNav(), []);
+  useEffect(() => closeSideNav(), [closeSideNav]);
 
   const [loading, setLoading] = useState(false);
   const [pendingApproval, setPendingApproval] = useState(false);

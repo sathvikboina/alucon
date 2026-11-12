@@ -187,18 +187,18 @@ const Posts = ({
   useEffect(() => {
     closeSideNav();
     getAllChannels();
-  }, []);
+  }, [closeSideNav, getAllChannels]);
 
   // Empty channel means "all posts" now, matching the prototype home feed.
   useEffect(() => {
     getPosts(initialSearch, channelName);
-  }, [channelName]);
+  }, [channelName, initialSearch, getPosts]);
 
   useEffect(() => {
     if (!composerChannel) {
       setComposerChannel(channelName || channels?.[0]?.name || "General");
     }
-  }, [channelName, channels]);
+  }, [channelName, channels, composerChannel]);
 
   // Right-rail data. Both endpoints are already part of the original API.
   useEffect(() => {

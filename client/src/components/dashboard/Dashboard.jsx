@@ -62,7 +62,10 @@ const Dashboard = ({ closeSideNav, getCurrentUserProfile, addExperience, addEduc
   const [importNotice, setImportNotice] = useState("");
   const [importError, setImportError] = useState("");
 
-  useEffect(() => { closeSideNav(); getCurrentUserProfile(); }, []);
+  useEffect(() => {
+    closeSideNav();
+    getCurrentUserProfile();
+  }, [closeSideNav, getCurrentUserProfile]);
 
   useEffect(() => {
     if (authUser) {

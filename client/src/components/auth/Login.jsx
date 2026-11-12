@@ -9,7 +9,7 @@ const Login = ({ login, isAuthenticated, closeSideNav }) => {
 	const [passwordType, setPasswordType] = useState("password");
 	useEffect(() => {
 		closeSideNav();
-	}, []);
+	}, [closeSideNav]);
 
 	const [formInput, setFormInput] = useState({
 		email: "",

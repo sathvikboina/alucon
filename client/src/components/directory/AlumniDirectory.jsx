@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
 import { connect } from "react-redux";
@@ -49,7 +49,7 @@ const AlumniDirectory = ({
 
   const followingUsers = new Set((authUser?.followings || []).map(String));
 
-  const fetchAlumni = async () => {
+  const fetchAlumni = useCallback(async () => {
     try {
       const token = localStorage.getItem("token");
       const query = new URLSearchParams({
@@ -70,14 +70,14 @@ const AlumniDirectory = ({
     } catch (err) {
       console.error(err);
     }
-  };
+  }, [filters, page]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       fetchAlumni();
     }, 400); // 400ms debounce
     return () => clearTimeout(timer);
-  }, [filters, page]);
+  }, [fetchAlumni]);
 
   const handleChange  = (e) => {
     setPage(1);
