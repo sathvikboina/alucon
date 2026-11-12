@@ -82,8 +82,9 @@
   background: #fff1f1;
 }
 
-/* ── Image ── */
+/* ── Media ── */
 .post-image-wrap {
+  position: relative;
   width: 100%;
   max-height: 300px;
   overflow: hidden;
@@ -102,6 +103,48 @@
 
 .post-card:hover .post-image-wrap img {
   transform: scale(1.02);
+}
+
+.post-image-wrap video {
+  width: 100%;
+  max-height: 300px;
+  display: block;
+  background: #000;
+}
+
+.post-image-wrap.media-audio,
+.post-image-wrap.media-file {
+  padding: 16px;
+  line-height: 1.4;
+  max-height: none;
+}
+
+.post-image-wrap audio {
+  width: 100%;
+  display: block;
+}
+
+.post-media-file {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #1e4d8c;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.post-media-count {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  background: rgba(13, 27, 54, 0.78);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  padding: 5px 8px;
+  border-radius: 999px;
 }
 
 /* ── Body ── */

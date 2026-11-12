@@ -24,12 +24,20 @@ const countWords = (html = "") => {
 };
 
 const PostCard = ({
-  post: { _id, heading, text, likes, comments, date, user, avatar, name, images, channel, feed },
+  post: { _id, heading, text, likes, comments, date, user, avatar, name, images, media, channel, feed },
   auth: { loadingAuth, authUser },
   toggleLike,
   deletePost,
   showReason,
 }) => {
+  const attachments =
+    Array.isArray(media) && media.length
+      ? media
+      : (Array.isArray(images) ? images : []).map((url) => ({
+          url,
+          mediaType: "image",
+        }));
+  const leadMedia = attachments[0];
   const isLiked = authUser && likes?.some((l) => l.user === authUser._id);
   const [summary, setSummary] = useState(null);
   const [summaryError, setSummaryError] = useState("");
@@ -116,10 +124,30 @@ const PostCard = ({
         </p>
       )}
 
-      {/* Full-width image */}
-      {images?.length > 0 && (
-        <div className="post-image-wrap">
-          <img src={images[0]} alt={heading} />
+      {/* Lead attachment */}
+      {leadMedia && (
+        <div className={`post-image-wrap media-${leadMedia.mediaType}`}>
+          {leadMedia.mediaType === "video" ? (
+            <video src={leadMedia.url} controls preload="metadata" />
+          ) : leadMedia.mediaType === "audio" ? (
+            <audio src={leadMedia.url} controls preload="metadata" />
+          ) : leadMedia.mediaType === "file" ? (
+            <a
+              className="post-media-file"
+              href={leadMedia.url}
+              target="_blank"
+              rel="noreferrer"
+            >
+              <i className="fas fa-file" /> Open attachment
+            </a>
+          ) : (
+            <img src={leadMedia.url} alt={heading} />
+          )}
+          {attachments.length > 1 && (
+            <span className="post-media-count">
+              +{attachments.length - 1}
+            </span>
+          )}
         </div>
       )}
 

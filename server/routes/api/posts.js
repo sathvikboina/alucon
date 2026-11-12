@@ -67,7 +67,40 @@ router.post(
                 visibleAlumni,
                 channel,
                 images,
+                media,
             } = req.body;
+
+            // Accept either typed media or the legacy images array. Only
+            // http(s) URLs and site-relative /uploads paths are stored.
+            const asMedia = (list) =>
+                (Array.isArray(list) ? list : [])
+                    .map((item) =>
+                        typeof item === "string"
+                            ? { url: item, mediaType: "image" }
+                            : item
+                    )
+                    .filter(
+                        (item) =>
+                            item &&
+                            typeof item.url === "string" &&
+                            /^(https?:\/\/|\/uploads\/)/.test(item.url)
+                    )
+                    .slice(0, 8)
+                    .map((item) => ({
+                        url: item.url,
+                        mediaType: ["image", "video", "audio", "file"].includes(
+                            item.mediaType
+                        )
+                            ? item.mediaType
+                            : "image",
+                    }));
+
+            const attachments = asMedia(media).length
+                ? asMedia(media)
+                : asMedia(images);
+            const imageUrls = attachments
+                .filter((item) => item.mediaType === "image")
+                .map((item) => item.url);
 
             // Build visibility array
             const visibility = [];
@@ -97,7 +130,8 @@ router.post(
                 name: user.name,
                 avatar: user.avatar,
                 visibility,
-                images,
+                images: imageUrls,
+                media: attachments,
                 channel: channelName,
             });
 

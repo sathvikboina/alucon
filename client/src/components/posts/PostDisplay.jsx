@@ -94,6 +94,13 @@ const PostDisplay = ({
 
   const isLiked = post.likes?.some((like) => like.user === authUser._id);
   const commentCount = post.comments?.length || 0;
+  const attachments =
+    Array.isArray(post.media) && post.media.length
+      ? post.media
+      : (Array.isArray(post.images) ? post.images : []).map((url) => ({
+          url,
+          mediaType: "image",
+        }));
 
   return (
     <div className="post-page">
@@ -129,11 +136,41 @@ const PostDisplay = ({
           <div className="post-content">
             <div className="post-text">{parse(sanitizeHtml(post.text))}</div>
 
-            {post.images?.length > 0 && (
+            {attachments.length > 0 && (
               <div className="post-images">
-                {post.images.map((img) => (
-                  <img key={img} src={img} alt={post.heading || "post media"} />
-                ))}
+                {attachments.map((item) =>
+                  item.mediaType === "video" ? (
+                    <video
+                      key={item.url}
+                      src={item.url}
+                      controls
+                      preload="metadata"
+                    />
+                  ) : item.mediaType === "audio" ? (
+                    <audio
+                      key={item.url}
+                      src={item.url}
+                      controls
+                      preload="metadata"
+                    />
+                  ) : item.mediaType === "file" ? (
+                    <a
+                      key={item.url}
+                      className="post-attachment"
+                      href={item.url}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      <i className="fas fa-file" /> Open attachment
+                    </a>
+                  ) : (
+                    <img
+                      key={item.url}
+                      src={item.url}
+                      alt={post.heading || "post media"}
+                    />
+                  )
+                )}
               </div>
             )}
           </div>

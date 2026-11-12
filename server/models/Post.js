@@ -76,6 +76,19 @@ const PostSchema = new Schema({
 		},
 	],
 	images: [String],
+	// Richer attachments. images stays for backwards compatibility; media adds
+	// the type so the client can render video and images differently.
+	media: [
+		{
+			_id: false,
+			url: { type: String, required: true },
+			mediaType: {
+				type: String,
+				enum: ["image", "video", "audio", "file"],
+				default: "image",
+			},
+		},
+	],
 	date: {
 		type: Date,
 		default: Date.now,

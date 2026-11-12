@@ -25,6 +25,12 @@ const EXTENSION_BY_MIME = {
   "image/png": ".png",
   "image/webp": ".webp",
   "image/gif": ".gif",
+  "video/mp4": ".mp4",
+  "video/webm": ".webm",
+  "video/quicktime": ".mov",
+  "audio/mpeg": ".mp3",
+  "audio/wav": ".wav",
+  "audio/webm": ".weba",
   "application/pdf": ".pdf",
   "application/msword": ".doc",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document": ".docx",
@@ -118,6 +124,11 @@ router.post("/multiple", auth, (req, res) => {
       );
       return res.json({
         images: urls.map((r) => absoluteUrl(req, r.secure_url)),
+        media: urls.map((r, index) => ({
+          url: absoluteUrl(req, r.secure_url),
+          mediaType: detectMediaType(req.files[index].mimetype),
+          originalName: req.files[index].originalname,
+        })),
       });
     } catch (error) {
       console.error("Multiple upload error:", error);

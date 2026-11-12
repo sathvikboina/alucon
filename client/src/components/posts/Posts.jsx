@@ -93,6 +93,10 @@ const Posts = ({
   const [composerChannel, setComposerChannel] = useState("");
   const [composerError, setComposerError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [media, setMedia] = useState([]);
+  const [mediaUploading, setMediaUploading] = useState(false);
+  const [mediaError, setMediaError] = useState("");
+  const mediaInputRef = useRef(null);
 
   const [open, setOpen] = useState(false);
   const [newChannelName, setChannelName] = useState("");
@@ -351,14 +355,14 @@ const Posts = ({
 
   const handleCompose = async (e) => {
     e.preventDefault();
-    if (submitting) return;
+    if (submitting || mediaUploading) return;
 
     if (!heading.trim()) {
       setComposerError("Add a short title for your post.");
       return;
     }
-    if (!body.trim()) {
-      setComposerError("Write something before posting.");
+    if (!body.trim() && media.length === 0) {
+      setComposerError("Write something or attach media before posting.");
       return;
     }
 
@@ -376,12 +380,15 @@ const Posts = ({
 
     const payload = {
       heading: heading.trim(),
-      text: toHtml(body.trim()),
+      text: body.trim() ? toHtml(body.trim()) : "<p></p>",
       visibleStudent: visibility.student,
       visibleFaculty: visibility.faculty,
       visibleAlumni: visibility.alumni,
       channel: (composerChannel || "General").trim(),
-      images: [],
+      images: media
+        .filter((item) => item.mediaType === "image")
+        .map((item) => item.url),
+      media,
     };
 
     const ok = await (async () => {
@@ -397,6 +404,8 @@ const Posts = ({
     if (ok) {
       setHeading("");
       setBody("");
+      setMedia([]);
+      setMediaError("");
       setAudience("community");
       setComposerOpen(false);
       getPosts(search.trim(), channelName);
@@ -405,6 +414,46 @@ const Posts = ({
       setComposerError("Could not publish right now. Please try again.");
     }
   };
+
+  const handleMediaSelect = async (e) => {
+    const files = Array.from(e.target.files || []);
+    e.target.value = "";
+    if (!files.length) return;
+
+    const slots = 4 - media.length;
+    if (slots <= 0) {
+      setMediaError("You can attach up to 4 files per post.");
+      return;
+    }
+    if (files.length > slots) {
+      setMediaError(
+        `Only ${slots} more file${slots === 1 ? "" : "s"} can be added.`
+      );
+    } else {
+      setMediaError("");
+    }
+
+    const formData = new FormData();
+    files.slice(0, slots).forEach((file) => formData.append("files", file));
+
+    setMediaUploading(true);
+    try {
+      const { data } = await api.post("/api/upload/multiple", formData);
+      const uploaded = Array.isArray(data?.media)
+        ? data.media
+        : (data?.images || []).map((url) => ({ url, mediaType: "image" }));
+      setMedia((current) => [...current, ...uploaded].slice(0, 4));
+    } catch (err) {
+      setMediaError(
+        err?.response?.data?.msg || "Could not upload that file. Please try again."
+      );
+    } finally {
+      setMediaUploading(false);
+    }
+  };
+
+  const removeMedia = (url) =>
+    setMedia((current) => current.filter((item) => item.url !== url));
 
   const handleNewChannelSubmit = async () => {
     if (!newChannelName.trim()) return;
@@ -586,15 +635,72 @@ const Posts = ({
                 </p>
               )}
 
+              {composerOpen && media.length > 0 && (
+                <div className="composer-media">
+                  {media.map((item) => (
+                    <div className="composer-media-item" key={item.url}>
+                      {item.mediaType === "image" ? (
+                        <img src={item.url} alt="Attachment preview" />
+                      ) : (
+                        <div className="composer-media-file">
+                          <i
+                            className={`fas ${
+                              item.mediaType === "video"
+                                ? "fa-video"
+                                : item.mediaType === "audio"
+                                ? "fa-music"
+                                : "fa-file"
+                            }`}
+                          />
+                          <span>{item.mediaType}</span>
+                        </div>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => removeMedia(item.url)}
+                        aria-label="Remove attachment"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {composerOpen && mediaError && (
+                <p className="composer-error" role="alert">
+                  {mediaError}
+                </p>
+              )}
+
               <div className="composer-actions">
                 <span className="composer-hint">
-                  Shared with the selected audience.
+                  {media.length > 0
+                    ? `${media.length} attachment${media.length === 1 ? "" : "s"} · shared with the selected audience.`
+                    : "Images, video and audio can be attached. Shared with the selected audience."}
                 </span>
                 <div className="composer-buttons">
+                  <input
+                    ref={mediaInputRef}
+                    type="file"
+                    accept="image/*,video/*,audio/*"
+                    multiple
+                    hidden
+                    onChange={handleMediaSelect}
+                  />
+                  <button
+                    type="button"
+                    className="composer-media-btn"
+                    onClick={() => mediaInputRef.current?.click()}
+                    disabled={mediaUploading || media.length >= 4}
+                  >
+                    <i className="fas fa-paperclip" />{" "}
+                    {mediaUploading ? "Uploading…" : "Add media"}
+                  </button>
                   <button
                     className="create-btn"
                     type="submit"
-                    disabled={submitting}
+                    disabled={submitting || mediaUploading}
                   >
                     {submitting ? "Posting..." : "Post"}
                   </button>

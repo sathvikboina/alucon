@@ -5,7 +5,7 @@ const multer = require("multer");
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: 10 * 1024 * 1024, 
+    fileSize: 25 * 1024 * 1024,
   },
   fileFilter: function (req, file, cb) {
     const allowed = [
@@ -13,6 +13,12 @@ const upload = multer({
   "image/png",
   "image/webp",
   "image/gif",
+  "video/mp4",
+  "video/webm",
+  "video/quicktime",
+  "audio/mpeg",
+  "audio/wav",
+  "audio/webm",
   "application/pdf",
   "application/msword",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -24,7 +30,7 @@ const upload = multer({
     } else {
       cb(
         new Error(
-          "Unsupported file type. Upload an image, PDF, Word or PowerPoint file."
+          "Unsupported file type. Upload an image, video, audio, PDF, Word or PowerPoint file."
         ),
         false
       );
