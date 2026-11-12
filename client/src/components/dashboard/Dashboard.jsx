@@ -54,6 +54,14 @@ const Dashboard = ({ closeSideNav, getCurrentUserProfile, addExperience, addEduc
   const [showSocial, setShowSocial] = useState(false);
   const [imageUploading, setImageUploading] = useState(false);
 
+  // CV / LinkedIn import (F-56). Text is sent once and never stored.
+  const [importOpen, setImportOpen] = useState(false);
+  const [importText, setImportText] = useState("");
+  const [importConsent, setImportConsent] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const [importNotice, setImportNotice] = useState("");
+  const [importError, setImportError] = useState("");
+
   useEffect(() => { closeSideNav(); getCurrentUserProfile(); }, []);
 
   useEffect(() => {
@@ -95,6 +103,59 @@ const Dashboard = ({ closeSideNav, getCurrentUserProfile, addExperience, addEduc
       ...profileForm,
       [field]: e.target.type === "checkbox" ? e.target.checked : e.target.value,
     });
+
+  const runProfileImport = async () => {
+    setImporting(true);
+    setImportError("");
+    setImportNotice("");
+    try {
+      const { data } = await api.post("/api/ai/assist/profile-import", {
+        profileText: importText,
+        consent: importConsent,
+      });
+      const fields = data.fields || {};
+      setProfileForm((current) => {
+        const next = { ...current };
+        const setText = (key, value) => {
+          if (value) next[key] = value;
+        };
+        setText("bio", fields.bio);
+        setText("location", fields.location);
+        setText("organisation", fields.organisation);
+        setText("status", fields.status);
+        setText("website", fields.website);
+        setText("githubusername", fields.githubusername);
+        if (fields.skills?.length) next.skills = fields.skills.join(", ");
+        if (fields.mentee_goals?.length)
+          next.mentee_goals = fields.mentee_goals.join(", ");
+        if (fields.internship_types?.length)
+          next.internship_types = fields.internship_types.join(", ");
+        if (fields.internship_work_modes?.length)
+          next.internship_work_modes = fields.internship_work_modes.join(", ");
+        if (fields.internship_locations?.length)
+          next.internship_locations = fields.internship_locations.join(", ");
+        const social = fields.social || {};
+        for (const key of ["linkedin", "twitter", "facebook", "youtube", "instagram"]) {
+          if (social[key]) next[key] = social[key];
+        }
+        return next;
+      });
+      if (Object.keys(fields.social || {}).length) setShowSocial(true);
+      setImportNotice(
+        `${data.fieldCount} field${data.fieldCount === 1 ? "" : "s"} filled from ${
+          data.fallback ? "a fixed template (offline)" : data.model
+        }. Review everything and click Save Changes — nothing is saved yet.`
+      );
+      setImportText("");
+      setImportConsent(false);
+    } catch (err) {
+      setImportError(
+        err?.response?.data?.msg || "Could not extract fields from that text."
+      );
+    } finally {
+      setImporting(false);
+    }
+  };
 
   const handleAddExperience = (e) => {
     e.preventDefault();
@@ -281,6 +342,70 @@ const Dashboard = ({ closeSideNav, getCurrentUserProfile, addExperience, addEduc
       {modal === "editProfile" && (
         <Modal title="Edit Profile" onClose={closeModal}>
           <form onSubmit={handleEditProfile}>
+
+            <div style={{ border: "1px solid #dbe6f3", borderRadius: "8px", padding: "12px", marginBottom: "16px", background: "#f8fbff" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "10px" }}>
+                <div>
+                  <p style={{ margin: 0, fontSize: "0.85rem", fontWeight: 600, color: "#174a80" }}>
+                    Import from a CV or LinkedIn
+                  </p>
+                  <p style={{ margin: "4px 0 0", fontSize: "12px", color: "#666", lineHeight: 1.45 }}>
+                    Paste text, extract a few fields, then review and save. Text is sent once and not stored.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setImportOpen(!importOpen);
+                    setImportNotice("");
+                    setImportError("");
+                  }}
+                  style={{ flex: "0 0 auto", background: "none", border: "1px solid #c7d9ee", borderRadius: "7px", padding: "7px 14px", color: "#1a5fa8", cursor: "pointer", fontSize: "0.85rem", fontFamily: "inherit" }}
+                >
+                  {importOpen ? "Close import" : "Import text"}
+                </button>
+              </div>
+
+              {importOpen && (
+                <div style={{ marginTop: "12px" }}>
+                  <textarea
+                    style={{ ...inputStyle, height: "110px", resize: "vertical" }}
+                    placeholder="Paste your CV or LinkedIn profile text here"
+                    value={importText}
+                    onChange={(e) => setImportText(e.target.value)}
+                    maxLength={12000}
+                  />
+                  <label style={{ ...labelStyle, display: "flex", alignItems: "flex-start", gap: "8px", marginTop: "10px" }}>
+                    <input
+                      type="checkbox"
+                      checked={importConsent}
+                      onChange={(e) => setImportConsent(e.target.checked)}
+                      style={{ marginTop: "4px" }}
+                    />
+                    <span style={{ fontWeight: 400 }}>
+                      I want to extract profile fields from this text.
+                      <span style={{ display: "block", color: "#999", fontSize: "0.78rem", marginTop: "3px" }}>
+                        Extraction fills the form only. Nothing is saved until you click Save Changes.
+                      </span>
+                    </span>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={runProfileImport}
+                    disabled={importing || !importConsent || importText.trim().length < 80}
+                    style={{ ...submitBtn, marginTop: 0, opacity: importing || !importConsent || importText.trim().length < 80 ? 0.6 : 1 }}
+                  >
+                    {importing ? "Extracting…" : "Extract fields"}
+                  </button>
+                  {importNotice && (
+                    <p style={{ margin: "10px 0 0", fontSize: "12px", color: "#067647" }}>{importNotice}</p>
+                  )}
+                  {importError && (
+                    <p style={{ margin: "10px 0 0", fontSize: "12px", color: "#b42318" }}>{importError}</p>
+                  )}
+                </div>
+              )}
+            </div>
 
             <label style={labelStyle}>
               Status <span style={{ color: "red" }}>*</span>

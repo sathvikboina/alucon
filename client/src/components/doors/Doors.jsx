@@ -59,6 +59,8 @@ const Doors = () => {
   const [requestingId, setRequestingId] = useState("");
   const [requestMessage, setRequestMessage] = useState("");
   const [requesting, setRequesting] = useState(false);
+  const [drafting, setDrafting] = useState(false);
+  const [draftLabel, setDraftLabel] = useState("");
 
   const [question, setQuestion] = useState("");
   const [questionTopics, setQuestionTopics] = useState("");
@@ -145,6 +147,29 @@ const Doors = () => {
     }
   };
 
+  const draftMessage = async (doorId) => {
+    setDrafting(true);
+    setError("");
+    setNotice("");
+    setDraftLabel("");
+    try {
+      const { data } = await api.post("/api/ai/assist/door-request", {
+        doorId,
+        hint: requestMessage,
+      });
+      setRequestMessage(data.message || "");
+      setDraftLabel(
+        data.fallback
+          ? "Draft filled from a fixed template (offline). Edit it before sending."
+          : `Draft filled by ${data.model}. Edit it before sending.`
+      );
+    } catch (err) {
+      setError(err?.response?.data?.msg || "Could not draft a message.");
+    } finally {
+      setDrafting(false);
+    }
+  };
+
   const requestDoor = async (doorId) => {
     setRequesting(true);
     setError("");
@@ -155,6 +180,7 @@ const Doors = () => {
       });
       setRequestingId("");
       setRequestMessage("");
+      setDraftLabel("");
       setNotice("Request sent. You will see the alumnus's decision here.");
       await fetchAll();
     } catch (err) {
@@ -456,6 +482,9 @@ const Doors = () => {
                           placeholder="What do you want to ask?"
                           maxLength={1200}
                         />
+                        {draftLabel && (
+                          <p className="doors-muted">{draftLabel}</p>
+                        )}
                         <div className="doors-inline-actions">
                           <button
                             className="btn btn-primary"
@@ -466,9 +495,17 @@ const Doors = () => {
                           </button>
                           <button
                             className="btn btn-light"
+                            onClick={() => draftMessage(door._id)}
+                            disabled={drafting || requesting}
+                          >
+                            {drafting ? "Drafting…" : "Draft a message"}
+                          </button>
+                          <button
+                            className="btn btn-light"
                             onClick={() => {
                               setRequestingId("");
                               setRequestMessage("");
+                              setDraftLabel("");
                             }}
                           >
                             Cancel
@@ -481,6 +518,7 @@ const Doors = () => {
                         onClick={() => {
                           setRequestingId(door._id);
                           setRequestMessage("");
+                          setDraftLabel("");
                         }}
                         disabled={!door.active}
                       >

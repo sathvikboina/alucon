@@ -133,6 +133,7 @@ app.use("/api/search", require("./routes/api/search"));
 
 //ai help
 app.use("/api/ai/insights", require("./routes/api/aiInsights"));
+app.use("/api/ai/assist", require("./routes/api/aiAssist"));
 // app.use("/api/showcase", require("./routes/api/showcase"));
 
 app.use('/api/showcase', require('./routes/showcaseRoutes')); //NEW
