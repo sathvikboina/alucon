@@ -14,7 +14,7 @@
 
 .app-sidebar {
   /* 110% of the previous 232px rail. */
-  --sidebar-width: 255px;
+  --sidebar-width: 275px;
   position: sticky;
   top: 64px;
   display: flex;
