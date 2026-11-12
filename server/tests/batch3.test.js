@@ -22,6 +22,7 @@ const mongoose = require("mongoose");
 
 const User = require("../models/User");
 const Infra = require("../models/Infra");
+const JoinRequest = require("../models/JoinRequest");
 
 function mongoParts(raw) {
 	const match = String(raw).match(
@@ -112,6 +113,8 @@ let admin;
 before(async () => {
 	mongoUri = buildTestUri("routes");
 	await mongoose.connect(mongoUri, { serverSelectionTimeoutMS: 10000 });
+	// Build the unique email index before concurrent approvals race on it.
+	await User.init();
 
 	member = await makeUser("member", { name: "Batch3 Member" });
 	mutualA = await makeUser("mutual-a", { name: "Batch3 Mutual A" });
@@ -134,6 +137,7 @@ before(async () => {
 	app.use("/api/users", require("../routes/api/users"));
 	app.use("/api/showcase", require("../routes/showcaseRoutes"));
 	app.use("/api/auth", require("../routes/api/auth"));
+	app.use("/api/requests", require("../routes/api/request"));
 
 	const started = await listen(app);
 	server = started.server;
@@ -360,4 +364,48 @@ test("D15: timeAgo and formatDateLabel live in one shared util", async () => {
 	assert.match(chatWindow, /from "\.\.\/\.\.\/utils\/messageTime"/);
 	assert.doesNotMatch(sidebar, /function timeAgo/);
 	assert.doesNotMatch(chatWindow, /function formatDateLabel/);
+});
+
+/* ------------------------------------------------------------------ */
+/* D9 — approval claims the join request before creating the user      */
+/* ------------------------------------------------------------------ */
+
+test("D9: two concurrent approvals create exactly one account", async () => {
+	const email = `d9-${process.pid}-${Date.now()}@batch3.test`;
+	const joinRequest = await JoinRequest.create({
+		name: "Batch3 D9 Applicant",
+		email,
+		password: await bcrypt.hash("regression-pass", 4),
+		role: "student",
+		program: "BTech",
+		passing_year: "2024",
+	});
+
+	const [first, second] = await Promise.all([
+		api(baseUrl, `/api/requests/join/${joinRequest._id}/approve`, {
+			method: "POST",
+			token: tokenFor(admin),
+		}),
+		api(baseUrl, `/api/requests/join/${joinRequest._id}/approve`, {
+			method: "POST",
+			token: tokenFor(admin),
+		}),
+	]);
+
+	const statuses = [first.status, second.status].sort((a, b) => a - b);
+	assert.deepEqual(
+		statuses,
+		[200, 409],
+		`expected one success and one conflict, saw ${statuses.join(" and ")}`
+	);
+	assert.equal(
+		await User.countDocuments({ email }),
+		1,
+		"exactly one user must be created for the email"
+	);
+	assert.equal(
+		await JoinRequest.countDocuments({ _id: joinRequest._id }),
+		0,
+		"the claimed request must not remain in the queue"
+	);
 });

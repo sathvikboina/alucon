@@ -44,42 +44,67 @@ router.post("/join/:id/approve", authAdmin, async (req, res) => {
       });
     }
 	const avatar = gravatar.url(request.email, { s: "200", r: "pg", d: "mm" });
-    // 3️⃣ Create user
-   
+
+    // 3️⃣ Claim the request BEFORE creating the user. On a standalone
+    // MongoDB there is no multi-document transaction, so this atomic
+    // findOneAndDelete is the ordering guarantee: only the request that
+    // actually removes the row may create an account. A concurrent
+    // approval gets 409 instead of racing the duplicate-email check.
+    const claimed = await JoinRequest.findOneAndDelete({ _id: req.params.id });
+    if (!claimed) {
+      return res.status(409).json({
+        msg: "Join request is already being processed."
+      });
+    }
 
 let userData = {
-	name: request.name,
-	email: request.email,
-	password: request.password,
-	role: request.role,
+	name: claimed.name,
+	email: claimed.email,
+	password: claimed.password,
+	role: claimed.role,
 };
 
 // role-based fields
-if (request.role === "student") {
-	userData.program = request.program;
-	userData.starting_year = request.starting_year;
-	userData.passing_year = request.passing_year;
+if (claimed.role === "student") {
+	userData.program = claimed.program;
+	userData.starting_year = claimed.starting_year;
+	userData.passing_year = claimed.passing_year;
 }
-else if (request.role === "faculty") {
-	userData.department = request.department;
-	userData.designation = request.designation;
+else if (claimed.role === "faculty") {
+	userData.department = claimed.department;
+	userData.designation = claimed.designation;
 }
-else if (request.role === "alumni") {
-	userData.program = request.program;
-	userData.starting_year = request.starting_year;
-	userData.passing_year = request.passing_year;
-	userData.organisation = request.organisation;
-	userData.designation = request.designation;
-	userData.location = request.location;
-	userData.working_area = request.working_area;
+else if (claimed.role === "alumni") {
+	userData.program = claimed.program;
+	userData.starting_year = claimed.starting_year;
+	userData.passing_year = claimed.passing_year;
+	userData.organisation = claimed.organisation;
+	userData.designation = claimed.designation;
+	userData.location = claimed.location;
+	userData.working_area = claimed.working_area;
 }
 
 // create user
 const user = new User(userData);
 
-	
-
-    await user.save();
+    try {
+      await user.save();
+    } catch (err) {
+      if (err && err.code === 11000) {
+        // A concurrent signup registered the email after the check above.
+        // The account exists, so the request stays consumed.
+        return res.status(409).json({
+          msg: "User already exists with this email."
+        });
+      }
+      // Transient failure: put the request back so an admin can retry.
+      try {
+        await JoinRequest.create(claimed.toObject());
+      } catch (restoreErr) {
+        console.error("Failed to restore join request:", restoreErr.message);
+      }
+      throw err;
+    }
     queueSearchRefresh("alumni", user._id);
 
     // 4️⃣ SEND EMAIL (FIXED)
@@ -124,8 +149,7 @@ const user = new User(userData);
     } catch (emailErr) {
     }
 
-    // 5️⃣ Delete request AFTER email
-    await JoinRequest.findByIdAndDelete(req.params.id);
+    // 5️⃣ The request was already removed by the claim in step 3.
 
     // 6️⃣ Send response
     res.json({ id: req.params.id });
