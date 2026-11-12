@@ -661,11 +661,9 @@ router.get("/friends/:userId", auth, async (req, res) => {
 			followerIds.has(id.toString())
 		);
 
-		let friends = [];
-		for (let i = 0; i < friend_IDs.length; i++) {
-			const us = await User.findById(friend_IDs[i]).select("-password");
-			friends.push(us);
-		}
+		const friends = await User.find({ _id: { $in: friend_IDs } }).select(
+			"-password"
+		);
 		res.status(200).json(friends);
 	} catch (err) {
 		res.status(500).json(err);
