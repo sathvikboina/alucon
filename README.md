@@ -346,9 +346,10 @@ first page after login; search is a separate destination.
 - **Ranking** — 0.6 cosine similarity + 0.4 lexical evidence + a 0.1 intent
   boost, with a content-token guard and an upcoming-event filter. The 0.6/0.4
   blend was the best of 21 tested ratios on the current evaluation set. Negated
-  filters such as “not in Bangalore” are removed before ranking, while ordinary
-  phrases such as “not a queue” remain searchable. Ranking runs in Node; no LLM
-  generates answers.
+  filters such as “not in Bangalore”, “no one from Bangalore”, “except the ones
+  in Bangalore” and “exclude alumni from Bangalore” are removed before ranking,
+  while ordinary phrases such as “not a queue” remain searchable. Ranking runs
+  in Node; no LLM generates answers.
 - **Access** — post visibility and private-group membership are enforced before
   ranking. Messenger messages, notifications, mentorship requests, group
   threads and other private records are intentionally excluded.
