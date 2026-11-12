@@ -117,8 +117,8 @@ AlumniConnect/
 ### Clone Repository
 
 ```bash
-git clone https://github.com/your-username/alumniconnect.git
-cd alumniconnect
+git clone https://github.com/sathvikboina/alucon.git
+cd alucon
 ```
 
 ## Install Dependencies
