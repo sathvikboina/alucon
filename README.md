@@ -82,7 +82,7 @@ delivery path and effort estimates.
 
 ### Additional Services
 - Socket.io
-- Cloudinary
+- Cloudinary (production media storage; local `/uploads` fallback when credentials are absent)
 - Brevo (transactional email)
 - Gemini (thread TL;DR only; optional, with an offline fallback)
 - BGE-small-en-v1.5 via `@huggingface/transformers` (local embeddings for unified search)
@@ -477,6 +477,58 @@ Endpoints:
 | `GET` | `/api/feed/top?range=week&from=&to=&channel=&limit=30` | Engagement-ranked posts in a time window |
 | `POST` | `/api/feed/events` | Batch of 1–50 behavioural events |
 | `POST` | `/api/feed/reset` | Delete the user's feed history |
+
+---
+
+## 🧭 Navigation and Layout
+
+Signed-in pages share a persistent left sidebar (`AppSidebar.jsx`) with
+Community, Career, Campus and account sections, plus admin links for admins. The
+sidebar collapses to icons and remembers the choice in `localStorage`; it is
+hidden on public/auth pages and on the admin dashboards, which already have
+their own side navigation. The feed drops its old duplicate left rail and keeps
+the channel strip, composer and right rail. Messenger keeps its conversation
+list but no longer shows the global footer.
+
+---
+
+## 📎 Post Media and Profile Photos
+
+Posts accept up to four image, video or audio attachments (25 MB each) through
+`POST /api/upload/multiple`. The post stores both `images` for backwards
+compatibility and a typed `media` array (`image`, `video`, `audio`, `file`) so
+the feed and detail page can render the right element. A post may contain media
+without body text, but still needs a title.
+
+Profile photos use the same upload route. When Cloudinary credentials are not
+configured, the server writes files to `server/uploads/` and serves them at
+`/uploads/...`; production continues to use Cloudinary. An upload failure now
+shows an alert and leaves the edit modal open instead of silently saving the
+rest of the form.
+
+---
+
+## 🔗 LinkedIn Import
+
+The app does **not** scrape LinkedIn or call unofficial endpoints. LinkedIn's
+[Prohibited software and extensions policy](https://www.linkedin.com/help/linkedin/answer/a1341387)
+prohibits crawlers, bots and copying profile data outside the permitted API.
+
+The compliant options are:
+
+- **Sign In with LinkedIn using OpenID Connect** (`openid`, `profile`, `email`)
+  returns only the member's id, name, profile picture and optional email. It
+  does not expose experience, education, skills or posts.
+- **User-provided text or export** — the existing `Profile import` flow accepts
+  text the member pastes themselves and fills the form for review. Nothing is
+  saved automatically.
+- **Member posts** — `r_member_social` is a closed permission and LinkedIn is
+  not accepting access requests, so importing a member's posts is not
+  available. The Community Management API covers organisation pages, not
+  personal profiles.
+
+Connecting OIDC would need a LinkedIn developer app, client credentials and a
+redirect URL; that is an infrastructure decision, not a code-only change.
 
 ---
 
