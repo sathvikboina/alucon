@@ -13,6 +13,10 @@ const Channel = require("../../models/Channel");
 const bcrypt = require("bcryptjs");
 const { queueSearchRefresh } = require("../../services/searchIndex");
 
+// Roles that may come from a public registration request. Anything else is
+// rejected again at approval time in case a legacy row was tampered with.
+const ALLOWED_REGISTRATION_ROLES = ["student", "alumni", "faculty"];
+
 // get join requests from db
 router.get("/join", authAdmin, async (req, res) => {
 	try {
@@ -33,6 +37,10 @@ router.post("/join/:id/approve", authAdmin, async (req, res) => {
 
     if (!request) {
       return res.status(404).json({ msg: "Join request not found." });
+    }
+
+    if (!ALLOWED_REGISTRATION_ROLES.includes(String(request.role || "").toLowerCase())) {
+      return res.status(400).json({ msg: "Join request has an invalid role." });
     }
 
     // 2️⃣ Check existing user
@@ -57,24 +65,35 @@ router.post("/join/:id/approve", authAdmin, async (req, res) => {
       });
     }
 
+const claimedRole = String(claimed.role || "").trim().toLowerCase();
+if (!ALLOWED_REGISTRATION_ROLES.includes(claimedRole)) {
+  // Restore the row so an admin can inspect/reject it instead of losing it.
+  try {
+    await JoinRequest.create(claimed.toObject());
+  } catch (restoreErr) {
+    console.error("Failed to restore join request:", restoreErr.message);
+  }
+  return res.status(400).json({ msg: "Join request has an invalid role." });
+}
+
 let userData = {
 	name: claimed.name,
 	email: claimed.email,
 	password: claimed.password,
-	role: claimed.role,
+	role: claimedRole,
 };
 
 // role-based fields
-if (claimed.role === "student") {
+if (claimedRole === "student") {
 	userData.program = claimed.program;
 	userData.starting_year = claimed.starting_year;
 	userData.passing_year = claimed.passing_year;
 }
-else if (claimed.role === "faculty") {
+else if (claimedRole === "faculty") {
 	userData.department = claimed.department;
 	userData.designation = claimed.designation;
 }
-else if (claimed.role === "alumni") {
+else if (claimedRole === "alumni") {
 	userData.program = claimed.program;
 	userData.starting_year = claimed.starting_year;
 	userData.passing_year = claimed.passing_year;

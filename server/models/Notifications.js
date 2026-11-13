@@ -13,6 +13,13 @@ const NotificationSchema = new Schema({
     required: true
   },
 
+  // Admin notices are intentionally visible to every member. Direct
+  // notifications leave this false and are only returned to their owner.
+  isBroadcast: {
+    type: Boolean,
+    default: false
+  },
+
   Notification_name: {
     type: String,
     required: true

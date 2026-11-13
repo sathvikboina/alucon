@@ -14,9 +14,11 @@ router.post("/getNotifications", auth, async (req, res) => {
   try {
     const userID = req.user.id;
 
-    // Only fetch notifications not read by this user
-    const unreadNotifications = await Notification.find({ readBy: { $ne: userID } })
-      .sort({ createdAt: -1 });
+    // Direct notices belong to one member; admin broadcasts are shared.
+    const unreadNotifications = await Notification.find({
+      $or: [{ userID: userID }, { isBroadcast: true }],
+      readBy: { $ne: userID },
+    }).sort({ createdAt: -1 });
 
     res.json({
       notifications: unreadNotifications,
@@ -37,7 +39,8 @@ router.post("/addNotifications", authAdmin, async (req, res) => {
       userID: req.user.id,
       Notification_name: req.body.name,
       Notification_description: req.body.description,
-      Notification_link: req.body.link
+      Notification_link: req.body.link,
+      isBroadcast: true
     });
 
     await notification.save();
@@ -54,10 +57,15 @@ router.post("/markSingleRead", auth, async (req, res) => {
     const { id } = req.body;
     const userID = req.user.id;
 
-    console.error(`Marking notification ${id} as read for user: ${userID}`);
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(404).json({ msg: "Notification not found" });
+    }
 
-    const marked = await Notification.findByIdAndUpdate(
-      id,
+    const marked = await Notification.findOneAndUpdate(
+      {
+        _id: id,
+        $or: [{ userID: userID }, { isBroadcast: true }],
+      },
       { $addToSet: { readBy: userID } },
       { new: true }
     );

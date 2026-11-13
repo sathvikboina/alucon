@@ -102,11 +102,12 @@ router.post(
 				},
 			};
 
-			// sign the payload with private key
+			// Short-lived access token. There is no refresh flow yet, so keep
+			// this long enough for a workday but short enough to limit theft.
 			jwt.sign(
 				payload,
 				process.env.ACCESS_TOKEN_SECRET || process.env.JWT_SECRET,
-				{ expiresIn: 360000 },
+				{ expiresIn: process.env.JWT_EXPIRES_IN || "12h" },
 				(err, token) => {
 					if (err) throw err;
 					// Return the token plus a password-free copy of the user.
@@ -142,14 +143,16 @@ router.post(
 			return res.status(400).json({ errors: errors.array() });
 		}
 		const { email } = req.body;
+		// Always return the same response, whether or not the address exists.
+		const genericResponse = {
+			msg: "If an account exists, a reset link has been sent.",
+		};
+
 		try {
 			const user = await User.findOne({ email }).select("+password");
 			if (!user) {
-				return res
-					.status(400)
-					.json({ errors: [{ msg: "Account not found" }] });
+				return res.status(200).json(genericResponse);
 			}
-			
 
 			const secret = (process.env.ACCESS_TOKEN_SECRET || process.env.JWT_SECRET) + user.password;
 			const payload = { user: { id: user.id } };
@@ -198,8 +201,8 @@ const options = {
   `,
 };
 
-			sendEmail(options);
-			return res.status(200).send("Email sent");
+			await sendEmail(options);
+			return res.status(200).json(genericResponse);
 		} catch (err) {
 			console.error(err.message);
 			res.status(500).send("Server error.");
@@ -211,15 +214,14 @@ router.post(
 	"/reset-password",
 	resetPasswordLimiter,
 	[
-		check("password", "Password Required").not().isEmpty().isLength({
-			min: 6,
-		}),
+		check("password", "Password must be 10-128 characters")
+			.not()
+			.isEmpty()
+			.isLength({ min: 10, max: 128 }),
 		check("password_confirm", "Confirm Password is required")
 			.not()
 			.isEmpty()
-			.isLength({
-				min: 6,
-			}),
+			.isLength({ min: 10, max: 128 }),
 	],
 	async (req, res) => {
 		const errors = validationResult(req);

@@ -49,9 +49,11 @@ router.get("/:eventId/questions", authMiddleware, async (req, res) => {
   try {
     const { eventId } = req.params;
 
+    // Contact details are opt-in elsewhere; the Q&A feed only needs identity
+    // and avatar so participants cannot harvest email addresses.
     const questions = await EventQuestion.find({ eventId })
-      .populate("studentId", "name email")
-      .populate("replies.alumniId", "name email")
+      .populate("studentId", "name avatar")
+      .populate("replies.alumniId", "name avatar")
       .sort({ createdAt: -1 });
 
     res.status(200).json(questions);
@@ -73,6 +75,9 @@ router.post("/reply/:questionId", authMiddleware, async (req, res) => {
     if (!question) return res.status(404).json({ msg: "Question not found" });
 
     const event = await Event.findById(question.eventId);
+    if (!event) {
+      return res.status(404).json({ msg: "Event not found" });
+    }
     const now = new Date();
 
     if (
@@ -100,7 +105,6 @@ router.post("/reply/:questionId", authMiddleware, async (req, res) => {
 // ==============================
 router.delete("/:questionId", authMiddleware, async (req, res) => {
   try {
-    console.error("USER:", req.user);
     const question = await EventQuestion.findById(req.params.questionId);
 
     if (!question) {

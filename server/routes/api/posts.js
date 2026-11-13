@@ -236,10 +236,10 @@ router.delete("/:id", auth, async (req, res) => {
       return res.status(404).json({ msg: "Post not found" });
     }
 
-    // ✅ allow: creator OR head admin (role is reloaded from the DB by auth)
+    // ✅ allow: creator OR a current head admin. Admin claims are reloaded
+    // from MongoDB by auth, so a stale/forged role string cannot bypass this.
     const isHeadAdmin =
-      req.user.role === "head_admin" ||
-      (req.user.isAdmin === true && req.user.adminType === "head");
+      req.user.isAdmin === true && req.user.adminType === "head";
 
     if (post.user.toString() !== req.user.id && !isHeadAdmin) {
       return res.status(401).json({ msg: "User not authorized" });

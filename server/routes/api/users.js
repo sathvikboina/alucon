@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const crypto = require("crypto");
 const gravatar = require("gravatar");
 const { check, validationResult } = require("express-validator");
 const bcrypt = require("bcryptjs");
@@ -22,8 +23,67 @@ const otpStore = new Map();
 
 const OTP_TOKEN_TTL = "15m";
 
+// Only these roles can be self-registered. Privileged roles are granted by an
+// admin after approval and never copied from the registration payload.
+const ALLOWED_ROLES = ["student", "alumni", "faculty"];
+
+// Fields that are safe to show on another member's profile. Email, blocked
+// lists, device IDs and matching preferences stay private to the owner.
+const PUBLIC_USER_FIELDS = [
+	"name",
+	"avatar",
+	"role",
+	"program",
+	"starting_year",
+	"passing_year",
+	"organisation",
+	"department",
+	"designation",
+	"location",
+	"working_area",
+	"skills",
+	"bio",
+	"images",
+	"experience",
+	"education",
+	"social",
+	"website",
+	"status",
+	"githubusername",
+	"company",
+	"followers",
+	"followings",
+	"isAdmin",
+	"adminType",
+	"blocked",
+	"online",
+	"date",
+	"mentorship.available",
+].join(" ");
+
+// Same response for new and already-registered addresses so the endpoint
+// cannot be used to enumerate accounts.
+const GENERIC_REGISTER_MESSAGE =
+	"If these details are valid, an OTP has been sent. Check your inbox and spam folder.";
+
 const normalizeEmail = (value) =>
 	String(value || "").trim().toLowerCase().slice(0, 254);
+
+const generateOtp = () => crypto.randomInt(100000, 1000000).toString();
+
+const hashOtp = (otp) =>
+	crypto.createHash("sha256").update(String(otp)).digest("hex");
+
+const otpMatches = (record, otp) => {
+	if (!record?.otpHash) return false;
+	const provided = hashOtp(otp);
+	const stored = String(record.otpHash);
+	if (stored.length !== provided.length) return false;
+	return crypto.timingSafeEqual(
+		Buffer.from(stored, "utf8"),
+		Buffer.from(provided, "utf8")
+	);
+};
 
 const otpKey = (req) =>
 	`${req.ip || req.connection?.remoteAddress || "unknown"}:${normalizeEmail(req.body?.email)}`;
@@ -90,8 +150,10 @@ router.post(
   [
     check("name", "Name is required!").not().isEmpty(),
     check("email", "Valid email required").isEmail(),
-    check("password", "Min 6 chars").isLength({ min: 6 }),
-    check("role", "Role required").not().isEmpty(),
+    check("password", "Password must be 10-128 characters")
+      .isLength({ min: 10, max: 128 }),
+    check("role", "Role must be student, alumni or faculty")
+      .isIn(ALLOWED_ROLES),
 
     // ✅ Academic fields validation
     check("program", "Program required for student/alumni").optional(),
@@ -105,8 +167,6 @@ router.post(
 
     const {
       name,
-      email,
-      role,
       password,
       program,
       starting_year,
@@ -118,20 +178,22 @@ router.post(
       working_area,
     } = req.body;
 
+    const email = normalizeEmail(req.body.email);
+    const role = String(req.body.role || "").trim().toLowerCase();
+
     try {
-      // ✅ Check existing user
-      const user = await User.findOne({ email });
-      const existingRequest = await JoinRequest.findOne({ email });
+      if (!ALLOWED_ROLES.includes(role)) {
+        return res.status(400).json({
+          errors: [{ msg: "Role must be student, alumni or faculty" }],
+        });
+      }
 
-      if (user)
-        return res
-          .status(400)
-          .json({ errors: [{ msg: "User already exists" }] });
-
-      if (existingRequest)
-        return res
-          .status(400)
-          .json({ errors: [{ msg: "Already requested" }] });
+      // ✅ Check existing user / pending request without revealing which.
+      const [user, existingRequest] = await Promise.all([
+        User.findOne({ email }).select("_id").lean(),
+        JoinRequest.findOne({ email }).select("_id").lean(),
+      ]);
+      const accountExists = Boolean(user || existingRequest);
 
       // ✅ ROLE-BASED VALIDATION
       if ((role === "student" || role === "alumni")) {
@@ -164,17 +226,37 @@ router.post(
         }
       }
 
-      // ✅ Generate OTP
-      const otp = Math.floor(100000 + Math.random() * 900000).toString();
+      // ✅ Generate a cryptographically random OTP. Only its hash is kept in
+      // memory; the plaintext code exists just long enough to send the email.
+      const otp = generateOtp();
 
-      // ✅ Store OTP + FULL USER DATA
+      if (accountExists) {
+        // Decoy record: an attacker cannot tell whether the address was
+        // already registered. No OTP is delivered and no request is created.
+        otpStore.set(email, {
+          otpHash: hashOtp(otp),
+          data: null,
+          decoy: true,
+          expires: Date.now() + 5 * 60 * 1000,
+          attempts: 0,
+        });
+        return res.json({
+          msg: GENERIC_REGISTER_MESSAGE,
+          otp_token: signOtpToken(email),
+        });
+      }
+
+      // Hash the password before keeping it in the in-memory OTP record.
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      // ✅ Store OTP hash + verified user data (password already hashed)
       otpStore.set(email, {
-        otp,
+        otpHash: hashOtp(otp),
         data: {
           name,
           email,
           role,
-          password,
+          password: hashedPassword,
           program,
           starting_year,
           passing_year,
@@ -184,6 +266,7 @@ router.post(
           department,
           working_area,
         },
+        decoy: false,
         expires: Date.now() + 5 * 60 * 1000,
         attempts: 0,
       });
@@ -204,7 +287,7 @@ router.post(
       });
 
       return res.json({
-        msg: "OTP sent successfully. If not received, please check your spam folder.",
+        msg: GENERIC_REGISTER_MESSAGE,
         otp_token: signOtpToken(email),
       });
 
@@ -220,40 +303,45 @@ router.post(
 router.post("/verify-otp", verifyOtpLimiter, async (req, res) => {
   const { email, otp } = req.body;
 
-  const record = otpStore.get(email);
+  const normalizedEmail = normalizeEmail(email);
+  const record = otpStore.get(normalizedEmail);
 
-  if (!record) return res.status(400).json({ msg: "No OTP found" });
-
-  if (record.expires < Date.now()) {
-    otpStore.delete(email);
-    return res.status(400).json({ msg: "OTP expired" });
+  // Missing, expired and wrong codes all return the same message so the
+  // endpoint does not reveal whether an address is already registered.
+  if (!record) {
+    return res.status(400).json({ msg: "Invalid or expired OTP" });
   }
 
-  if (record.otp !== otp) {
+  if (record.expires < Date.now()) {
+    otpStore.delete(normalizedEmail);
+    return res.status(400).json({ msg: "Invalid or expired OTP" });
+  }
+
+  if (!otpMatches(record, otp)) {
     record.attempts += 1;
 
     if (record.attempts >= 5) {
-      otpStore.delete(email);
+      otpStore.delete(normalizedEmail);
       return res.status(400).json({ msg: "Too many attempts" });
     }
 
-    return res.status(400).json({ msg: "Invalid OTP" });
+    return res.status(400).json({ msg: "Invalid or expired OTP" });
+  }
+
+  if (record.decoy) {
+    otpStore.delete(normalizedEmail);
+    return res.json({ msg: "OTP verified, request sent for approval" });
   }
 
   try {
     const data = record.data;
 
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(data.password, salt);
-
-    // ✅ Create JoinRequest NOW (after OTP)
-    const request = new JoinRequest({
-      ...data,
-      password: hashedPassword,
-    });
+    // ✅ Create JoinRequest NOW (after OTP). The password was hashed before
+    // it was placed in the in-memory OTP record.
+    const request = new JoinRequest(data);
 
     await request.save();
-    otpStore.delete(email);
+    otpStore.delete(normalizedEmail);
 
     // ✅ Notify admin
     await sendEmail({
@@ -278,23 +366,28 @@ router.post("/resend-otp", resendOtpLimiter, async (req, res) => {
     return res.status(401).json({ msg: "Invalid or expired OTP session" });
   }
 
-  const record = otpStore.get(email);
-  if (!record) return res.status(400).json({ msg: "No request found" });
+  const normalizedEmail = normalizeEmail(email);
+  const record = otpStore.get(normalizedEmail);
+  if (!record) return res.status(400).json({ msg: "Invalid or expired OTP" });
 
-  const newOtp = Math.floor(100000 + Math.random() * 900000).toString();
+  const newOtp = generateOtp();
 
-  record.otp = newOtp;
+  record.otpHash = hashOtp(newOtp);
   record.expires = Date.now() + 5 * 60 * 1000;
   record.attempts = 0;
 
-  await sendEmail({
-    to: email,
-    subject: "Resent OTP",
-    text: `Your new OTP is ${newOtp}`,
-    html: `<h2>New OTP: ${newOtp}</h2>`,
-  });
+  // Do not deliver a fresh code for a decoy record; the address already has
+  // an account or a pending request.
+  if (!record.decoy) {
+    await sendEmail({
+      to: normalizedEmail,
+      subject: "Resent OTP",
+      text: `Your new OTP is ${newOtp}`,
+      html: `<h2>New OTP: ${newOtp}</h2>`,
+    });
+  }
 
-  res.json({ msg: "OTP resent", otp_token: signOtpToken(email) });
+  res.json({ msg: "OTP resent", otp_token: signOtpToken(normalizedEmail) });
 });
 
 
@@ -306,7 +399,7 @@ router.post("/reset-otp", resetOtpLimiter, (req, res) => {
     return res.status(401).json({ msg: "Invalid or expired OTP session" });
   }
 
-  otpStore.delete(email);
+  otpStore.delete(normalizeEmail(email));
 
   res.json({ msg: "OTP reset successful" });
 });
@@ -339,7 +432,10 @@ router.get("/search/:query", auth, async (req, res) => {
 		}
 
 		if (searchTerm === "all") {
-			users = await User.find().select("-password -email").sort({ date: -1 });
+			users = await User.find()
+				.select(PUBLIC_USER_FIELDS)
+				.sort({ date: -1 })
+				.limit(200);
 		} else {
 			// Escape regex metacharacters so a query cannot change the match
 			// semantics or trigger expensive backtracking.
@@ -350,7 +446,10 @@ router.get("/search/:query", auth, async (req, res) => {
 					{ company: { $regex: safeTerm, $options: "i" } },
 					{ organisation: { $regex: safeTerm, $options: "i" } },
 				]
-			}).select("-password -email").sort({ date: -1 });
+			})
+				.select(PUBLIC_USER_FIELDS)
+				.sort({ date: -1 })
+				.limit(200);
 		}
 
 		res.json(users);
@@ -393,8 +492,13 @@ router.get("/following", auth, async (req, res) => {
 
 router.get("/:user_id", auth, async (req, res) => {
 	try {
+		const isSelf = String(req.params.user_id) === String(req.user.id);
+		const canSeePrivate = isSelf || req.user.isAdmin === true;
+
+		// Owners and admins get the editable profile; everyone else gets the
+		// directory-safe projection so emails and private arrays never leak.
 		const user = await User.findById(req.params.user_id).select(
-			"-password"
+			canSeePrivate ? "-password" : PUBLIC_USER_FIELDS
 		);
 
 		if (!user) {
@@ -405,13 +509,9 @@ router.get("/:user_id", auth, async (req, res) => {
 	} catch (error) {
 		console.error(error.message);
 		if (error.kind == "ObjectId") {
-			return res
-				.status(400)
-				.json({ msg: "catch block: Profile not found!" });
+			return res.status(400).json({ msg: "Profile not found!" });
 		}
-		res.status(500).json({
-			msg: "Server Error in catch block get user by id",
-		});
+		res.status(500).json({ msg: "Server Error" });
 	}
 });
 

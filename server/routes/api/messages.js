@@ -6,6 +6,23 @@ const Conversation = require("../../models/Conversation");
 const User = require("../../models/User");
 const { DoEncrypt, DoDecrypt } = require("../../utils/encryption");
 
+const MAX_MESSAGE_LENGTH = 4000;
+const MAX_PAGE_SIZE = 100;
+const MEDIA_TYPES = ["image", "video", "audio", "file"];
+
+const clampLimit = (value) => {
+	const parsed = Number.parseInt(value, 10);
+	if (!Number.isInteger(parsed) || parsed < 1) return 30;
+	return Math.min(parsed, MAX_PAGE_SIZE);
+};
+
+// Only site uploads and absolute http(s) URLs are accepted. This keeps a
+// message from embedding javascript:/data: payloads or an unbounded string.
+const isAllowedMediaUrl = (value) =>
+	typeof value === "string" &&
+	value.length <= 2048 &&
+	/^(https?:\/\/|\/uploads\/)/i.test(value);
+
 // ─────────────────────────────────────────────
 // Helper: decrypt a message object safely
 // ─────────────────────────────────────────────
@@ -23,10 +40,25 @@ const decryptMessage = (msg) => {
 // ✅ Added: socket.io emit to recipient room
 // ─────────────────────────────────────────────
 router.post("/send", auth, async (req, res) => {
-	const { conversationId, text, media, mediaType, replyTo } = req.body;
+	const { conversationId, media, mediaType, replyTo } = req.body;
+	const text = typeof req.body.text === "string" ? req.body.text.trim() : "";
 
 	if (!text && !media) {
 		return res.status(400).json({ msg: "Message cannot be empty" });
+	}
+
+	if (text.length > MAX_MESSAGE_LENGTH) {
+		return res.status(400).json({
+			msg: `Message cannot exceed ${MAX_MESSAGE_LENGTH} characters`,
+		});
+	}
+
+	if (media && !isAllowedMediaUrl(media)) {
+		return res.status(400).json({ msg: "Invalid media URL" });
+	}
+
+	if (mediaType && !MEDIA_TYPES.includes(mediaType)) {
+		return res.status(400).json({ msg: "Invalid media type" });
 	}
 
 	try {
@@ -58,6 +90,17 @@ router.post("/send", auth, async (req, res) => {
 			receiver.blockedUsers.some((id) => id.toString() === req.user.id)
 		) {
 			return res.status(403).json({ msg: "You are blocked by this user." });
+		}
+
+		// A reply must point at a message in the same conversation.
+		if (replyTo) {
+			const parent = await Message.findOne({
+				_id: replyTo,
+				conversation: conversationId,
+			}).select("_id");
+			if (!parent) {
+				return res.status(400).json({ msg: "Invalid reply target" });
+			}
 		}
 
 		// ✅ Fixed: actually encrypt before saving
@@ -133,7 +176,8 @@ router.post("/send", auth, async (req, res) => {
 // ─────────────────────────────────────────────
 router.get("/:conversationId", auth, async (req, res) => {
 	try {
-		const { before, limit = 30 } = req.query;
+		const { before } = req.query;
+		const limit = clampLimit(req.query.limit);
 
 		// Verify membership
 		const conversation = await Conversation.findById(req.params.conversationId);
@@ -150,12 +194,16 @@ router.get("/:conversationId", auth, async (req, res) => {
 			deletedFor: { $ne: req.user.id }, // exclude soft-deleted messages
 		};
 		if (before) {
-			query.createdAt = { $lt: new Date(before) };
+			const beforeDate = new Date(before);
+			if (Number.isNaN(beforeDate.getTime())) {
+				return res.status(400).json({ msg: "Invalid cursor" });
+			}
+			query.createdAt = { $lt: beforeDate };
 		}
 
 		const messages = await Message.find(query)
 			.sort({ createdAt: -1 })         // newest first for slicing
-			.limit(Number(limit))
+			.limit(limit)
 			.populate("sender", "name avatar")
 			.populate("replyTo", "text sender");
 
@@ -164,7 +212,7 @@ router.get("/:conversationId", auth, async (req, res) => {
 
 		res.json({
 			messages: decrypted,
-			hasMore: messages.length === Number(limit),
+			hasMore: messages.length === limit,
 		});
 	} catch (error) {
 		console.error("Get messages error:", error.message);
@@ -272,8 +320,13 @@ router.put("/react/:messageId", auth, async (req, res) => {
 // ─────────────────────────────────────────────
 router.put("/edit/:messageId", auth, async (req, res) => {
 	try {
-		const { text } = req.body;
+		const text = typeof req.body.text === "string" ? req.body.text.trim() : "";
 		if (!text) return res.status(400).json({ msg: "New text required" });
+		if (text.length > MAX_MESSAGE_LENGTH) {
+			return res.status(400).json({
+				msg: `Message cannot exceed ${MAX_MESSAGE_LENGTH} characters`,
+			});
+		}
 
 		const message = await Message.findById(req.params.messageId);
 		if (!message) return res.status(404).json({ msg: "Message not found" });
@@ -364,14 +417,13 @@ router.delete("/clear/:conversationId", auth, async (req, res) => {
 			return res.status(403).json({ msg: "Not authorized to clear this chat" });
 		}
 
-		await Message.deleteMany({ conversation: req.params.conversationId });
-		await Conversation.findByIdAndUpdate(req.params.conversationId, {
-			lastMessage: "",
-			lastMessageAt: null,
-			lastMessageSender: null,
-		});
+		// Clear only for the caller. Other participants keep their history.
+		await Message.updateMany(
+			{ conversation: req.params.conversationId },
+			{ $addToSet: { deletedFor: req.user.id } }
+		);
 
-		res.json({ msg: "Chat cleared successfully" });
+		res.json({ msg: "Chat cleared for you" });
 	} catch (error) {
 		console.error("Clear error:", error.message);
 		res.status(500).send("Server Error clearing chat");

@@ -282,6 +282,23 @@ router.put("/group/add-members", auth, async (req, res) => {
 	try {
 		const { conversationId, userIds } = req.body;
 
+		if (!mongoose.Types.ObjectId.isValid(conversationId)) {
+			return res.status(400).json({ msg: "Invalid conversation id" });
+		}
+
+		if (!Array.isArray(userIds) || userIds.length === 0) {
+			return res.status(400).json({ msg: "userIds must be a non-empty array" });
+		}
+
+		// Cap the batch and reject malformed ids before touching the document.
+		const uniqueIds = [...new Set(userIds.map(String))];
+		if (uniqueIds.length > 50) {
+			return res.status(400).json({ msg: "At most 50 members can be added at once" });
+		}
+		if (uniqueIds.some((id) => !mongoose.Types.ObjectId.isValid(id))) {
+			return res.status(400).json({ msg: "Invalid user id" });
+		}
+
 		const conversation = await Conversation.findById(conversationId);
 		if (!conversation || !conversation.isGroup) {
 			return res.status(404).json({ msg: "Group not found" });
@@ -294,8 +311,13 @@ router.put("/group/add-members", auth, async (req, res) => {
 			return res.status(403).json({ msg: "Only admins can add members" });
 		}
 
+		const existingUsers = await User.find({ _id: { $in: uniqueIds } }).select("_id");
+		if (existingUsers.length !== uniqueIds.length) {
+			return res.status(400).json({ msg: "One or more users do not exist" });
+		}
+
 		await Conversation.findByIdAndUpdate(conversationId, {
-			$addToSet: { members: { $each: userIds } },
+			$addToSet: { members: { $each: uniqueIds } },
 		});
 
 		res.json({ msg: "Members added successfully" });

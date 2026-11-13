@@ -28,6 +28,8 @@ const SupportForm = require("../models/SupportForm");
 const Notification = require("../models/Notifications");
 const EventQuestion = require("../models/EventQuestion");
 const Achievement = require("../models/Achievement");
+const Conversation = require("../models/Conversation");
+const Message = require("../models/Message");
 
 const SERVER_DIR = path.resolve(__dirname, "..");
 
@@ -643,3 +645,256 @@ test("auth reload rejects blocked accounts and deleted users (D7)", async () => 
 });
 
 
+
+/* ------------------------------------------------------------------ */
+/* Audit remediation regressions (2026-11-13)                          */
+/* ------------------------------------------------------------------ */
+
+test("registration rejects privileged roles and short passwords", async () => {
+	const privileged = await api("/api/users/register", {
+		method: "POST",
+		body: {
+			name: "Role Injector",
+			email: "role-injector@regression.test",
+			password: "long-enough-password",
+			role: "head_admin",
+		},
+	});
+	assert.equal(privileged.status, 400);
+
+	const shortPassword = await api("/api/users/register", {
+		method: "POST",
+		body: {
+			name: "Short Password",
+			email: "short-password@regression.test",
+			password: "123456",
+			role: "student",
+			program: "BTech",
+			starting_year: "2020",
+			passing_year: "2024",
+		},
+	});
+	assert.equal(shortPassword.status, 400);
+});
+
+test("registration does not reveal whether an address already exists", async () => {
+	const response = await api("/api/users/register", {
+		method: "POST",
+		body: {
+			name: users.mentor.name,
+			email: users.mentor.email,
+			password: "long-enough-password",
+			role: "alumni",
+			program: "BTech",
+			starting_year: "2018",
+			passing_year: "2022",
+			organisation: "Regression Co",
+			designation: "Engineer",
+			location: "Prayagraj",
+		},
+	});
+
+	assert.equal(response.status, 200);
+	assert.match(response.body.msg, /If these details are valid/i);
+
+	const verify = await api("/api/users/verify-otp", {
+		method: "POST",
+		body: { email: users.mentor.email, otp: "000000" },
+	});
+	assert.equal(verify.status, 400);
+	assert.match(verify.body.msg, /Invalid or expired OTP/i);
+});
+
+test("GET /api/users/:id hides private fields from other members", async () => {
+	const other = await api(`/api/users/${users.mentor._id}`, {
+		token: tokenFor(users.mentee1),
+	});
+	assert.equal(other.status, 200);
+	for (const field of [
+		"email",
+		"blockedUsers",
+		"NotificationID",
+		"notificationID",
+		"internship_preferences",
+		"linkedinId",
+	]) {
+		assert.equal(field in other.body, false, `profile leaks ${field}`);
+	}
+
+	const self = await api(`/api/users/${users.mentee1._id}`, {
+		token: tokenFor(users.mentee1),
+	});
+	assert.equal(self.status, 200);
+	assert.equal(self.body.email, users.mentee1.email);
+});
+
+test("event Q&A does not expose participant emails", async () => {
+	const eventId = new mongoose.Types.ObjectId();
+	await EventQuestion.create({
+		eventId,
+		studentId: users.mentor._id,
+		question: "Privacy regression",
+		replies: [{ alumniId: users.mentee1._id, replyText: "A reply" }],
+	});
+
+	const response = await api(`/api/event-questions/${eventId}/questions`, {
+		token: tokenFor(users.mentee1),
+	});
+	assert.equal(response.status, 200);
+	assert.equal(response.body.length, 1);
+	for (const question of response.body) {
+		assert.equal("email" in (question.studentId || {}), false);
+		for (const reply of question.replies || []) {
+			assert.equal("email" in (reply.alumniId || {}), false);
+		}
+	}
+});
+
+test("messages reject oversized text and clamp page size", async () => {
+	const conversation = await Conversation.create({
+		isGroup: false,
+		members: [users.mentee1._id, users.mentee2._id],
+	});
+
+	const oversized = await api("/api/messages/send", {
+		method: "POST",
+		token: tokenFor(users.mentee1),
+		body: {
+			conversationId: String(conversation._id),
+			text: "x".repeat(4001),
+		},
+	});
+	assert.equal(oversized.status, 400);
+
+	const page = await api(
+		`/api/messages/${conversation._id}?limit=100000`,
+		{ token: tokenFor(users.mentee1) }
+	);
+	assert.equal(page.status, 200);
+	assert.ok(page.body.messages.length <= 100);
+});
+
+test("clear chat is a per-user soft delete", async () => {
+	const conversation = await Conversation.create({
+		isGroup: true,
+		groupName: "Clear regression",
+		members: [users.mentee1._id, users.mentee2._id],
+		groupAdmins: [users.mentee1._id],
+	});
+
+	await Message.create([
+		{
+			conversation: conversation._id,
+			sender: users.mentee1._id,
+			text: "first",
+			readBy: [users.mentee1._id],
+		},
+		{
+			conversation: conversation._id,
+			sender: users.mentee2._id,
+			text: "second",
+			readBy: [users.mentee2._id],
+		},
+	]);
+
+	const cleared = await api(`/api/messages/clear/${conversation._id}`, {
+		method: "DELETE",
+		token: tokenFor(users.mentee1),
+	});
+	assert.equal(cleared.status, 200);
+
+	assert.equal(
+		await Message.countDocuments({ conversation: conversation._id }),
+		2,
+		"clear must not delete other members' history"
+	);
+
+	const mine = await api(`/api/messages/${conversation._id}`, {
+		token: tokenFor(users.mentee1),
+	});
+	assert.equal(mine.status, 200);
+	assert.equal(mine.body.messages.length, 0);
+
+	const theirs = await api(`/api/messages/${conversation._id}`, {
+		token: tokenFor(users.mentee2),
+	});
+	assert.equal(theirs.status, 200);
+	assert.equal(theirs.body.messages.length, 2);
+});
+
+test("group add-members validates ids and caps the batch", async () => {
+	const conversation = await Conversation.create({
+		isGroup: true,
+		groupName: "Validation regression",
+		members: [users.mentee1._id],
+		groupAdmins: [users.mentee1._id],
+	});
+
+	const malformed = await api("/api/conversations/group/add-members", {
+		method: "PUT",
+		token: tokenFor(users.mentee1),
+		body: { conversationId: String(conversation._id), userIds: ["not-an-id"] },
+	});
+	assert.equal(malformed.status, 400);
+
+	const missing = await api("/api/conversations/group/add-members", {
+		method: "PUT",
+		token: tokenFor(users.mentee1),
+		body: {
+			conversationId: String(conversation._id),
+			userIds: [String(new mongoose.Types.ObjectId())],
+		},
+	});
+	assert.equal(missing.status, 400);
+});
+
+test("notifications are scoped to the recipient, broadcasts stay global", async () => {
+	const direct = await Notification.create({
+		created_by_user: "regression",
+		userID: users.mentee1._id,
+		Notification_name: "Direct regression notice",
+		Notification_link: "/feed",
+		isBroadcast: false,
+	});
+	const broadcast = await Notification.create({
+		created_by_user: "regression",
+		userID: users.admin._id,
+		Notification_name: "Broadcast regression notice",
+		Notification_link: "/feed",
+		isBroadcast: true,
+	});
+
+	const feed = await api("/api/notifications/getNotifications", {
+		method: "POST",
+		token: tokenFor(users.mentee2),
+	});
+	assert.equal(feed.status, 200);
+	const ids = feed.body.notifications.map((item) => String(item._id));
+	assert.equal(ids.includes(String(direct._id)), false);
+	assert.equal(ids.includes(String(broadcast._id)), true);
+
+	const denied = await api("/api/notifications/markSingleRead", {
+		method: "POST",
+		token: tokenFor(users.mentee2),
+		body: { id: String(direct._id) },
+	});
+	assert.equal(denied.status, 404);
+});
+
+test("blocked admins cannot use admin middleware", async () => {
+	const blockedAdmin = await makeUser("blockedAdmin", {
+		name: "Blocked Admin",
+		email: "blocked-admin@regression.test",
+		role: "Admin",
+		isAdmin: true,
+		adminType: "head",
+		blocked: true,
+	});
+
+	const response = await api("/api/notifications/addNotifications", {
+		method: "POST",
+		token: tokenFor(blockedAdmin),
+		body: { name: "Blocked", description: "Should fail", link: "/feed" },
+	});
+	assert.equal(response.status, 403);
+});

@@ -15,7 +15,12 @@ const isSubmitter = (u) => !u?.isAdmin; // any non-admin can submit
 // ─── GET /achievements ── browse approved achievements (all authenticated) ───
 router.get("/",  async (req, res) => {
   try {
-    const { category, recipientType, search, page = 1, limit = 12 } = req.query;
+    const { category, recipientType, search } = req.query;
+    const page = Math.max(1, Number.parseInt(req.query.page, 10) || 1);
+    const limit = Math.min(
+      50,
+      Math.max(1, Number.parseInt(req.query.limit, 10) || 12)
+    );
 
     const filter = { status: "approved" };
     if (category)      filter.category = category;
@@ -29,19 +34,20 @@ router.get("/",  async (req, res) => {
       ];
     }
 
-    const skip = (Number(page) - 1) * Number(limit);
+    const skip = (page - 1) * limit;
     const [achievements, total] = await Promise.all([
       Achievement.find(filter)
         .populate("category", "name slug icon color")
         .sort({ createdAt: -1 })
         .skip(skip)
-        .limit(Number(limit)),
+        .limit(limit),
       Achievement.countDocuments(filter),
     ]);
 
-    res.json({ achievements, total, page: Number(page), pages: Math.ceil(total / Number(limit)) });
+    res.json({ achievements, total, page, pages: Math.ceil(total / limit) });
   } catch (err) {
-    res.status(500).json({ message: "Server error", error: err.message });
+    console.error("Achievement list error:", err.message);
+    res.status(500).json({ message: "Server error" });
   }
 });
 
@@ -69,8 +75,8 @@ router.get("/pending", authenticate, async (req, res) => {
       .sort({ createdAt: 1 });
     res.json({ achievements });
   } catch (err) {
-    console.error("❌ /pending error:", err); // ADD THIS
-    res.status(500).json({ message: "Server error", error: err.message });
+    console.error("Achievement pending error:", err.message);
+    res.status(500).json({ message: "Server error" });
   }
 });
 

@@ -12,14 +12,30 @@ module.exports = async function (req, res, next) {
 
 	try {
 		const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET || process.env.JWT_SECRET);
-		const thisUser = await User.findById(decoded.user.id);
+		const thisUser = await User.findById(decoded.user.id).select(
+			"isAdmin adminType role blocked"
+		);
+
+		if (!thisUser) {
+			return res.status(401).json({ msg: "Token is not Valid" });
+		}
+
+		if (thisUser.blocked) {
+			return res.status(403).json({ msg: "Account is blocked" });
+		}
 
 		if (!thisUser.isAdmin || thisUser.adminType !== "head") {
 			return res
 				.status(401)
 				.json({ msg: "You are not authorised to perform this action" });
 		}
-		req.user = decoded.user;
+
+		req.user = {
+			...decoded.user,
+			role: thisUser.role,
+			isAdmin: Boolean(thisUser.isAdmin),
+			adminType: thisUser.adminType,
+		};
 		next();
 	} catch (error) {
 		res.status(401).json({ msg: "Token is not Valid" });
