@@ -7,7 +7,6 @@ const cors = require("cors");
 const path = require("path");
 const jwt = require("jsonwebtoken");
 const { v4: uuidv4 } = require("uuid");
-const Authroutes = require("./routes/api/LinkedinRoute.js");
 const Conversation = require("./models/Conversation");
 const app = express();
 const eventQuestionsRoutes = require("./routes/api/eventQuestions");
@@ -26,10 +25,41 @@ if (!JWT_SECRET) {
 
 // Basic hardening that does not require another dependency.
 app.disable("x-powered-by");
+
+// Honour a configured reverse proxy so req.ip is the real client address.
+// Set TRUST_PROXY to the number of proxy hops (for example 1 behind nginx).
+if (process.env.TRUST_PROXY) {
+	const hops = Number(process.env.TRUST_PROXY);
+	app.set("trust proxy", Number.isFinite(hops) && hops > 0 ? hops : process.env.TRUST_PROXY);
+}
+
 app.use((req, res, next) => {
 	res.setHeader("X-Content-Type-Options", "nosniff");
 	res.setHeader("X-Frame-Options", "DENY");
 	res.setHeader("Referrer-Policy", "no-referrer");
+	// The app uses inline React styles, so style-src needs 'unsafe-inline'.
+	// Scripts stay same-origin; images/media may come from Cloudinary.
+	res.setHeader(
+		"Content-Security-Policy",
+		[
+			"default-src 'self'",
+			"script-src 'self'",
+			"style-src 'self' 'unsafe-inline' https://stackpath.bootstrapcdn.com https://cdnjs.cloudflare.com https://fonts.googleapis.com",
+			"img-src 'self' data: blob: https:",
+			"media-src 'self' blob: https:",
+			"font-src 'self' data: https://fonts.gstatic.com https://cdnjs.cloudflare.com",
+			"connect-src 'self' ws: wss:",
+			"frame-ancestors 'none'",
+			"base-uri 'self'",
+			"form-action 'self'",
+		].join("; ")
+	);
+	if (process.env.NODE_ENV === "production") {
+		res.setHeader(
+			"Strict-Transport-Security",
+			"max-age=31536000; includeSubDomains"
+		);
+	}
 	next();
 });
 
@@ -42,8 +72,8 @@ const achievementsRouter = require("./routes/achievement/achievements");
 const categoriesRouter = require("./routes/achievement/categories");
 const featuredRouter = require("./routes/achievement/featured");
 // app.use(express.json({ extended: false }));
-app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+app.use(express.json({ limit: "2mb" }));
+app.use(express.urlencoded({ extended: true, limit: "2mb" }));
 
 http.listen(PORT, () => console.log(`Server is up on port ${PORT}`));
 
@@ -98,7 +128,9 @@ app.use(
 app.use(express.json({ extended: false }));
 
 // define routes
-app.use('/api/linkedin' , Authroutes);
+// LinkedIn OAuth is intentionally not mounted. The old callback had no state
+// or PKCE and created password-less accounts; rebuild it before enabling.
+// The client only uses the CV/LinkedIn text importer, not this route.
 
 app.use("/api/users", require("./routes/api/users"));
 app.use("/api/profile", require("./routes/api/profile"));
@@ -145,7 +177,27 @@ app.use("/api/featured-achievements", featuredRouter);
 
 // static file serving
 app.use("/awards", express.static(path.join(__dirname, "/images")));
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+// User files are untrusted. Images/video/audio can render inline; everything
+// else is forced to download so a crafted HTML/SVG file cannot run in the app
+// origin. The sandbox CSP is defence in depth if a browser ignores the type.
+const INLINE_UPLOAD_EXTENSIONS = new Set([
+	".jpg", ".jpeg", ".png", ".gif", ".webp", ".avif",
+	".mp4", ".webm", ".mov", ".mp3", ".wav", ".weba", ".ogg",
+]);
+app.use(
+	"/uploads",
+	(req, res, next) => {
+		const extension = path.extname(req.path).toLowerCase();
+		res.setHeader("X-Content-Type-Options", "nosniff");
+		res.setHeader("Content-Security-Policy", "default-src 'none'; sandbox");
+		if (!INLINE_UPLOAD_EXTENSIONS.has(extension)) {
+			res.setHeader("Content-Disposition", "attachment");
+		}
+		next();
+	},
+	express.static(path.join(__dirname, "uploads"))
+);
 
 let onlineUsers = new Map();
 
@@ -239,43 +291,10 @@ io.on("connection", (socket) => {
 		});
 	});
 
-	socket.on('sendMessage', async ({ receiverId, conversationId, text, isGroup } = {}) => {
-		try {
-			const senderId = socket.userId;
-
-			if (isGroup) {
-				if (!(await socketIsMember(socket, conversationId))) return;
-				// Resolve recipients from the database, not from a client-supplied list.
-				const conversation = await Conversation.findById(conversationId).select("members");
-				(conversation?.members || []).forEach((memberId) => {
-					const id = String(memberId);
-					if (id === senderId) return;
-					const receiverSocket = onlineUsers.get(id);
-					if (receiverSocket) {
-						io.to(receiverSocket).emit('receiveMessage', {
-							senderId,
-							text,
-							conversationId,
-							conversation: conversationId,
-							isGroup: true,
-						});
-					}
-				});
-			} else if (receiverId) {
-				const receiverSocket = onlineUsers.get(String(receiverId));
-				if (receiverSocket) {
-					io.to(receiverSocket).emit('receiveMessage', {
-						senderId,
-						text,
-						conversationId,
-						conversation: conversationId,
-					});
-				}
-			}
-		} catch (err) {
-			console.error("Socket error in sendMessage:", err);
-		}
-	});
+	// The legacy client-to-client sendMessage/receiveMessage path was removed.
+	// Messages are sent through POST /api/messages/send, which checks
+	// conversation membership, blocks and payload limits before emitting
+	// new_message to the conversation room.
 
 	socket.on("disconnect", () => {
 		if (onlineUsers.get(socket.userId) === socket.id) {

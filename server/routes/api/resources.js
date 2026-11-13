@@ -1,6 +1,8 @@
 const express = require("express");
 const router = express.Router();
+const crypto = require("crypto");
 const auth = require("../../middleware/auth");
+const { rateLimit } = require("../../middleware/rateLimit");
 const Resource = require("../../models/Resource");
 const multer = require("multer");
 const { v2: cloudinary } = require("cloudinary");
@@ -33,10 +35,16 @@ const storage = new CloudinaryStorage({
       resourceType = "raw";
     }
 
+    // Never derive the public id from the user-supplied filename. A random
+    // id prevents path/metadata injection and guessable resource URLs.
+    const extension = String(file.originalname || "")
+      .toLowerCase()
+      .match(/\.[a-z0-9]{1,8}$/)?.[0] || "";
+
     return {
       folder: "resources",
       resource_type: resourceType,
-      public_id: `${Date.now()}-${file.originalname.split(".")[0]}`
+      public_id: `${Date.now()}-${crypto.randomBytes(12).toString("hex")}${extension}`
     };
   }
 });
@@ -62,8 +70,16 @@ const upload = multer({
 });
 
 
+const resourceUploadLimiter = rateLimit({
+  scope: "resource-upload",
+  windowMs: 60 * 60 * 1000,
+  max: 30,
+  message: "Too many resource uploads. Please try again later.",
+  key: (req) => req.user?.id || req.ip || "unknown",
+});
+
 // ================= UPLOAD =================
-router.post("/upload", auth, (req, res) => {
+router.post("/upload", auth, resourceUploadLimiter, (req, res) => {
   upload.single("file")(req, res, async (err) => {
     if (err) {
       return res.status(400).json({ msg: err.message });

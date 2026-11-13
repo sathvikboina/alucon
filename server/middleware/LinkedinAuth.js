@@ -1,3 +1,5 @@
+// NOT MOUNTED. This legacy flow has no OAuth state/PKCE and creates accounts
+// without a password. Rebuild it before wiring it back into the API.
 const User = require("../models/User.js");
 const jwt = require("jsonwebtoken");
 require("dotenv").config(); // Ensure environment variables are loaded

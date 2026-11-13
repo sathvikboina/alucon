@@ -104,9 +104,6 @@ export function useMessengerSocket(authUser) {
     socket.on("user_offline",         onUserOffline);
     socket.on("conversation_updated", onConvUpdated);
 
-    // Keep legacy receiveMessage for backwards compat with existing sendMessage handler
-    socket.on("receiveMessage", onNewMessage);
-
     return () => {
       socket.off("new_message",          onNewMessage);
       socket.off("messages_read",        onMessagesRead);
@@ -118,7 +115,6 @@ export function useMessengerSocket(authUser) {
       socket.off("user_online",          onUserOnline);
       socket.off("user_offline",         onUserOffline);
       socket.off("conversation_updated", onConvUpdated);
-      socket.off("receiveMessage",       onNewMessage);
     };
   }, [authUser?._id, dispatch]);
 

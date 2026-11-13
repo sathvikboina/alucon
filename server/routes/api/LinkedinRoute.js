@@ -1,3 +1,4 @@
+// NOT MOUNTED. See middleware/LinkedinAuth.js before enabling this router.
 const express = require('express')
 const {linkedInCallback , getUser} = require("../../middleware/LinkedinAuth.js")
 

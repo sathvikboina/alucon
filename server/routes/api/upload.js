@@ -3,12 +3,23 @@ const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
 const auth = require("../../middleware/auth");
+const { rateLimit } = require("../../middleware/rateLimit");
 const router = express.Router();
 const upload = require("../../middleware/upload");
 const cloudinary = require("../../config/cloudinary");
 const streamifier = require("streamifier");
 
 const LOCAL_UPLOAD_DIR = path.join(__dirname, "../../uploads");
+
+// Per-account upload budget. The limit is high enough for normal posting but
+// stops one authenticated account from filling memory/disk or Cloudinary quota.
+const uploadLimiter = rateLimit({
+  scope: "upload",
+  windowMs: 60 * 60 * 1000,
+  max: 60,
+  message: "Too many uploads. Please try again later.",
+  key: (req) => req.user?.id || req.ip || "unknown",
+});
 
 // Cloudinary is the production store, but local development often runs without
 // credentials. Falling back to disk keeps image uploads usable instead of
@@ -85,7 +96,7 @@ const detectMediaType = (mimetype) => {
 };
 
 
-router.post("/", auth, (req, res) => {
+router.post("/", auth, uploadLimiter, (req, res) => {
   upload.single("file")(req, res, async (err) => {
     if (err) {
       // multer errors (file too large, wrong type, etc.)
@@ -110,7 +121,7 @@ router.post("/", auth, (req, res) => {
 });
 
 // POST /api/upload/multiple — up to 5 files
-router.post("/multiple", auth, (req, res) => {
+router.post("/multiple", auth, uploadLimiter, (req, res) => {
   upload.array("files", 5)(req, res, async (err) => {
     if (err) {
       return res.status(400).json({ msg: err.message });
