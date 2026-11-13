@@ -200,3 +200,42 @@ node /tmp/opencode/socket-test.js   # two-client spoof test
 5. Remove or rebuild the LinkedIn flow with `state` + PKCE (**M2**).
 6. Add upload/message limits, short-lived tokens and admin-block checks (**M3–M5**, **M9**).
 7. Add CSP/HSTS, then the low-risk hardening items.
+
+---
+
+## 9. Remediation status (2026-11-13)
+
+All application-level findings below were fixed in the codebase, with regression tests. The running development stack was restarted against the patched API.
+
+| Finding | Status | What changed |
+| --- | --- | --- |
+| **C1** MongoDB exposure | **Mitigated** | `run.sh` now publishes `127.0.0.1:27017:27017`. The running container was recreated with the same data volumes and a `mongodump` backup was taken first. MongoDB authentication is still **pending**: enabling it requires changing `MONGO_URI`/credentials in `.env`, which is outside the approved scope. |
+| **H1** Socket message injection | Fixed | Removed the legacy `sendMessage`/`receiveMessage` socket path on both server and client. Messages now only travel through the membership-checked REST route. |
+| **H2** Destructive clear-chat | Fixed | `DELETE /api/messages/clear/:id` now adds the caller to each message's `deletedFor` list instead of `deleteMany`. |
+| **H3** Registration role injection | Fixed | Registration and approval accept only `student`, `alumni` and `faculty`; the `role === "head_admin"` post-delete bypass was removed. |
+| **H4** User-profile IDOR | Fixed | `GET /api/users/:id` returns a directory-safe projection to other members; owners/admins still receive the full editable profile. |
+| **M1** Event Q&A emails | Fixed | Participant projections now return only `name avatar`. |
+| **M2** LinkedIn OAuth | Disabled | The router is no longer mounted. The legacy files are marked not-mounted; rebuild with `state` + PKCE before enabling. |
+| **M3** Upload abuse | Fixed | Per-account upload rate limits on `/api/upload` and `/api/resources/upload`; local filenames were already random. |
+| **M4** Unbounded messages | Fixed | Message text capped at 4,000 characters, page size clamped to 1–100, media URLs validated, reply targets must belong to the same conversation. |
+| **M5** Long-lived tokens | Mitigated | JWT lifetime is now 12 hours by default (`JWT_EXPIRES_IN` override). A refresh/revocation flow is still future work. |
+| **M6** Weak password policy | Fixed | Registration and reset require 10–128 characters. |
+| **M7** Account enumeration | Fixed | Registration returns a generic message for new and existing addresses (with a decoy OTP record); forgot-password always returns a generic response. |
+| **M8** Proxy-aware rate limits | Fixed | `TRUST_PROXY` configures Express `trust proxy`; in-memory store remains single-process. |
+| **M9** Blocked admins | Fixed | `authAdmin` and `authHeadAdmin` reject blocked accounts with 403 and reload current role/admin claims. |
+| **L1** CSP/HSTS | Fixed | Added a CSP (including the CDN styles/fonts the client uses) and production-only HSTS. |
+| **L2/L3** Notification scoping | Fixed | Direct notifications are scoped to their owner; admin notices are explicitly marked `isBroadcast`. Mark-as-read verifies ownership/broadcast. |
+| **L4** Group add-members | Fixed | ObjectIds are validated, the batch is capped at 50, and all users must exist. |
+| **L6** OTP strength/storage | Fixed | `crypto.randomInt`, SHA-256 OTP hashes, timing-safe comparison, and passwords are bcrypt-hashed before entering the in-memory OTP store. |
+| **L7** Reset token referrer | Fixed | Added `<meta name="referrer" content="no-referrer">`; the existing 5-minute token and password-hash-bound secret remain. |
+| **L8** Cloudinary public id | Fixed | Resource uploads use a random public id with a sanitized extension. |
+| **L9** User-file serving | Fixed | `/uploads` sends `Content-Disposition: attachment` for non-media and a sandbox CSP. |
+| **L10** Message media URLs | Fixed | Only `http(s)` and `/uploads/` URLs are accepted, with a length cap. |
+| **L11** Achievement pagination | Fixed | Page/limit clamped (max 50) and errors return a generic message. |
+| **L12** Unbounded user search | Fixed | `search/all` is capped at 200 and uses the directory-safe projection. |
+| **L16** Verbose logs | Fixed | Removed user/notification debug logging from the reviewed routes. |
+| **L18** Event reply validation | Fixed | Missing events return 404 instead of a 500. |
+
+**Tests:** server suite now **98/98 passing** (86 existing + 12 new security regressions), including AES-GCM round-trip/tamper/legacy tests. Client production build compiles successfully.
+
+**Residual work:** enable MongoDB authentication and rotate credentials; add a token refresh/revocation flow; upgrade the CRA/webpack dev toolchain; add an admin audit trail.
