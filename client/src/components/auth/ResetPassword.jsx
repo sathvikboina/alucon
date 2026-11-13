@@ -57,7 +57,7 @@ const ResetPassword = ({
 						value={password}
 						autoComplete="true"
 						onChange={(event) => onChange(event)}
-						minLength="6"
+						minLength="10"
 					/>
 				</div>
 				<div className="form-group">
@@ -68,7 +68,7 @@ const ResetPassword = ({
 						value={password_confirm}
 						autoComplete="true"
 						onChange={(event) => onChange(event)}
-						minLength="6"
+						minLength="10"
 					/>
 				</div>
 				<input

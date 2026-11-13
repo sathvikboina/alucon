@@ -7,7 +7,7 @@ import PropTypes from "prop-types";
 import "./Register.css";
 
 const getPasswordChecks = (password) => ({
-  length: password.length >= 8,
+  length: password.length >= 10,
   upper: /[A-Z]/.test(password),
   lower: /[a-z]/.test(password),
   number: /\d/.test(password),
