@@ -80,7 +80,9 @@ if ! port_open "$MONGO_PORT"; then
       docker start "$MONGO_CONTAINER" >/dev/null
     else
       say "Creating Docker container '${MONGO_CONTAINER}' (mongo:6)"
-      docker run -d --name "$MONGO_CONTAINER" -p "${MONGO_PORT}:27017" mongo:6 >/dev/null
+      # Bind only to loopback. Publishing 0.0.0.0:27017 would expose an
+      # unauthenticated database to the network.
+      docker run -d --name "$MONGO_CONTAINER" -p "127.0.0.1:${MONGO_PORT}:27017" mongo:6 >/dev/null
     fi
     wait_for_port "$MONGO_PORT" "MongoDB" 45 \
       || die "MongoDB did not start. Check 'docker logs ${MONGO_CONTAINER}'."
