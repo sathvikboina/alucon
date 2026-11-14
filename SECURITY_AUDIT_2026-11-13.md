@@ -38,7 +38,7 @@ The full list of already-verified controls is in section 5.
   2. Enable MongoDB authentication (`--auth`, `MONGO_INITDB_ROOT_USERNAME/PASSWORD`) and use a least-privilege application user.
   3. Add a firewall rule / cloud security group that denies 27017 from everywhere except the API host.
   4. Rotate the JWT, encryption and database credentials if the port has ever been publicly reachable.
-- **Status:** Not changed — the repository rules forbid touching MongoDB/Docker data without approval.
+- **Status:** Fixed with approval. The container now publishes only on loopback and runs with `--auth`. A `mongodump` backup was taken first; the container was recreated against the same data volumes. Users: `alumniRoot` (root), `alumniApp` (readWrite on `alumniconnect`) and `alumniTest` (throwaway test databases). `server/.env` uses the credential-bearing `MONGO_URI`, `TEST_MONGO_URI` covers `npm test`, and `run.sh` seeds the root user when it must create a fresh container.
 
 ---
 
@@ -209,7 +209,7 @@ All application-level findings below were fixed in the codebase, with regression
 
 | Finding | Status | What changed |
 | --- | --- | --- |
-| **C1** MongoDB exposure | **Mitigated** | `run.sh` now publishes `127.0.0.1:27017:27017`. The running container was recreated with the same data volumes and a `mongodump` backup was taken first. MongoDB authentication is still **pending**: enabling it requires changing `MONGO_URI`/credentials in `.env`, which is outside the approved scope. |
+| **C1** MongoDB exposure | **Fixed** | `run.sh` publishes `127.0.0.1:27017:27017` and the container runs with `--auth`. Root/app/test users are scoped by role, the app connects with `alumniApp`, and `npm test` uses `alumniTest`. A `mongodump` backup preceded the volume-preserving recreation. |
 | **H1** Socket message injection | Fixed | Removed the legacy `sendMessage`/`receiveMessage` socket path on both server and client. Messages now only travel through the membership-checked REST route. |
 | **H2** Destructive clear-chat | Fixed | `DELETE /api/messages/clear/:id` now adds the caller to each message's `deletedFor` list instead of `deleteMany`. |
 | **H3** Registration role injection | Fixed | Registration and approval accept only `student`, `alumni` and `faculty`; the `role === "head_admin"` post-delete bypass was removed. |
@@ -239,4 +239,4 @@ All application-level findings below were fixed in the codebase, with regression
 
 **Tests:** server suite now **99/99 passing** (86 existing + 13 new security regressions), including AES-GCM round-trip/tamper/legacy tests. Client production build compiles successfully.
 
-**Residual work:** enable MongoDB authentication and rotate credentials; add a token refresh/revocation flow; upgrade the CRA/webpack dev toolchain; add an admin audit trail.
+**Residual work:** rotate the newly issued DB credentials if this host has ever exposed port 27017; add a token refresh/revocation flow; upgrade the CRA/webpack dev toolchain; add an admin audit trail.
