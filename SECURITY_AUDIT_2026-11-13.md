@@ -226,6 +226,7 @@ All application-level findings below were fixed in the codebase, with regression
 | **L1** CSP/HSTS | Fixed | Added a CSP (including the CDN styles/fonts the client uses) and production-only HSTS. |
 | **L2/L3** Notification scoping | Fixed | Direct notifications are scoped to their owner; admin notices are explicitly marked `isBroadcast`. Mark-as-read verifies ownership/broadcast. |
 | **L4** Group add-members | Fixed | ObjectIds are validated, the batch is capped at 50, and all users must exist. |
+| **L5** Invite-only group metadata | Fixed | Non-members who were not invited receive a minimal detail payload: no description, member list, avatars or discussion state. |
 | **L6** OTP strength/storage | Fixed | `crypto.randomInt`, SHA-256 OTP hashes, timing-safe comparison, and passwords are bcrypt-hashed before entering the in-memory OTP store. |
 | **L7** Reset token referrer | Fixed | Added `<meta name="referrer" content="no-referrer">`; the existing 5-minute token and password-hash-bound secret remain. |
 | **L8** Cloudinary public id | Fixed | Resource uploads use a random public id with a sanitized extension. |
@@ -236,6 +237,6 @@ All application-level findings below were fixed in the codebase, with regression
 | **L16** Verbose logs | Fixed | Removed user/notification debug logging from the reviewed routes. |
 | **L18** Event reply validation | Fixed | Missing events return 404 instead of a 500. |
 
-**Tests:** server suite now **98/98 passing** (86 existing + 12 new security regressions), including AES-GCM round-trip/tamper/legacy tests. Client production build compiles successfully.
+**Tests:** server suite now **99/99 passing** (86 existing + 13 new security regressions), including AES-GCM round-trip/tamper/legacy tests. Client production build compiles successfully.
 
 **Residual work:** enable MongoDB authentication and rotate credentials; add a token refresh/revocation flow; upgrade the CRA/webpack dev toolchain; add an admin audit trail.
