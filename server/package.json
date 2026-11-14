@@ -10,7 +10,7 @@
     "search:index": "node scripts/buildSearchIndex.js",
     "search:eval": "node scripts/evaluateSearch.js",
     "ai:warm": "node scripts/warmAI.js",
-    "test": "node --test tests/*.test.js",
+    "test": "node -r dotenv/config --test tests/*.test.js",
     "test:matching": "node --test tests/matching.test.js",
     "test:email": "node --test tests/emailQueue.test.js"
   },

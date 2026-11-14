@@ -79,10 +79,19 @@ if ! port_open "$MONGO_PORT"; then
       say "Starting existing Docker container '${MONGO_CONTAINER}'"
       docker start "$MONGO_CONTAINER" >/dev/null
     else
-      say "Creating Docker container '${MONGO_CONTAINER}' (mongo:6)"
-      # Bind only to loopback. Publishing 0.0.0.0:27017 would expose an
-      # unauthenticated database to the network.
-      docker run -d --name "$MONGO_CONTAINER" -p "127.0.0.1:${MONGO_PORT}:27017" mongo:6 >/dev/null
+      say "Creating Docker container '${MONGO_CONTAINER}' (mongo:6, auth enabled)"
+      # Bind only to loopback. Publishing 0.0.0.0:27017 would expose the
+      # database to the network, and --auth requires credentials to connect.
+      ROOT_USER="$(grep -E '^MONGO_ROOT_USER=' server/.env 2>/dev/null | head -1 | cut -d= -f2- || true)"
+      ROOT_PASS="$(grep -E '^MONGO_ROOT_PASSWORD=' server/.env 2>/dev/null | head -1 | cut -d= -f2- || true)"
+      if [ -z "$ROOT_USER" ] || [ -z "$ROOT_PASS" ]; then
+        die "Creating a new MongoDB container requires MONGO_ROOT_USER and
+MONGO_ROOT_PASSWORD in server/.env. Add them, then rerun ./run.sh."
+      fi
+      docker run -d --name "$MONGO_CONTAINER" -p "127.0.0.1:${MONGO_PORT}:27017" \
+        -e MONGO_INITDB_ROOT_USERNAME="$ROOT_USER" \
+        -e MONGO_INITDB_ROOT_PASSWORD="$ROOT_PASS" \
+        mongo:6 --auth >/dev/null
     fi
     wait_for_port "$MONGO_PORT" "MongoDB" 45 \
       || die "MongoDB did not start. Check 'docker logs ${MONGO_CONTAINER}'."
