@@ -300,6 +300,30 @@ router.get("/:id", auth, async (req, res) => {
 
     const manage = canManage(group, user);
     const visible = canViewDiscussions(group, user);
+    const invited = Boolean(invitedUser(group, user._id));
+
+    // Invite-only hubs may appear in discovery, but non-members who were not
+    // invited only get name/access/owner. Description, member count, avatars
+    // and every discussion field stay hidden until they join or are invited.
+    if (group.access === "INVITE" && !visible && !manage && !invited) {
+      const minimal = summary(group, user);
+      minimal.description = "";
+      minimal.membersCount = 0;
+      minimal.avatars = [];
+      return res.json({
+        group: {
+          ...minimal,
+          guidelines: "",
+          members: [],
+          requests: [],
+          invites: [],
+          canManage: false,
+          canViewDiscussions: false,
+          discussionsCount: 0,
+        },
+      });
+    }
+
     const [discussionsCount] = await Promise.all([
       Post.countDocuments({ group: group._id }),
     ]);

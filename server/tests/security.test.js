@@ -898,3 +898,22 @@ test("blocked admins cannot use admin middleware", async () => {
 	});
 	assert.equal(response.status, 403);
 });
+
+test("invite-only group detail is redacted for non-members", async () => {
+	const outsiderView = await api(`/api/groups/${group._id}`, {
+		token: tokenFor(users.outsider),
+	});
+	assert.equal(outsiderView.status, 200);
+	assert.equal(outsiderView.body.group.description, "");
+	assert.equal(outsiderView.body.group.membersCount, 0);
+	assert.deepEqual(outsiderView.body.group.members, []);
+	assert.deepEqual(outsiderView.body.group.avatars, []);
+	assert.equal(outsiderView.body.group.canViewDiscussions, false);
+
+	const memberView = await api(`/api/groups/${group._id}`, {
+		token: tokenFor(users.groupMember),
+	});
+	assert.equal(memberView.status, 200);
+	assert.equal(memberView.body.group.description, group.description);
+	assert.ok(memberView.body.group.members.length > 0);
+});
