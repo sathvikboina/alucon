@@ -25,6 +25,12 @@ This project deploys as a serverless function. Two limits are handled in code:
 
 Do not set `PORT`; Vercel provides it.
 
+## Client project (Root Directory = client)
+
+Set `REACT_APP_BACKEND_URL` to this API project's URL and
+`REACT_APP_REALTIME=false`. The second value swaps the Socket.IO client for a
+no-op stub so the browser does not retry a connection the API cannot serve.
+
 ## Atlas checklist
 
 1. Create a free cluster and a database user.

@@ -611,7 +611,8 @@ both projects separate and degrades realtime/uploads:
    and the `CLOUD_NAME`/`CLOUDINARY_API_KEY`/`CLOUDINARY_API_SECRET` pair.
    See `server/VERCEL.md`.
 3. **Client project:** import the same repo, set **Root Directory** to `client`,
-   and set `REACT_APP_BACKEND_URL` to the API project URL before building.
+   set `REACT_APP_BACKEND_URL` to the API project URL and `REACT_APP_REALTIME=false`,
+   then build.
 4. Set the API's `CLIENT_URL` to the final client URL and redeploy it.
 
 Realtime messaging, background search indexing, and disk uploads are disabled

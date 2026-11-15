@@ -2,12 +2,36 @@
 import { io } from 'socket.io-client';
 
 const SOCKET_URL = process.env.REACT_APP_BACKEND_URL;
-export const socket = io(SOCKET_URL, {
-  autoConnect: false,
-  // Send the JWT with the handshake so the server can verify identity and
-  // enforce conversation membership before joining any room.
-  auth: (cb) => cb({ token: localStorage.getItem("token") }),
-});
+// Vercel functions cannot hold a WebSocket. Set REACT_APP_REALTIME=false there
+// so the client does not retry a connection that can never succeed.
+const REALTIME_ENABLED = process.env.REACT_APP_REALTIME !== "false";
+const realtimeStub = {
+  connected: false,
+  id: null,
+  on() {
+    return this;
+  },
+  off() {
+    return this;
+  },
+  emit() {
+    return this;
+  },
+  connect() {
+    return this;
+  },
+  disconnect() {
+    return this;
+  },
+};
+export const socket = REALTIME_ENABLED
+  ? io(SOCKET_URL, {
+      autoConnect: false,
+      // Send the JWT with the handshake so the server can verify identity and
+      // enforce conversation membership before joining any room.
+      auth: (cb) => cb({ token: localStorage.getItem("token") }),
+    })
+  : realtimeStub;
 
 // A simple global state to track unread messages without Redux boilerplate
 class NotificationStore {
