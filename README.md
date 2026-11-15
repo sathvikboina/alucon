@@ -618,6 +618,8 @@ both projects separate and degrades realtime/uploads:
 Realtime messaging, background search indexing, and disk uploads are disabled
 on Vercel. REST messaging still works; refresh to see new messages.
 
+**Live:** client `https://alucon.vercel.app` · API `https://alucon-api.vercel.app`
+
 ---
 
 ## 🔮 Future Scope
