@@ -3,6 +3,7 @@ import axios from "axios";
 import {
   GET_CONVERSATIONS,
   GET_MESSAGES,
+  MESSAGES_POLLED,
   MESSAGE_SENT,
   MESSAGES_PREPEND,
   MESSAGE_EDITED,
@@ -65,6 +66,22 @@ export const getMessages = (convId) => async (dispatch) => {
     dispatch({ type: SET_HAS_MORE, payload: hasMore });
   } catch (err) {
     console.error("getMessages:", err);
+  }
+};
+
+/**
+ * Poll the newest page without resetting scroll or loading state. Used when
+ * the deployment has no Socket.IO; the reducer merges by _id.
+ */
+export const pollMessages = (convId) => async (dispatch) => {
+  try {
+    const res = await axios.get(`${BASE}/api/messages/${convId}?limit=30`);
+    const { messages = res.data } = res.data?.messages
+      ? res.data
+      : { messages: res.data };
+    dispatch({ type: MESSAGES_POLLED, payload: messages });
+  } catch (err) {
+    // Polling is best-effort; a transient failure must not disturb the UI.
   }
 };
 

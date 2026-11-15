@@ -33,6 +33,8 @@ export const socket = REALTIME_ENABLED
     })
   : realtimeStub;
 
+export { REALTIME_ENABLED };
+
 // A simple global state to track unread messages without Redux boilerplate
 class NotificationStore {
   constructor() {

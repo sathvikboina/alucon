@@ -71,6 +71,7 @@ export const ACCOUNT_DELETED = "ACCOUNT_DELETED";
 // chat related
 export const GET_CONVERSATIONS = "GET_CONVERSATIONS";
 export const GET_MESSAGES = "GET_MESSAGES";
+export const MESSAGES_POLLED = "MESSAGES_POLLED";
 export const MESSAGE_SENT = "MESSAGE_SENT";
 
 //story related

@@ -2,6 +2,7 @@
 import {
   GET_CONVERSATIONS,
   GET_MESSAGES,
+  MESSAGES_POLLED,
   MESSAGE_SENT,
   MESSAGES_PREPEND,
   MESSAGE_RECEIVED,
@@ -59,6 +60,24 @@ export default function chatReducer(state = initialState, action) {
     // ── messages ──
     case GET_MESSAGES:
       return { ...state, messages: payload, loading: false };
+
+    case MESSAGES_POLLED: {
+      // Merge polled messages by _id: updates edits/reactions, appends new
+      // messages, and preserves the existing scroll position.
+      const byId = new Map(state.messages.map((m) => [m._id, m]));
+      let changed = false;
+      for (const incoming of payload) {
+        const existing = byId.get(incoming._id);
+        if (!existing) {
+          byId.set(incoming._id, incoming);
+          changed = true;
+        } else if (existing.updatedAt !== incoming.updatedAt) {
+          byId.set(incoming._id, { ...existing, ...incoming });
+          changed = true;
+        }
+      }
+      return changed ? { ...state, messages: [...byId.values()] } : state;
+    }
 
     case MESSAGES_PREPEND:
       // older messages come in from the top; de-duplicate by _id

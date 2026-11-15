@@ -8,6 +8,7 @@ const User = require("../../models/User");
 const auth = require("../../middleware/auth");
 const authHeadAdmin = require("../../middleware/authHeadAdmin");
 const JoinRequest = require("../../models/JoinRequest");
+const OtpRequest = require("../../models/OtpRequest");
 require("dotenv").config();
 const sendEmail = require("../../middleware/utils/sendEmail");
 const jwt = require("jsonwebtoken");
@@ -18,9 +19,7 @@ const {
 	removeSearchDocumentsForUser,
 } = require("../../services/searchIndex");
 
-// ✅ OTP STORE
-const otpStore = new Map();
-
+const OTP_TTL_MS = 5 * 60 * 1000;
 const OTP_TOKEN_TTL = "15m";
 
 // Only these roles can be self-registered. Privileged roles are granted by an
@@ -87,6 +86,22 @@ const otpMatches = (record, otp) => {
 
 const otpKey = (req) =>
 	`${req.ip || req.connection?.remoteAddress || "unknown"}:${normalizeEmail(req.body?.email)}`;
+
+// One row per email. Upserting replaces any previous pending code so a resend
+// cannot leave two valid OTPs behind.
+const saveOtp = (email, fields) =>
+	OtpRequest.findOneAndUpdate(
+		{ email },
+		{
+			$set: {
+				email,
+				expiresAt: new Date(Date.now() + OTP_TTL_MS),
+				attempts: 0,
+				...fields,
+			},
+		},
+		{ upsert: true, new: true, setDefaultsOnInsert: true }
+	);
 
 const registerLimiter = rateLimit({
 	scope: "register",
@@ -226,19 +241,17 @@ router.post(
         }
       }
 
-      // ✅ Generate a cryptographically random OTP. Only its hash is kept in
-      // memory; the plaintext code exists just long enough to send the email.
+      // ✅ Generate a cryptographically random OTP. Only its hash is stored;
+      // the plaintext code exists just long enough to send the email.
       const otp = generateOtp();
 
       if (accountExists) {
         // Decoy record: an attacker cannot tell whether the address was
         // already registered. No OTP is delivered and no request is created.
-        otpStore.set(email, {
+        await saveOtp(email, {
           otpHash: hashOtp(otp),
           data: null,
           decoy: true,
-          expires: Date.now() + 5 * 60 * 1000,
-          attempts: 0,
         });
         return res.json({
           msg: GENERIC_REGISTER_MESSAGE,
@@ -246,11 +259,11 @@ router.post(
         });
       }
 
-      // Hash the password before keeping it in the in-memory OTP record.
+      // Hash the password before keeping it in the OTP record.
       const hashedPassword = await bcrypt.hash(password, 10);
 
       // ✅ Store OTP hash + verified user data (password already hashed)
-      otpStore.set(email, {
+      await saveOtp(email, {
         otpHash: hashOtp(otp),
         data: {
           name,
@@ -267,8 +280,6 @@ router.post(
           working_area,
         },
         decoy: false,
-        expires: Date.now() + 5 * 60 * 1000,
-        attempts: 0,
       });
 
       // ✅ Send OTP Email
@@ -304,7 +315,7 @@ router.post("/verify-otp", verifyOtpLimiter, async (req, res) => {
   const { email, otp } = req.body;
 
   const normalizedEmail = normalizeEmail(email);
-  const record = otpStore.get(normalizedEmail);
+  const record = await OtpRequest.findOne({ email: normalizedEmail });
 
   // Missing, expired and wrong codes all return the same message so the
   // endpoint does not reveal whether an address is already registered.
@@ -312,8 +323,8 @@ router.post("/verify-otp", verifyOtpLimiter, async (req, res) => {
     return res.status(400).json({ msg: "Invalid or expired OTP" });
   }
 
-  if (record.expires < Date.now()) {
-    otpStore.delete(normalizedEmail);
+  if (record.expiresAt.getTime() < Date.now()) {
+    await OtpRequest.deleteOne({ _id: record._id });
     return res.status(400).json({ msg: "Invalid or expired OTP" });
   }
 
@@ -321,15 +332,16 @@ router.post("/verify-otp", verifyOtpLimiter, async (req, res) => {
     record.attempts += 1;
 
     if (record.attempts >= 5) {
-      otpStore.delete(normalizedEmail);
+      await OtpRequest.deleteOne({ _id: record._id });
       return res.status(400).json({ msg: "Too many attempts" });
     }
 
+    await record.save();
     return res.status(400).json({ msg: "Invalid or expired OTP" });
   }
 
   if (record.decoy) {
-    otpStore.delete(normalizedEmail);
+    await OtpRequest.deleteOne({ _id: record._id });
     return res.json({ msg: "OTP verified, request sent for approval" });
   }
 
@@ -337,11 +349,11 @@ router.post("/verify-otp", verifyOtpLimiter, async (req, res) => {
     const data = record.data;
 
     // ✅ Create JoinRequest NOW (after OTP). The password was hashed before
-    // it was placed in the in-memory OTP record.
+    // it was placed in the OTP record.
     const request = new JoinRequest(data);
 
     await request.save();
-    otpStore.delete(normalizedEmail);
+    await OtpRequest.deleteOne({ _id: record._id });
 
     // ✅ Notify admin
     await sendEmail({
@@ -367,14 +379,15 @@ router.post("/resend-otp", resendOtpLimiter, async (req, res) => {
   }
 
   const normalizedEmail = normalizeEmail(email);
-  const record = otpStore.get(normalizedEmail);
+  const record = await OtpRequest.findOne({ email: normalizedEmail });
   if (!record) return res.status(400).json({ msg: "Invalid or expired OTP" });
 
   const newOtp = generateOtp();
 
   record.otpHash = hashOtp(newOtp);
-  record.expires = Date.now() + 5 * 60 * 1000;
+  record.expiresAt = new Date(Date.now() + OTP_TTL_MS);
   record.attempts = 0;
+  await record.save();
 
   // Do not deliver a fresh code for a decoy record; the address already has
   // an account or a pending request.
@@ -392,14 +405,14 @@ router.post("/resend-otp", resendOtpLimiter, async (req, res) => {
 
 
 // ================= RESET OTP =================
-router.post("/reset-otp", resetOtpLimiter, (req, res) => {
+router.post("/reset-otp", resetOtpLimiter, async (req, res) => {
   const { email, otp_token } = req.body;
 
   if (!verifyOtpToken(otp_token, email)) {
     return res.status(401).json({ msg: "Invalid or expired OTP session" });
   }
 
-  otpStore.delete(normalizeEmail(email));
+  await OtpRequest.deleteOne({ email: normalizeEmail(email) });
 
   res.json({ msg: "OTP reset successful" });
 });

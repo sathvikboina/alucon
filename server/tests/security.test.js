@@ -30,6 +30,7 @@ const EventQuestion = require("../models/EventQuestion");
 const Achievement = require("../models/Achievement");
 const Conversation = require("../models/Conversation");
 const Message = require("../models/Message");
+const OtpRequest = require("../models/OtpRequest");
 
 const SERVER_DIR = path.resolve(__dirname, "..");
 
@@ -703,6 +704,28 @@ test("registration does not reveal whether an address already exists", async () 
 	});
 	assert.equal(verify.status, 400);
 	assert.match(verify.body.msg, /Invalid or expired OTP/i);
+});
+
+test("registration stores the pending OTP in MongoDB, not process memory", async () => {
+	const email = "persisted-otp@regression.test";
+	const response = await api("/api/users/register", {
+		method: "POST",
+		body: {
+			name: "Persisted OTP",
+			email,
+			password: "long-enough-password",
+			role: "student",
+			program: "BTech",
+			starting_year: "2020",
+			passing_year: "2024",
+		},
+	});
+	assert.equal(response.status, 200);
+
+	const record = await OtpRequest.findOne({ email }).lean();
+	assert.ok(record, "OTP record should be readable from a different process");
+	assert.equal(typeof record.otpHash, "string");
+	assert.ok(record.expiresAt instanceof Date);
 });
 
 test("GET /api/users/:id hides private fields from other members", async () => {

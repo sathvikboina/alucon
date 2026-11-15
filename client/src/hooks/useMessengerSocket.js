@@ -6,7 +6,8 @@
 //
 import { useEffect, useRef, useCallback } from "react";
 import { useDispatch } from "react-redux";
-import { socket } from "../socket"; // your existing socket singleton
+import { socket, REALTIME_ENABLED } from "../socket"; // your existing socket singleton
+import { getConversations, pollMessages } from "../actions/chat";
 import {
   MESSAGE_RECEIVED,
   MESSAGE_EDITED,
@@ -37,6 +38,30 @@ export function useMessengerSocket(authUser) {
       // full logout, which you handle in your auth flow.
     };
   }, [authUser?._id]);
+
+  // ─── polling fallback (no Socket.IO on serverless) ─────────────────────────
+  // Refreshes the sidebar and the open conversation every few seconds. Runs
+  // only when REACT_APP_REALTIME=false, and pauses on hidden tabs.
+  useEffect(() => {
+    if (REALTIME_ENABLED || !authUser?._id) return undefined;
+
+    let stopped = false;
+    const tick = () => {
+      if (stopped || document.hidden) return;
+      dispatch(getConversations());
+      const match = window.location.pathname.match(
+        /\/messenger\/(?:conversation\/)?([a-f0-9]{24})/i
+      );
+      if (match) dispatch(pollMessages(match[1]));
+    };
+
+    tick();
+    const timer = setInterval(tick, 5000);
+    return () => {
+      stopped = true;
+      clearInterval(timer);
+    };
+  }, [authUser?._id, dispatch]);
 
   // ─── inbound event listeners ───────────────────────────────────────────────
   useEffect(() => {
