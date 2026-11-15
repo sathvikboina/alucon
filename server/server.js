@@ -6,7 +6,6 @@ const connectDB = require("./config/db");
 const cors = require("cors");
 const path = require("path");
 const jwt = require("jsonwebtoken");
-const { v4: uuidv4 } = require("uuid");
 const Conversation = require("./models/Conversation");
 const app = express();
 const eventQuestionsRoutes = require("./routes/api/eventQuestions");
