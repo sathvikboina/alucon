@@ -155,7 +155,7 @@ ADMIN_PASSWORD=your_admin_password
 # Transactional email (Brevo). Announcement email is skipped when blank.
 BREVO_API_KEY=your_brevo_key
 
-CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUD_NAME=your_cloud_name
 CLOUDINARY_API_KEY=your_key
 CLOUDINARY_API_SECRET=your_secret
 
@@ -598,6 +598,24 @@ Includes:
 ## 🌐 Deployment
 
 Project deployed on **Render**
+
+### Vercel (client + API as two projects)
+
+Vercel cannot run Socket.IO or write to local disk, so this deployment keeps
+both projects separate and degrades realtime/uploads:
+
+1. **Database:** create a MongoDB Atlas cluster, add a database user, allow
+   `0.0.0.0/0`, and copy the `mongodb+srv://` URI.
+2. **API project:** import the repo, set **Root Directory** to `server`, and add
+   `MONGO_URI`, `JWT_SECRET`, `ENCRYPTION_KEY`, `CLIENT_URL`, `TRUST_PROXY=1`,
+   and the `CLOUD_NAME`/`CLOUDINARY_API_KEY`/`CLOUDINARY_API_SECRET` pair.
+   See `server/VERCEL.md`.
+3. **Client project:** import the same repo, set **Root Directory** to `client`,
+   and set `REACT_APP_BACKEND_URL` to the API project URL before building.
+4. Set the API's `CLIENT_URL` to the final client URL and redeploy it.
+
+Realtime messaging, background search indexing, and disk uploads are disabled
+on Vercel. REST messaging still works; refresh to see new messages.
 
 ---
 
