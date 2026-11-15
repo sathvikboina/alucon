@@ -8,6 +8,9 @@
  */
 
 process.env.NODE_ENV = "test";
+// Tests must use the local model: the HTTP embeddings backend would make the
+// suite depend on a network key and quota.
+process.env.EMBEDDING_PROVIDER = "local";
 const TEST_SECRET = "security-regression-secret";
 process.env.JWT_SECRET = TEST_SECRET;
 
@@ -238,6 +241,7 @@ before(async () => {
 		env: {
 			...process.env,
 			NODE_ENV: "test",
+			EMBEDDING_PROVIDER: "local",
 			PORT: String(port),
 			MONGO_URI: testUri,
 			JWT_SECRET: TEST_SECRET,

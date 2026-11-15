@@ -1,4 +1,5 @@
 process.env.NODE_ENV = "test";
+process.env.EMBEDDING_PROVIDER = "local";
 
 const test = require("node:test");
 const assert = require("node:assert/strict");

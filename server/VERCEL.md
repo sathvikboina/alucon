@@ -7,8 +7,11 @@ This project deploys as a serverless function. Two limits are handled in code:
   realtime delivery needs a separate long-lived service.
 - **Local uploads are disabled.** Set the Cloudinary variables below, or uploads
   return `503`. Vercel has no writable persistent disk.
-- **Semantic search falls back to lexical matching.** The BGE/ONNX runtime
-  (~900 MB) is an optional dependency and is not installed here.
+- **Semantic search uses Gemini embeddings.** The local BGE/ONNX runtime
+  (~900 MB) cannot be bundled, so the deployed API embeds through
+  `gemini-embedding-001` over HTTPS. Set `EMBEDDING_PROVIDER=gemini` (it is
+  chosen automatically on Vercel when `GEMINI_API_KEY` exists). If the provider
+  fails, search degrades to lexical matching instead of erroring.
 
 ## Environment variables
 
@@ -19,7 +22,10 @@ This project deploys as a serverless function. Two limits are handled in code:
 | `ENCRYPTION_KEY` | yes | Keep the existing value or old messages cannot be read |
 | `CLIENT_URL` | yes | The Vercel client URL, e.g. `https://alucon.vercel.app` |
 | `CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` | yes for uploads | |
-| `GEMINI_API_KEY` | optional | Enables model-backed AI assists |
+| `GEMINI_API_KEY` | yes for AI search | Also enables model-backed AI assists |
+| `EMBEDDING_PROVIDER` | recommended | `gemini` on Vercel; `local` for development |
+| `EMBEDDING_DIMENSIONS` | optional | Vector size, default 768 for Gemini / 384 for local |
+| `GEMINI_EMBEDDING_MODEL` | optional | Defaults to `gemini-embedding-001` |
 | `TRUST_PROXY` | recommended | `1` behind Vercel's proxy |
 | `SEARCH_INDEX_AUTO` | optional | `0` keeps indexing off |
 

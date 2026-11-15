@@ -2,3 +2,5 @@ node_modules
 default.json
 .env
 build.env
+.vercel
+.env*

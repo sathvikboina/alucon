@@ -1,10 +1,11 @@
 /*
- * Rebuilds the BGE-small search index.
+ * Rebuilds the search index with the configured embedding provider.
  *
  *   MONGO_URI=... npm run search:index
  *
- * Run this after a seed or after bulk content changes. The API also builds the
- * index on first use when the collection is empty.
+ * Run this after a seed, after bulk content changes, or after switching
+ * EMBEDDING_PROVIDER / EMBEDDING_DIMENSIONS. The API also rebuilds the index on
+ * first use when the collection is empty or its vectors are stale.
  */
 
 require("dotenv").config();
@@ -26,7 +27,7 @@ async function run() {
   const stats = await rebuildSearchIndex();
   console.log(
     `Indexed ${stats.indexed} documents in ${Date.now() - started} ms ` +
-      `(${stats.semantic ? "BGE" : "text-only"}; ${stats.model})`
+      `(${stats.semantic ? "semantic" : "text-only"}; ${stats.model})`
   );
   console.log("By type:", stats.byType);
 

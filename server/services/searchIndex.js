@@ -1,9 +1,10 @@
 // Unified semantic search across the whole portal.
 //
 // MongoDB stores one SearchDocument per source record (job, member, post,
-// resource, event or group). BGE-small embeds the searchable text once at index
-// time; a query is embedded once and ranked in Node with cosine similarity plus
-// lexical evidence and an intent boost. No LLM is involved.
+// resource, event or group). An embedding model (BGE locally, Gemini on Vercel)
+// embeds the searchable text once at index time; a query is embedded once and
+// ranked in Node with cosine similarity plus lexical evidence and an intent
+// boost. No LLM is involved.
 
 const SearchDocument = require("../models/SearchDocument");
 const Job = require("../models/Jobs");
@@ -14,8 +15,10 @@ const Event = require("../models/Event");
 const Group = require("../models/Group");
 const { canViewPost } = require("../utils/postVisibility");
 const {
+  PROVIDER,
   MODEL_NAME,
   EMBEDDING_DIM,
+  EMBEDDING_TAG,
   embedTexts,
   embedQuery,
   cosineSimilarity,
@@ -661,7 +664,7 @@ async function rebuildSearchIndex({ batchSize = 16 } = {}) {
         $set: {
           ...doc,
           embedding: semantic ? vectors[index] || [] : [],
-          embeddingModel: semantic ? MODEL_NAME : "",
+          embeddingModel: semantic ? EMBEDDING_TAG : "",
           indexedAt: now,
         },
       },
@@ -690,17 +693,40 @@ async function rebuildSearchIndex({ batchSize = 16 } = {}) {
   };
 }
 
-async function ensureSearchIndex() {
+// Verifying the index costs two Atlas round-trips, which is a large share of a
+// search request on serverless. Once an instance has confirmed the tag matches,
+// it can trust that for a minute; a rebuild on any instance bumps indexedAt.
+const INDEX_CHECK_TTL_MS = 60 * 1000;
+let indexVerifiedAt = 0;
+let indexVerifiedCount = 0;
+
+async function ensureSearchIndex({ force = false } = {}) {
+  if (
+    !force &&
+    indexVerifiedCount > 0 &&
+    Date.now() - indexVerifiedAt < INDEX_CHECK_TTL_MS
+  ) {
+    return { indexed: indexVerifiedCount, built: false, model: MODEL_NAME };
+  }
+
   const count = await SearchDocument.estimatedDocumentCount();
   if (count > 0) {
     // An index built with a different embedding model has incompatible vectors,
-    // so rebuild instead of silently comparing BGE queries to MiniLM passages.
+    // so rebuild instead of silently comparing vectors from different models.
     const stale = await SearchDocument.countDocuments({
-      embeddingModel: { $ne: MODEL_NAME },
+      embeddingModel: { $ne: EMBEDDING_TAG },
     });
-    if (!stale) return { indexed: count, built: false, model: MODEL_NAME };
+    if (!stale) {
+      indexVerifiedAt = Date.now();
+      indexVerifiedCount = count;
+      return { indexed: count, built: false, model: MODEL_NAME };
+    }
   }
-  return { ...(await rebuildSearchIndex()), built: true };
+
+  const stats = await rebuildSearchIndex();
+  indexVerifiedAt = Date.now();
+  indexVerifiedCount = stats.indexed;
+  return { ...stats, built: true };
 }
 
 async function getIndexStats() {
@@ -713,10 +739,17 @@ async function getIndexStats() {
     .sort({ indexedAt: -1 })
     .select("indexedAt")
     .lean();
+  const embedded = await SearchDocument.countDocuments({
+    embeddingModel: EMBEDDING_TAG,
+    "embedding.0": { $exists: true },
+  });
   return {
     indexed: rows.reduce((total, row) => total + row.count, 0),
+    embedded,
     byType,
+    provider: PROVIDER,
     model: MODEL_NAME,
+    dimensions: EMBEDDING_DIM,
     lastIndexedAt: latest?.indexedAt || null,
   };
 }
@@ -797,7 +830,7 @@ async function refreshSearchDocument(sourceType, sourceId) {
       $set: {
         ...doc,
         embedding,
-        embeddingModel: semantic ? MODEL_NAME : "",
+        embeddingModel: semantic ? EMBEDDING_TAG : "",
         indexedAt: new Date(),
       },
     },
@@ -969,6 +1002,7 @@ async function searchAll(
     engine: {
       semantic,
       model: semantic ? MODEL_NAME : "lexical-only",
+      provider: semantic ? PROVIDER : "",
       indexSize: documents.length,
       dimensions: EMBEDDING_DIM,
     },
