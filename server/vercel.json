@@ -1,0 +1,9 @@
+{
+  "functions": {
+    "api/index.js": {
+      "maxDuration": 60,
+      "includeFiles": "images/**"
+    }
+  },
+  "rewrites": [{ "source": "/(.*)", "destination": "/api/index.js" }]
+}

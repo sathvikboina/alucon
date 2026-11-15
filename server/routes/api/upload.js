@@ -77,6 +77,14 @@ const storeFile = async (req, file, folder) => {
   if (cloudinaryConfigured()) {
     return streamUpload(file.buffer, folder);
   }
+  // Vercel's filesystem is read-only, so the disk fallback cannot work there.
+  if (process.env.VERCEL) {
+    const error = new Error(
+      "Uploads require Cloudinary in this deployment (set CLOUD_NAME, CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET)"
+    );
+    error.status = 503;
+    throw error;
+  }
   return localUpload(file.buffer, file.mimetype, file.originalname);
 };
 
@@ -115,7 +123,9 @@ router.post("/", auth, uploadLimiter, (req, res) => {
       });
     } catch (error) {
       console.error("Upload error:", error);
-      return res.status(500).json({ msg: "Upload failed" });
+      return res
+        .status(error.status || 500)
+        .json({ msg: error.status ? error.message : "Upload failed" });
     }
   });
 });
@@ -143,7 +153,9 @@ router.post("/multiple", auth, uploadLimiter, (req, res) => {
       });
     } catch (error) {
       console.error("Multiple upload error:", error);
-      return res.status(500).json({ msg: "Upload failed" });
+      return res
+        .status(error.status || 500)
+        .json({ msg: error.status ? error.message : "Upload failed" });
     }
   });
 });

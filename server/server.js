@@ -12,6 +12,8 @@ const app = express();
 const eventQuestionsRoutes = require("./routes/api/eventQuestions");
 const http = require("http").createServer(app);
 const PORT = process.env.PORT || 5001;
+// Vercel runs this file as a serverless function: no listen() and no WebSocket.
+const isServerless = Boolean(process.env.VERCEL);
 
 // Refuse to start without a signing secret instead of failing later with
 // "jwt must be provided" on the first authenticated request.
@@ -75,32 +77,42 @@ const featuredRouter = require("./routes/achievement/featured");
 app.use(express.json({ limit: "2mb" }));
 app.use(express.urlencoded({ extended: true, limit: "2mb" }));
 
-http.listen(PORT, () => console.log(`Server is up on port ${PORT}`));
+if (!isServerless) {
+	http.listen(PORT, () => console.log(`Server is up on port ${PORT}`));
+}
 
-const io = require("socket.io")(http, {
-	cors: {
-		origin: `${process.env.CLIENT_URL}`,
-		methods: ["GET" , "POST"]
-	},
-});
+// Socket.IO needs a long-lived process. On Vercel, expose a no-op emitter so
+// routes that broadcast can still call res.app.get("io").to(...).emit(...).
+const io = isServerless
+	? { to: () => ({ emit() {} }), emit() {}, use() {}, on() {} }
+	: require("socket.io")(http, {
+			cors: {
+				origin: `${process.env.CLIENT_URL}`,
+				methods: ["GET", "POST"],
+			},
+	  });
 app.set("io", io); // ✅ makes io accessible in routes via req.app.get("io")
 
-connectDB().then(() => {
-	// Build the BGE-small search index in the background when it is empty. The API
-	// is already listening, so the first request is not blocked by indexing.
-	if (process.env.SEARCH_INDEX_AUTO !== "0") {
-		require("./services/searchIndex")
-			.ensureSearchIndex()
-			.then((stats) =>
-				console.log(
-					`Search index ready: ${stats.indexed} documents (${stats.model})`
-				)
-			)
-			.catch((err) =>
-				console.warn("[search] index warm-up failed:", err.message)
-			);
-	}
-});
+if (!isServerless) {
+	connectDB()
+		.then(() => {
+			// Build the BGE-small search index in the background when it is empty.
+			// The API is already listening, so the first request is not blocked.
+			if (process.env.SEARCH_INDEX_AUTO !== "0") {
+				require("./services/searchIndex")
+					.ensureSearchIndex()
+					.then((stats) =>
+						console.log(
+							`Search index ready: ${stats.indexed} documents (${stats.model})`
+						)
+					)
+					.catch((err) =>
+						console.warn("[search] index warm-up failed:", err.message)
+					);
+			}
+		})
+		.catch((err) => console.error("[mongo] startup connection failed:", err.message));
+}
 
 // init middleware for parsing
 const allowedOrigins = [
@@ -305,9 +317,11 @@ io.on("connection", (socket) => {
 	});
 });
 
-if (process.env.NODE_ENV === "production") {
+if (!isServerless && process.env.NODE_ENV === "production") {
 	app.use(express.static(path.join(__dirname, "../client/build")));
 	app.get("*", (req, res) => {
 		res.sendFile(path.resolve(__dirname, "../client/build", "index.html"));
 	});
 }
+
+module.exports = app;

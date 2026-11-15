@@ -21,7 +21,11 @@ const QUERY_CACHE_MAX = 200;
 async function getExtractor() {
   if (!extractorPromise) {
     extractorPromise = (async () => {
-      const { pipeline } = await import("@huggingface/transformers");
+      // Kept non-literal on purpose: serverless bundlers must not trace the
+      // ONNX runtime (~900 MB) into the function. Local installs still resolve
+      // it normally; deployments without it fall back to lexical search.
+      const dynamicImport = new Function("specifier", "return import(specifier)");
+      const { pipeline } = await dynamicImport("@huggingface/transformers");
       const extractor = await pipeline("feature-extraction", MODEL_NAME);
       ready = true;
       return extractor;
