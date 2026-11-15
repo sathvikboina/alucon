@@ -106,7 +106,6 @@ AlumniConnect/
 │   ├── models/
 │   ├── middleware/
 │
-├── package.json
 └── README.md
 ```
 
