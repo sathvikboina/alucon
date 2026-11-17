@@ -282,8 +282,9 @@ router.post(
         decoy: false,
       });
 
-      // ✅ Send OTP Email
-      await sendEmail({
+      // ✅ Send OTP Email. A deployment without BREVO_API_KEY cannot deliver
+      // mail, so fail loudly instead of claiming that a code was sent.
+      const delivered = await sendEmail({
         to: email,
         subject: "OTP Verification - AlumniConnect",
         text: `Your OTP is ${otp}`,
@@ -296,6 +297,13 @@ router.post(
           </div>
         `,
       });
+
+      if (!delivered) {
+        await OtpRequest.deleteOne({ email });
+        return res.status(503).json({
+          msg: "Email delivery is not configured on this deployment. Ask the administrator to set BREVO_API_KEY.",
+        });
+      }
 
       return res.json({
         msg: GENERIC_REGISTER_MESSAGE,
@@ -392,12 +400,17 @@ router.post("/resend-otp", resendOtpLimiter, async (req, res) => {
   // Do not deliver a fresh code for a decoy record; the address already has
   // an account or a pending request.
   if (!record.decoy) {
-    await sendEmail({
+    const delivered = await sendEmail({
       to: normalizedEmail,
       subject: "Resent OTP",
       text: `Your new OTP is ${newOtp}`,
       html: `<h2>New OTP: ${newOtp}</h2>`,
     });
+    if (!delivered) {
+      return res.status(503).json({
+        msg: "Email delivery is not configured on this deployment. Ask the administrator to set BREVO_API_KEY.",
+      });
+    }
   }
 
   res.json({ msg: "OTP resent", otp_token: signOtpToken(normalizedEmail) });

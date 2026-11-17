@@ -26,7 +26,7 @@ const Job = () => {
   }, []);
 
   let userData = localStorage.getItem("_user_data");
-  userData = JSON.parse(userData);
+  userData = JSON.parse(userData || "{}");
 
   const userID = userData._id;
   const userName = userData.name;

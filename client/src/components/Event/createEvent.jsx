@@ -18,7 +18,7 @@ const CreateEvent = () => {
   const [speaker,           setSpeaker]             = useState("");
   const [loading,           setLoading]             = useState(false);
 
-  let userData = JSON.parse(localStorage.getItem("_user_data"));
+  let userData = JSON.parse(localStorage.getItem("_user_data") || "{}");
   const userID   = userData._id;
   const userName = userData.name;
   const userRole = userData.role;

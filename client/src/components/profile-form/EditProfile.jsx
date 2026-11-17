@@ -12,7 +12,7 @@ const EditProfile = ({
 	history,
 }) => {
 	let userData = localStorage.getItem("_user_data");
-	userData = JSON.parse(userData);
+	userData = JSON.parse(userData || "{}");
 	const userid = userData._id;
 	const userRole = (authUser && authUser.role) || userData.role;
 	const isAlumni = ["alumni", "faculty"].includes(String(userRole).toLowerCase());

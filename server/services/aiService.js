@@ -18,6 +18,11 @@ const MODEL_TIMEOUT_MS = 25000;
 // A request may try several models. Cap the whole chain so a slow provider
 // cannot hold an HTTP request open for minutes.
 const TOTAL_TIMEOUT_MS = 20000;
+// Model names drift faster than deployments. The provider's ListModels
+// endpoint is queried once per warm process so generation keeps working when a
+// hard-coded name is retired, instead of silently falling back to offline text.
+const MODEL_CACHE_TTL_MS = 60 * 60 * 1000;
+let modelCache = { at: 0, models: [] };
 
 function apiKey() {
   return (
@@ -36,6 +41,67 @@ function modelList() {
   const preferred = (process.env.GEMINI_MODEL || "").trim();
   const list = preferred ? [preferred, ...FALLBACK_MODELS] : FALLBACK_MODELS;
   return [...new Set(list)];
+}
+
+async function discoverModels() {
+  if (
+    modelCache.models.length &&
+    Date.now() - modelCache.at < MODEL_CACHE_TTL_MS
+  ) {
+    return modelCache.models;
+  }
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 8000);
+  try {
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(
+        apiKey()
+      )}&pageSize=1000`,
+      { signal: controller.signal }
+    );
+    if (!res.ok) return modelCache.models;
+
+    const body = await res.json();
+    const names = (body.models || [])
+      .filter((model) =>
+        (model.supportedGenerationMethods || []).includes("generateContent")
+      )
+      .map((model) => String(model.name || "").replace(/^models\//, ""))
+      // Embedding, image, video and speech models cannot answer a JSON prompt.
+      .filter(
+        (name) =>
+          name && !/(embedding|aqa|imagen|veo|tts|native-audio)/i.test(name)
+      );
+
+    // Prefer the fast Flash family, then everything else the key can reach.
+    names.sort((a, b) => {
+      const rank = (name) => {
+        if (/flash/i.test(name) && !/lite/i.test(name)) return 0;
+        if (/flash-lite/i.test(name)) return 1;
+        return 2;
+      };
+      return rank(a) - rank(b);
+    });
+
+    if (names.length) modelCache = { at: Date.now(), models: names };
+    return modelCache.models;
+  } catch (err) {
+    return modelCache.models;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function modelListAsync() {
+  const preferred = (process.env.GEMINI_MODEL || "").trim();
+  const discovered = await discoverModels();
+  const list = [
+    ...(preferred ? [preferred] : []),
+    ...discovered,
+    ...FALLBACK_MODELS,
+  ];
+  return [...new Set(list)].slice(0, 12);
 }
 
 function extractJson(text) {
@@ -143,8 +209,9 @@ async function generateJSON(prompt, options = {}) {
   if (!isConfigured()) return null;
 
   const deadline = Date.now() + (options.timeoutMs ?? TOTAL_TIMEOUT_MS);
+  const models = await modelListAsync();
   let lastError = "";
-  for (const model of modelList()) {
+  for (const model of models) {
     const remaining = deadline - Date.now();
     if (remaining <= 0) {
       lastError = lastError || "Model call timed out";

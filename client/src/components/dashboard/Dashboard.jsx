@@ -177,7 +177,7 @@ const Dashboard = ({ closeSideNav, setAlert, getCurrentUserProfile, addExperienc
   const handleEditProfile = async (e) => {
     e.preventDefault();
     let userData = localStorage.getItem("_user_data");
-    userData = JSON.parse(userData);
+    userData = JSON.parse(userData || "{}");
     const userid = userData._id;
 
     const payload = {

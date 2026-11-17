@@ -108,7 +108,7 @@ const Event = () => {
   const [showModal,    setShowModal]    = useState(false);
   const [deleteData,   setDeleteData]   = useState(null);
 
-  const userData = JSON.parse(localStorage.getItem("_user_data"));
+  const userData = JSON.parse(localStorage.getItem("_user_data") || "{}");
   const userID   = userData._id;
   const userRole = userData.role;
 

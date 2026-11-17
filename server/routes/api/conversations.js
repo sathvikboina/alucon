@@ -99,6 +99,31 @@ router.get("/groups", auth, async (req, res) => {
 });
 
 // ─────────────────────────────────────────────
+// GET /unread-count/:id
+// ✅ NEW: Get unread message count for a conversation
+// ─────────────────────────────────────────────
+router.get("/unread-count/:id", auth, async (req, res) => {
+	try {
+		const conversation = await Conversation.findById(req.params.id);
+		if (!conversation) return res.status(404).json({ msg: "Conversation not found" });
+		const isMember = conversation.members.some(
+			(m) => m.toString() === req.user.id
+		);
+		if (!isMember) return res.status(403).json({ msg: "Access denied" });
+
+		const count = await Message.countDocuments({
+			conversation: req.params.id,
+			sender: { $ne: req.user.id },
+			readBy: { $ne: req.user.id },
+		});
+		res.json({ count });
+	} catch (error) {
+		console.error("Unread count error:", error.message);
+		res.status(500).send("Server Error");
+	}
+});
+
+// ─────────────────────────────────────────────
 // GET /:id
 // ✅ Fixed: safe optional chaining on blockedUsers,
 //    no crash when member is missing
@@ -143,31 +168,6 @@ router.get("/:id", auth, async (req, res) => {
 		});
 	} catch (error) {
 		console.error("Get conversation error:", error.message);
-		res.status(500).send("Server Error");
-	}
-});
-
-// ─────────────────────────────────────────────
-// GET /unread-count/:id
-// ✅ NEW: Get unread message count for a conversation
-// ─────────────────────────────────────────────
-router.get("/unread-count/:id", auth, async (req, res) => {
-	try {
-		const conversation = await Conversation.findById(req.params.id);
-		if (!conversation) return res.status(404).json({ msg: "Conversation not found" });
-		const isMember = conversation.members.some(
-			(m) => m.toString() === req.user.id
-		);
-		if (!isMember) return res.status(403).json({ msg: "Access denied" });
-
-		const count = await Message.countDocuments({
-			conversation: req.params.id,
-			sender: { $ne: req.user.id },
-			readBy: { $ne: req.user.id },
-		});
-		res.json({ count });
-	} catch (error) {
-		console.error("Unread count error:", error.message);
 		res.status(500).send("Server Error");
 	}
 });

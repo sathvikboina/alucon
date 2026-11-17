@@ -1,7 +1,15 @@
 import React from "react";
 // import ReactDOM from "react-dom";
+import axios from "axios";
 import App from "./App";
 import { createRoot } from "react-dom/client";
+
+// The API is a separate Vercel project, so every relative axios call must be
+// resolved against it. Several components call axios("/api/...") directly
+// instead of using the configured instance in utils/api.js; without this
+// default those calls hit the static client host and receive index.html.
+const backendUrl = (process.env.REACT_APP_BACKEND_URL || "").replace(/\/$/, "");
+if (backendUrl) axios.defaults.baseURL = backendUrl;
 
 const container = document.getElementById("root");
 const root = createRoot(container);

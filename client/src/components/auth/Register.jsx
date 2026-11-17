@@ -6,6 +6,8 @@ import { register } from "../../actions/auth";
 import PropTypes from "prop-types";
 import "./Register.css";
 
+const API_BASE = (process.env.REACT_APP_BACKEND_URL || "").replace(/\/$/, "");
+
 const getPasswordChecks = (password) => ({
   length: password.length >= 10,
   upper: /[A-Z]/.test(password),
@@ -107,7 +109,7 @@ const Register = ({ setAlert, register, closeSideNav }) => {
   };
 
   const verifyOtp = async () => {
-    const res = await fetch("/api/users/verify-otp", {
+    const res = await fetch(`${API_BASE}/api/users/verify-otp`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, otp }),
@@ -121,7 +123,7 @@ const Register = ({ setAlert, register, closeSideNav }) => {
   };
 
   const resendOtp = async () => {
-    const res = await fetch("/api/users/resend-otp", {
+    const res = await fetch(`${API_BASE}/api/users/resend-otp`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, otp_token: otpToken }),
@@ -135,7 +137,7 @@ const Register = ({ setAlert, register, closeSideNav }) => {
   };
 
   const resetOtp = async () => {
-    const res = await fetch("/api/users/reset-otp", {
+    const res = await fetch(`${API_BASE}/api/users/reset-otp`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, otp_token: otpToken }),

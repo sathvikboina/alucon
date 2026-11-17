@@ -13,7 +13,7 @@ const DoubtList = () => {
   const [popup, setPopup] = useState({ show: false, message: "" });
 
   // 🔥 Current user
-  const user = JSON.parse(localStorage.getItem("_user_data"));
+  const user = JSON.parse(localStorage.getItem("_user_data") || "{}");
   const currentUserId = user?._id;
 
   useEffect(() => {

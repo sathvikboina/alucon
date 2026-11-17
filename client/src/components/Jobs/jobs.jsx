@@ -22,7 +22,7 @@ const Job = () => {
     getData();
   }, []);
 
-  const userData = JSON.parse(localStorage.getItem("_user_data"));
+  const userData = JSON.parse(localStorage.getItem("_user_data") || "{}");
   const userID   = userData._id;
   const userName = userData.name;
   const userRole = userData.role;
