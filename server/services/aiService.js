@@ -72,18 +72,24 @@ async function discoverModels() {
         (model.supportedGenerationMethods || []).includes("generateContent")
       )
       .map((model) => String(model.name || "").replace(/^models\//, ""))
-      // Embedding, image, video and speech models cannot answer a JSON prompt.
+      // Embedding, image, video, audio and "omni" models cannot answer a
+      // strict JSON prompt and waste the request budget when tried.
       .filter(
         (name) =>
-          name && !/(embedding|aqa|imagen|veo|tts|native-audio)/i.test(name)
+          name &&
+          !/(embedding|aqa|imagen|image|veo|tts|native-audio|audio|omni|learnlm)/i.test(
+            name
+          )
       );
 
-    // Prefer the fast Flash family, then everything else the key can reach.
+    // Prefer stable text Flash models, then the latest alias, then previews.
     names.sort((a, b) => {
       const rank = (name) => {
-        if (/flash/i.test(name) && !/lite/i.test(name)) return 0;
-        if (/flash-lite/i.test(name)) return 1;
-        return 2;
+        if (/flash/i.test(name) && !/(lite|preview|exp)/i.test(name)) return 0;
+        if (/flash-latest/i.test(name)) return 1;
+        if (/flash/i.test(name) && /lite/i.test(name)) return 2;
+        if (/flash/i.test(name)) return 3;
+        return 4;
       };
       return rank(a) - rank(b);
     });
