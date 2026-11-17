@@ -27,10 +27,10 @@ export const getConversations = () => async (dispatch) => {
   }
 };
 
-/** GET /api/conversations/unread-count/:userId  (per-conversation unread) */
-export const getUnreadCount = (userId) => async () => {
+/** GET /api/conversations/unread-counts  (map of conversationId → unread) */
+export const getUnreadCount = () => async () => {
   try {
-    const res = await axios.get(`${BASE}/api/conversations/unread-count/${userId}`);
+    const res = await axios.get(`${BASE}/api/conversations/unread-counts`);
     return res.data; // { [convId]: count }
   } catch (err) {
     console.error("getUnreadCount:", err);

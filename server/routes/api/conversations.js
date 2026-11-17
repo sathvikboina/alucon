@@ -99,6 +99,41 @@ router.get("/groups", auth, async (req, res) => {
 });
 
 // ─────────────────────────────────────────────
+// GET /unread-counts
+// ✅ Returns { [conversationId]: count } for every conversation the caller
+//    belongs to. The sidebar asks for all counts in one request; the older
+//    /unread-count/:id route remains for a single conversation.
+// ─────────────────────────────────────────────
+router.get("/unread-counts", auth, async (req, res) => {
+	try {
+		const conversations = await Conversation.find({ members: req.user.id })
+			.select("_id")
+			.lean();
+		const ids = conversations.map((c) => c._id);
+		if (!ids.length) return res.json({});
+
+		const userId = new mongoose.Types.ObjectId(req.user.id);
+		const rows = await Message.aggregate([
+			{
+				$match: {
+					conversation: { $in: ids },
+					sender: { $ne: userId },
+					readBy: { $ne: userId },
+				},
+			},
+			{ $group: { _id: "$conversation", count: { $sum: 1 } } },
+		]);
+
+		const counts = {};
+		for (const row of rows) counts[String(row._id)] = row.count;
+		res.json(counts);
+	} catch (error) {
+		console.error("Unread counts error:", error.message);
+		res.status(500).send("Server Error");
+	}
+});
+
+// ─────────────────────────────────────────────
 // GET /unread-count/:id
 // ✅ NEW: Get unread message count for a conversation
 // ─────────────────────────────────────────────

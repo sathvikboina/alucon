@@ -73,7 +73,7 @@ const ConversationSidebar = ({
     // Unread counts from backend
     const fetchUnread = async () => {
       try {
-        const res = await axios.get(`${BASE}/api/conversations/unread-count/${authUser._id}`);
+        const res = await axios.get(`${BASE}/api/conversations/unread-counts`);
         setUnreadMap(res.data || {});
       } catch (_) {}
     };
