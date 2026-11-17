@@ -8,6 +8,7 @@ const {
   draftDoorRequest,
   importProfileText,
 } = require("../../services/aiAssist");
+const { diagnose } = require("../../services/aiService");
 
 const sendError = (res, err) => {
   if (err instanceof AssistError) {
@@ -25,6 +26,22 @@ const assistLimiter = rateLimit({
   max: 30,
   message: "Too many AI assist requests. Please try again later.",
   key: (req) => String(req.user?.id || ""),
+});
+
+// @route   GET api/ai/assist/diagnostics
+// @desc    Head-admin probe of the configured generation models
+router.get("/diagnostics", auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id)
+      .select("isAdmin adminType")
+      .lean();
+    if (!user?.isAdmin || user.adminType !== "head") {
+      return res.status(403).json({ msg: "Head admin only" });
+    }
+    res.json(await diagnose());
+  } catch (err) {
+    sendError(res, err);
+  }
 });
 
 // @route   POST api/ai/assist/door-request

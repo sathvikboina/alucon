@@ -248,4 +248,28 @@ async function generateJSON(prompt, options = {}) {
   return null;
 }
 
-module.exports = { generateJSON, isConfigured, modelList };
+/**
+ * Probe the provider from a head-admin-only diagnostics route.
+ * Returns the model names the key can see and the result of one tiny call per
+ * model, without exposing the key itself.
+ */
+async function diagnose(prompt = 'Return strict JSON only: {"ok":true}') {
+  const models = await modelListAsync();
+  const results = [];
+  for (const model of models.slice(0, 8)) {
+    const result = await callModel(model, prompt, {
+      maxOutputTokens: 50,
+      temperature: 0,
+      timeoutMs: 8000,
+    });
+    results.push({
+      model,
+      ok: Boolean(result.data),
+      notFound: Boolean(result.notFound),
+      error: result.error || "",
+    });
+  }
+  return { configured: isConfigured(), models, results };
+}
+
+module.exports = { generateJSON, isConfigured, modelList, modelListAsync, diagnose };
