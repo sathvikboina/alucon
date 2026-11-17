@@ -25,12 +25,16 @@ const MODEL_CACHE_TTL_MS = 60 * 60 * 1000;
 let modelCache = { at: 0, models: [] };
 
 function apiKey() {
-  return (
+  const raw =
     process.env.GEMINI_API_KEY ||
     process.env.GOOGLE_API_KEY ||
     process.env.GOOGLE_AI_API_KEY ||
-    ""
-  );
+    "";
+  // Environment values pasted into a dashboard often carry a trailing newline
+  // or wrapping quotes. Embeddings trimmed the key; this client did not, so
+  // the same key authenticated over the x-goog-api-key header but produced a
+  // 401 when appended to the URL as ?key=.
+  return String(raw).trim().replace(/^["']|["']$/g, "");
 }
 
 function isConfigured() {
