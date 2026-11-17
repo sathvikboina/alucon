@@ -298,7 +298,8 @@ router.post(
         `,
       });
 
-      if (!delivered) {
+      // Tests and local development deliberately run without a mail key.
+      if (!delivered && process.env.NODE_ENV === "production") {
         await OtpRequest.deleteOne({ email });
         return res.status(503).json({
           msg: "Email delivery is not configured on this deployment. Ask the administrator to set BREVO_API_KEY.",
@@ -406,7 +407,7 @@ router.post("/resend-otp", resendOtpLimiter, async (req, res) => {
       text: `Your new OTP is ${newOtp}`,
       html: `<h2>New OTP: ${newOtp}</h2>`,
     });
-    if (!delivered) {
+    if (!delivered && process.env.NODE_ENV === "production") {
       return res.status(503).json({
         msg: "Email delivery is not configured on this deployment. Ask the administrator to set BREVO_API_KEY.",
       });
