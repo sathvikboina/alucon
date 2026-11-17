@@ -48,17 +48,6 @@ function Footer() {
                   Central Alumni Portal
                 </a>
               </li>
-              <li>
-                <a
-                  href="/Manual.pdf"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="manual-btn"
-                >
-                  <i className="fas fa-file-pdf" />
-                  <span>User Manual</span>
-                </a>
-              </li>
             </ul>
           </div>
 
@@ -77,17 +66,17 @@ function Footer() {
               <div className="contact-text">
                 <a href="mailto:iiita.alumniconnect@gmail.com">iiita.alumniconnect@gmail.com</a>
                 <span className="contact-separator">·</span>
-                <a href="mailto:alumni.coordinator@iiita.ac.in">alumni.coordinator@iiita.ac.in</a>
+                <a href="mailto:alumni.coordinator@iiita.ac.in">sathviboina@iiita.ac.in</a>
               </div>
             </div>
 
             <div className="contact-item">
               <i className="fas fa-phone-alt contact-icon" />
               <div className="contact-text contact-phones">
-                <span>0532-292-2599</span>
+                <span>9999999999</span>
                 <span className="contact-separator">·</span>
                 <span className="whatsapp-line">
-                  <i className="fab fa-whatsapp" /> +91 9305653537
+                  <i className="fab fa-whatsapp" /> +91 9999999999
                 </span>
               </div>
             </div>
