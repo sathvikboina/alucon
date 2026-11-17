@@ -3,7 +3,7 @@ import PropTypes from "prop-types";
 import { connect } from "react-redux";
 import Spinner from "../layouts/Spinner";
 import { getUserById } from "../../actions/users";
-import { useHistory } from "react-router-dom";
+import { useHistory, Link } from "react-router-dom";
 import ProfileTop from "./ProfileTop";
 import ProfileAbout from "./ProfileAbout";
 import ProfileExperience from "./ProfileExperience";
@@ -66,6 +66,22 @@ const Profile = ({
             <button style={styles.btnBack} onClick={() => history.goBack()}>
               ← Back to Profiles
             </button>
+            {/* Own profile renders exactly like anyone else's; the only extra
+                control is Edit Profile. */}
+            {authUser && userProfile && authUser._id === userProfile._id && (
+              <Link
+                to="/edit-profile"
+                style={{
+                  ...styles.btnBack,
+                  background: "#185FA5",
+                  borderColor: "#185FA5",
+                  color: "#fff",
+                  textDecoration: "none",
+                }}
+              >
+                Edit Profile
+              </Link>
+            )}
             {authUser &&
               userProfile &&
               authUser._id !== userProfile._id &&

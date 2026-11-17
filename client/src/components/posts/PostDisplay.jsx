@@ -11,6 +11,7 @@ import sanitizeHtml from "../../utils/sanitizeHtml";
 import NotAuthorized from "../layouts/NotAuthorized";
 import { trackFeedEvent } from "../../utils/feedTracking";
 import "./PostDisplay.css";
+import ProfileAvatarLink from "../profile/ProfileAvatarLink";
 
 const initialsOf = (name = "") =>
   name
@@ -123,7 +124,9 @@ const PostDisplay = ({
             <h1 className="post-title">{post.heading}</h1>
 
             <div className="post-author-row">
-              <PostAvatar src={post.avatar} name={post.name} />
+              <ProfileAvatarLink userId={post.user}>
+                <PostAvatar src={post.avatar} name={post.name} />
+              </ProfileAvatarLink>
               <div className="post-author-copy">
                 <strong>{post.name || "IIITA member"}</strong>
                 <small>

@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { connect } from "react-redux";
 import { setAlert } from "../../actions/alert";
+import ProfileAvatarLink from "../profile/ProfileAvatarLink";
+import { Link } from "react-router-dom";
 
 const BlockList = ({ auth: { authUser }, setAlert }) => {
 	const [blockedUsers, setBlockedUsers] = useState([]);
@@ -63,12 +65,16 @@ const BlockList = ({ auth: { authUser }, setAlert }) => {
 					{blockedUsers.map((user) => (
 						<div key={user._id} className="card p-3 mb-3" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
 							<div>
-								<img
-									src={user.avatar || "/default-avatar.png"}
-									alt="avatar"
-									style={{ width: "40px", height: "40px", borderRadius: "50%", marginRight: "1em" }}
-								/>
-								<strong>{user.name}</strong>
+								<ProfileAvatarLink userId={user._id}>
+									<img
+										src={user.avatar || "/default-avatar.png"}
+										alt="avatar"
+										style={{ width: "40px", height: "40px", borderRadius: "50%", marginRight: "1em" }}
+									/>
+								</ProfileAvatarLink>
+								<Link to={`/profile/${user._id}`}>
+									<strong>{user.name}</strong>
+								</Link>
 							</div>
 							<div>
 								<button

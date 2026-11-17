@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
+import ProfileAvatarLink from "../profile/ProfileAvatarLink";
 
 const AvatarOrInitial = ({ src, name, size = 40 }) => {
 	const initial = name ? name.charAt(0).toUpperCase() : "?";
@@ -73,17 +74,23 @@ const FriendsList = () => {
 			) : (
 				<div className="friends-list">
 					{filteredFriends.map((friend) => (
-						<Link
-							to={`/messenger/chat/${friend._id}`}
+						<div
 							key={friend._id}
 							className="card p-3 mb-3"
 							style={{ textDecoration: "none", color: "black" }}
 						>
 							<div style={{ display: "flex", alignItems: "center" }}>
-								<AvatarOrInitial src={friend.avatar} name={friend.name} size={40} />
-								<strong>{friend.name}</strong>
+								<ProfileAvatarLink userId={friend._id}>
+									<AvatarOrInitial src={friend.avatar} name={friend.name} size={40} />
+								</ProfileAvatarLink>
+								<Link
+									to={`/messenger/chat/${friend._id}`}
+									style={{ color: "black", flex: 1 }}
+								>
+									<strong>{friend.name}</strong>
+								</Link>
 							</div>
-						</Link>
+						</div>
 					))}
 				</div>
 			)}

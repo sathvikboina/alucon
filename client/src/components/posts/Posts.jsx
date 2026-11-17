@@ -11,6 +11,7 @@ import api from "../../utils/api";
 import { flushFeedEvents, observeFeed, resetFeedRecommendations, trackFeedEvent } from "../../utils/feedTracking";
 import "./Posts.css";
 import "../layouts/Settings.css";
+import ProfileAvatarLink from "../profile/ProfileAvatarLink";
 
 function useQuery() {
   return new URLSearchParams(useLocation().search);
@@ -519,6 +520,7 @@ const Posts = ({
 
           {authUser && (
             <div className="rail-profile">
+              <ProfileAvatarLink userId={authUser._id}>
               <img
                 src={(authUser.avatar || "").replace("d=mm", "d=404")}
                 alt={authUser.name}
@@ -526,6 +528,7 @@ const Posts = ({
                   e.target.style.display = "none";
                 }}
               />
+              </ProfileAvatarLink>
               <div>
                 <strong>{authUser.name}</strong>
                 <small>

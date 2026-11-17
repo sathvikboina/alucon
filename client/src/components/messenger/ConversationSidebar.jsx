@@ -160,7 +160,24 @@ const ConversationSidebar = ({
               className={`chat-list-item${isActive(conv._id) ? " active" : ""}`}
               onClick={() => history.push(`/messenger/chat/${conv._id}`)}
             >
-              <Avatar src={avatar} name={name} size={50} online={online} />
+              <span
+                role="link"
+                tabIndex={0}
+                title={`View ${name}'s profile`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (otherId) history.push(`/profile/${otherId}`);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && otherId) {
+                    e.stopPropagation();
+                    history.push(`/profile/${otherId}`);
+                  }
+                }}
+                style={{ display: "contents", cursor: "pointer" }}
+              >
+                <Avatar src={avatar} name={name} size={50} online={online} />
+              </span>
 
               <div className="chat-item-info">
                 <p className="chat-item-name">{name}</p>

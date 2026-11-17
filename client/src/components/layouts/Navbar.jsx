@@ -208,7 +208,7 @@ const Navbar = ({
           <i className="fas fa-user"></i> <span className="hide-sm">Profile ▾</span>
         </span>
         <ul className={`dropdown-menu right ${activeDropdown === "profile" ? "show" : ""}`}>
-          <li><Link to="/userprofile" onClick={closeMobile}>Profile</Link></li>
+          <li><Link to={authUser ? `/profile/${authUser._id}` : "/userprofile"} onClick={closeMobile}>Profile</Link></li>
           {authUser && authUser.role && authUser.role.toLowerCase() !== "student" && (
             <li><Link to="/support-initiatives" onClick={closeMobile}>Support Us</Link></li>
           )}

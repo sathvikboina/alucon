@@ -3,6 +3,7 @@ import axios from 'axios';
 import { connect } from 'react-redux';
 import { Link, useHistory } from 'react-router-dom';
 import './support.css';
+import ProfileAvatarLink from "../profile/ProfileAvatarLink";
 
 const SupportResponses = ({ auth: { authUser: user, loadingAuth: loading } }) => {
     const [responses, setResponses] = useState([]);
@@ -100,11 +101,17 @@ const SupportResponses = ({ auth: { authUser: user, loadingAuth: loading } }) =>
                                     <td>
                                         <div className="user-info">
                                             {response.user && response.user.avatar ? (
-                                                <img src={response.user.avatar} alt="avatar" className="response-avatar" />
+                                                <ProfileAvatarLink userId={response.user._id}>
+                                                    <img src={response.user.avatar} alt="avatar" className="response-avatar" />
+                                                </ProfileAvatarLink>
                                             ) : (
                                                 <div className="response-avatar-placeholder"></div>
                                             )}
-                                            <span>{response.user ? response.user.name : 'Unknown User'}</span>
+                                            {response.user && response.user._id ? (
+                                                <Link to={`/profile/${response.user._id}`}>{response.user.name}</Link>
+                                            ) : (
+                                                <span>Unknown User</span>
+                                            )}
                                         </div>
                                     </td>
                                     <td>{response.user ? response.user.email : 'N/A'}</td>

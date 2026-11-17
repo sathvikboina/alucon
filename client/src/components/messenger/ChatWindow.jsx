@@ -17,6 +17,7 @@ import {
   uploadMedia,
 } from "../../actions/chat";
 
+import ProfileAvatarLink from "../profile/ProfileAvatarLink";
 import TypingIndicator from "./TypingIndicator";
 import { notificationStore } from "../../socket";
 import { formatDateLabel } from "../../utils/messageTime";
@@ -453,11 +454,19 @@ const handleClickMessage = (msgId) => {
               {(chatTitle || "G")[0].toUpperCase()}
             </div>
           ) : (
-            <Avatar src={chatAvatar} name={chatTitle} size={38} />
+            <ProfileAvatarLink userId={receiverId}>
+              <Avatar src={chatAvatar} name={chatTitle} size={38} />
+            </ProfileAvatarLink>
           )}
 
           <div className="chat-header-info">
-            <h4>{chatTitle || "Chat"}</h4>
+            <h4>
+              {!isGroup && receiverId ? (
+                <ProfileAvatarLink userId={receiverId}>{chatTitle || "Chat"}</ProfileAvatarLink>
+              ) : (
+                chatTitle || "Chat"
+              )}
+            </h4>
             {!isGroup && (
               <div className="chat-header-status">
                 <span className={`status-dot${otherOnline ? " online" : ""}`} />
@@ -530,15 +539,17 @@ const handleClickMessage = (msgId) => {
               const isMe = uid === authUser?._id?.toString();
               return (
                 <div key={uid} className="group-member-row">
-                  <div className="group-member-avatar">
-                    {info.avatar
-                      ? <img src={info.avatar} alt={info.name} onError={(e) => { e.target.style.display="none"; }} />
-                      : <span>{(info.name || "?")[0].toUpperCase()}</span>
-                    }
-                  </div>
+                  <ProfileAvatarLink userId={uid}>
+                    <div className="group-member-avatar">
+                      {info.avatar
+                        ? <img src={info.avatar} alt={info.name} onError={(e) => { e.target.style.display="none"; }} />
+                        : <span>{(info.name || "?")[0].toUpperCase()}</span>
+                      }
+                    </div>
+                  </ProfileAvatarLink>
                   <div className="group-member-info">
                     <span className="group-member-name">
-                      {info.name || "Unknown"}{isMe ? " (You)" : ""}
+                      <ProfileAvatarLink userId={uid}>{info.name || "Unknown"}</ProfileAvatarLink>{isMe ? " (You)" : ""}
                     </span>
                     {isAdminMember && (
                       <span className="group-member-badge">Admin</span>
@@ -622,7 +633,9 @@ const handleClickMessage = (msgId) => {
                 <div className="chat-bubble-inner">
                   {/* Avatar for received */}
                   {!isMine && (
-                    <Avatar src={senderInfo.avatar} name={senderInfo.name} size={28} />
+                    <ProfileAvatarLink userId={msg.sender?._id || msg.sender}>
+                      <Avatar src={senderInfo.avatar} name={senderInfo.name} size={28} />
+                    </ProfileAvatarLink>
                   )}
 
                   {/* Action buttons — float above bubble via CSS position:absolute */}

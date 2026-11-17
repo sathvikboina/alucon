@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
+import ProfileAvatarLink from "../profile/ProfileAvatarLink";
 import { connect } from "react-redux";
 import PropTypes from "prop-types";
 import { setAlert } from "../../actions/alert";
@@ -160,6 +161,7 @@ const AlumniDirectory = ({
               <div className="alumni-card" key={user._id}>
 
                 <div className="card-top">
+                  <ProfileAvatarLink userId={user._id}>
                   {user.avatar ? (
                     <>
                       <img 
@@ -184,9 +186,10 @@ const AlumniDirectory = ({
                       </svg>
                     </div>
                   )}
+                  </ProfileAvatarLink>
                   <div className="card-info">
                     <h4>
-                      {user.name}
+                      <Link to={`/profile/${user._id}`}>{user.name}</Link>
                       {self && <span className="you-badge">You</span>}
                     </h4>
                     <p className="batch">

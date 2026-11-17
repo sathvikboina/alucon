@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../../utils/api";
 import "./matching.css";
+import ProfileAvatarLink from "../profile/ProfileAvatarLink";
 
 const AREAS = [
   "Career",
@@ -258,13 +259,17 @@ const MentorMatches = () => {
             return (
               <article className="match-card mentor-card" key={mentor.id}>
                 <div className="mentor-card-head">
-                  {mentor.avatar ? (
-                    <img className="mentor-avatar" src={mentor.avatar} alt={mentor.name} />
-                  ) : (
-                    <div className="mentor-avatar fallback">{initials(mentor.name)}</div>
-                  )}
+                  <ProfileAvatarLink userId={mentor.id}>
+                    {mentor.avatar ? (
+                      <img className="mentor-avatar" src={mentor.avatar} alt={mentor.name} />
+                    ) : (
+                      <div className="mentor-avatar fallback">{initials(mentor.name)}</div>
+                    )}
+                  </ProfileAvatarLink>
                   <div className="mentor-identity">
-                    <h2>{mentor.name}</h2>
+                    <h2>
+                      <Link to={`/profile/${mentor.id}`}>{mentor.name}</Link>
+                    </h2>
                     <p>
                       {mentor.designation || mentor.role}
                       {mentor.organisation ? ` · ${mentor.organisation}` : ""}

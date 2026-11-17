@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
 import AnswerForm from "./AnswerForm";
 import axios from "axios";
+import { Link } from "react-router-dom";
 import "./DoubtList.css";
+import ProfileAvatarLink from "../profile/ProfileAvatarLink";
 
 const DoubtList = () => {
   const [doubts, setDoubts] = useState([]);
@@ -116,7 +118,7 @@ const DoubtList = () => {
                 
                 <div className="doubt-header">
                   <div className="doubt-meta">
-                    <>
+                    <ProfileAvatarLink userId={doubt.user?._id}>
                       <img 
                         src={(doubt.user?.avatar || "").replace('d=mm', 'd=404')} 
                         alt="avatar" 
@@ -131,7 +133,7 @@ const DoubtList = () => {
                           <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
                         </svg>
                       </div>
-                    </>
+                    </ProfileAvatarLink>
 
                     <div>
                       <h4 className="doubt-question">
@@ -139,9 +141,12 @@ const DoubtList = () => {
                       </h4>
 
                       <p className="doubt-info">
-                        <span className="doubt-user">
+                        <Link
+                          to={`/profile/${doubt.user?._id}`}
+                          className="doubt-user"
+                        >
                           {doubt.user?.name || "Unknown User"}
-                        </span>{" "}
+                        </Link>{" "}
                         •{" "}
                         <span className="doubt-category">
                           {doubt.category}
