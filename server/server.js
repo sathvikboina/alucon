@@ -169,6 +169,8 @@ app.use("/api/event-questions", eventQuestionsRoutes);
 app.use("/api/analytics", require("./routes/api/analytics"));
 // upload route — handles all image uploads, returns Cloudinary secure_url
 app.use("/api/upload", require("./routes/api/upload"));
+// Public read path for uploads stored in MongoDB when Cloudinary is absent.
+app.use("/api/media", require("./routes/api/media"));
 app.use("/api/directory", require("./routes/api/directory"));
 app.use("/api/support", require("./routes/api/support"));
 app.use("/api/groups", require("./routes/api/groups"));

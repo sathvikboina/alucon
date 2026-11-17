@@ -5,52 +5,19 @@ const auth = require("../../middleware/auth");
 const { rateLimit } = require("../../middleware/rateLimit");
 const Resource = require("../../models/Resource");
 const multer = require("multer");
-const { v2: cloudinary } = require("cloudinary");
-const CloudinaryStorageModule = require("multer-storage-cloudinary");
-const CloudinaryStorage =
-  CloudinaryStorageModule.CloudinaryStorage || CloudinaryStorageModule;
+const {
+  storeBuffer,
+  destroyMedia,
+} = require("../../services/mediaStore");
 const {
   queueSearchRefresh,
   removeSearchDocument,
 } = require("../../services/searchIndex");
 
-
-// ================= CLOUDINARY CONFIG =================
-cloudinary.config({
-  cloud_name: process.env.CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
-
-
-// ================= STORAGE =================
-const storage = new CloudinaryStorage({
-  cloudinary,
-  params: async (req, file) => {
-
-    let resourceType = "image";
-
-    // PDFs should be raw
-    if (file.mimetype === "application/pdf") {
-      resourceType = "raw";
-    }
-
-    // Never derive the public id from the user-supplied filename. A random
-    // id prevents path/metadata injection and guessable resource URLs.
-    const extension = String(file.originalname || "")
-      .toLowerCase()
-      .match(/\.[a-z0-9]{1,8}$/)?.[0] || "";
-
-    return {
-      folder: "resources",
-      resource_type: resourceType,
-      public_id: `${Date.now()}-${crypto.randomBytes(12).toString("hex")}${extension}`
-    };
-  }
-});
-
+// Files are held in memory and handed to the shared media store, which uses
+// Cloudinary when configured and the inline MongoDB store on Vercel.
 const upload = multer({
-  storage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     const allowed = [
@@ -94,11 +61,20 @@ router.post("/upload", auth, resourceUploadLimiter, (req, res) => {
       });
     }
 
+    const stored = await storeBuffer({
+      buffer: req.file.buffer,
+      mimetype: req.file.mimetype,
+      originalName: req.file.originalname,
+      folder: "resources",
+      baseUrl: `${req.protocol}://${req.get("host")}`,
+      uploadedBy: req.user.id,
+    });
+
     const resource = new Resource({
       title,
       topic,
-      fileUrl: req.file.path,
-      filePublicId: req.file.filename,
+      fileUrl: stored.url,
+      filePublicId: stored.publicId,
       uploadedBy: req.user.id
     });
 
@@ -167,13 +143,7 @@ router.delete("/:id", auth, async (req, res) => {
         ? "raw"
         : "image";
 
-
-    await cloudinary.uploader.destroy(
-      resource.filePublicId,
-      {
-        resource_type: resourceType
-      }
-    );
+    await destroyMedia(resource.filePublicId, { resourceType });
 
 
     await resource.deleteOne();
