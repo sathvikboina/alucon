@@ -16,13 +16,23 @@ const FALLBACK_MODELS = [
 ];
 const MODEL_TIMEOUT_MS = 25000;
 // A request may try several models. Cap the whole chain so a slow provider
-// cannot hold an HTTP request open for minutes.
-const TOTAL_TIMEOUT_MS = 20000;
+// cannot hold an HTTP request open for minutes. The UI shows the offline
+// fallback when this expires, so keep the ceiling short enough that a click
+// still feels like it did something.
+const TOTAL_TIMEOUT_MS = 15000;
 // Model names drift faster than deployments. The provider's ListModels
 // endpoint is queried once per warm process so generation keeps working when a
 // hard-coded name is retired, instead of silently falling back to offline text.
 const MODEL_CACHE_TTL_MS = 60 * 60 * 1000;
 let modelCache = { at: 0, models: [] };
+
+// When every model in the chain fails, the provider is usually having a bad
+// minute (503 high demand / 429 quota / timeouts). Retrying the whole chain on
+// the next click makes the UI wait ~20s just to show the offline fallback, so
+// remember the outage briefly and answer instantly instead. The diagnostics
+// route bypasses this flag so an admin can still probe the provider.
+const UNAVAILABLE_COOLDOWN_MS = 3 * 60 * 1000;
+let unavailableUntil = 0;
 
 function apiKey() {
   const raw =
@@ -217,6 +227,7 @@ async function callModel(model, prompt, options) {
  */
 async function generateJSON(prompt, options = {}) {
   if (!isConfigured()) return null;
+  if (Date.now() < unavailableUntil) return null;
 
   const deadline = Date.now() + (options.timeoutMs ?? TOTAL_TIMEOUT_MS);
   const models = await modelListAsync();
@@ -235,6 +246,7 @@ async function generateJSON(prompt, options = {}) {
     });
     const elapsed = Date.now() - started;
     if (result.data) {
+      unavailableUntil = 0;
       if (process.env.AI_DEBUG === "true") {
         console.error(`[ai] ${model} answered in ${elapsed}ms`);
       }
@@ -255,6 +267,7 @@ async function generateJSON(prompt, options = {}) {
   }
 
   if (lastError) console.warn("[ai] Gemini unavailable:", lastError);
+  unavailableUntil = Date.now() + UNAVAILABLE_COOLDOWN_MS;
   return null;
 }
 
