@@ -7,6 +7,7 @@ const {
   DoorError,
   createDoor,
   setDoorActive,
+  deleteDoor,
   listDoors,
   requestDoor,
   transitionRequest,
@@ -116,6 +117,17 @@ router.patch("/:id/active", auth, async (req, res) => {
   try {
     const door = await setDoorActive(req.user.id, req.params.id, req.body.active);
     res.json(door);
+  } catch (err) {
+    sendError(res, err);
+  }
+});
+
+// @route   DELETE api/doors/:id
+// @desc    Remove one of the signed-in alumnus's own doors.
+router.delete("/:id", auth, async (req, res) => {
+  try {
+    const result = await deleteDoor(req.user.id, req.params.id);
+    res.json(result);
   } catch (err) {
     sendError(res, err);
   }

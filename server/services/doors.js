@@ -241,6 +241,13 @@ async function setDoorActive(ownerId, doorId, active) {
   return door;
 }
 
+async function deleteDoor(ownerId, doorId) {
+  const door = await Door.findOneAndDelete({ _id: doorId, owner: ownerId });
+  if (!door) throw new DoorError(404, "Door not found");
+  await DoorRequest.deleteMany({ door: doorId });
+  return { deleted: true };
+}
+
 async function listDoors({ userId, mine = false, type = "", topic = "", q = "" } = {}) {
   const filter = mine ? { owner: userId } : { active: true };
   const cleanType = String(type || "").trim();
@@ -624,6 +631,7 @@ module.exports = {
   pickQuestionDoors,
   createDoor,
   setDoorActive,
+  deleteDoor,
   listDoors,
   requestDoor,
   transitionRequest,
