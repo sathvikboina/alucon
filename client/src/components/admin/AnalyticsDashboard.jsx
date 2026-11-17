@@ -24,25 +24,18 @@ const AnalyticsDashboard = ({
   getDemographics,
   getRegistrations,
   analytics,
-  auth: { user },
+  auth: { authUser: user },
 }) => {
   const demographics = analytics?.demographics || [];
   const registrations = analytics?.registrations || [];
-  const loading = analytics?.loading;
+  const loading =
+    analytics?.loadingDemographics === true ||
+    analytics?.loadingRegistrations === true;
 
   useEffect(() => {
     getDemographics();
     getRegistrations();
   }, [getDemographics, getRegistrations]);
-
-  if (loading || !analytics) {
-    return (
-      <div className="analytics-loading">
-        <div className="loading-spinner" />
-        <p>Loading Analytics...</p>
-      </div>
-    );
-  }
 
   if (user && user.adminType !== "head") {
     return (
@@ -50,6 +43,15 @@ const AnalyticsDashboard = ({
         <span className="denied-icon">🔒</span>
         <h2>Access Denied</h2>
         <p>This dashboard is restricted to Head Admins only.</p>
+      </div>
+    );
+  }
+
+  if (loading || !analytics) {
+    return (
+      <div className="analytics-loading">
+        <div className="loading-spinner" />
+        <p>Loading Analytics...</p>
       </div>
     );
   }
