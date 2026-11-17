@@ -1,6 +1,7 @@
 import { Loader2 } from "lucide-react";
 import axios from "axios";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
 const NAVY   = "#1a2a4a";
 const BORDER = "#d0d5dd";
@@ -81,7 +82,26 @@ const CreateEvent = () => {
     btnDisabled: { opacity: 0.55, cursor: "not-allowed" },
   };
 
-  if (userRole !== "Admin") return null;
+  if (userRole !== "Admin") {
+    return (
+      <div style={s.page}>
+        <div style={s.wrap}>
+          <div style={s.title}>Create New Event</div>
+          <p style={{ fontSize: 14, color: TEXT, lineHeight: 1.7 }}>
+            Events and webinars are published by the alumni office. Alumni can
+            share internships, vacancies and open doors from the Opportunities
+            area at any time.
+          </p>
+          <Link
+            to="/events"
+            style={{ ...s.btnSubmit, display: "inline-block", textDecoration: "none" }}
+          >
+            Back to events
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={s.page}>
