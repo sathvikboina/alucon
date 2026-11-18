@@ -5,7 +5,12 @@
       "includeFiles": "images/**"
     }
   },
-  "rewrites": [{ "source": "/(.*)", "destination": "/api/index.js" }],
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/api/index.js"
+    }
+  ],
   "headers": [
     {
       "source": "/api/availability",
@@ -13,6 +18,10 @@
         {
           "key": "Cache-Control",
           "value": "public, max-age=0, s-maxage=120, stale-while-revalidate=600"
+        },
+        {
+          "key": "CDN-Cache-Control",
+          "value": "public, s-maxage=120, stale-while-revalidate=600"
         }
       ]
     },
@@ -22,6 +31,10 @@
         {
           "key": "Cache-Control",
           "value": "public, max-age=0, s-maxage=120, stale-while-revalidate=600"
+        },
+        {
+          "key": "CDN-Cache-Control",
+          "value": "public, s-maxage=120, stale-while-revalidate=600"
         }
       ]
     }
