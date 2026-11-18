@@ -5,7 +5,7 @@ import "./AppSidebar.css";
 
 const STORAGE_KEY = "alumni:sidebar-collapsed";
 
-const SECTIONS = [
+const BASE_SECTIONS = [
   {
     label: "Community",
     items: [
@@ -17,6 +17,8 @@ const SECTIONS = [
         label: "People",
         match: ["/alumni-directory"],
       },
+      { to: "/groups", icon: "fa-users", label: "Groups", match: ["/groups"] },
+      { to: "/events", icon: "fa-calendar-alt", label: "Events", match: ["/events"] },
     ],
   },
   {
@@ -26,7 +28,13 @@ const SECTIONS = [
         to: "/jobs",
         icon: "fa-briefcase",
         label: "Opportunities",
-        match: ["/jobs", "/company", "/archivejobs", "/createjob"],
+        match: ["/jobs", "/company", "/createjob"],
+      },
+      {
+        to: "/archivejobs",
+        icon: "fa-history",
+        label: "Past jobs",
+        match: ["/archivejobs"],
       },
       {
         to: "/internship-matches",
@@ -35,7 +43,19 @@ const SECTIONS = [
         match: ["/internship-matches"],
       },
       {
-        to: "/mentor-matches",
+        to: "/doors",
+        icon: "fa-door-open",
+        label: "Open Doors",
+        match: ["/doors"],
+      },
+      {
+        to: "/warm-paths",
+        icon: "fa-route",
+        label: "Warm Paths",
+        match: ["/warm-paths"],
+      },
+      {
+        to: "/mentorship",
         icon: "fa-handshake",
         label: "Mentorship",
         match: ["/mentor-matches", "/mentorship"],
@@ -45,9 +65,10 @@ const SECTIONS = [
   {
     label: "Campus",
     items: [
-      { to: "/events", icon: "fa-calendar-alt", label: "Events", match: ["/events"] },
       { to: "/resources", icon: "fa-book-open", label: "Resources", match: ["/resources"] },
-      { to: "/groups", icon: "fa-users", label: "Groups", match: ["/groups"] },
+      { to: "/doubts", icon: "fa-question-circle", label: "Doubts", match: ["/doubts"] },
+      { to: "/showcase", icon: "fa-star", label: "Showcase", match: ["/showcase"] },
+      { to: "/gallery", icon: "fa-images", label: "Gallery", match: ["/gallery"] },
     ],
   },
   {
@@ -59,18 +80,49 @@ const SECTIONS = [
         label: "Messages",
         match: ["/messenger"],
       },
-      {
-        to: "/userprofile",
-        icon: "fa-user-circle",
-        label: "My profile",
-        match: ["/userprofile", "/profile", "/edit-profile"],
-      },
     ],
   },
 ];
 
 const AppSidebar = ({ auth: { authUser } }) => {
   const location = useLocation();
+  const profilePath = authUser?._id ? `/profile/${authUser._id}` : "/userprofile";
+  const isStudent =
+    String(authUser?.role || "").toLowerCase() === "student";
+  const sectionsWithProfile = BASE_SECTIONS.map((section) =>
+    section.label === "You"
+      ? {
+          ...section,
+          items: [
+            ...section.items,
+            {
+              to: profilePath,
+              icon: "fa-user-circle",
+              label: "My profile",
+              match: ["/userprofile", "/profile", "/edit-profile"],
+            },
+          ],
+        }
+      : section
+  );
+  const SECTIONS = isStudent
+    ? sectionsWithProfile
+    : sectionsWithProfile.map((section) =>
+        section.label === "You"
+          ? {
+              ...section,
+              items: [
+                ...section.items,
+                {
+                  to: "/support-initiatives",
+                  icon: "fa-hands-helping",
+                  label: "Support Us",
+                  match: ["/support-initiatives"],
+                },
+              ],
+            }
+          : section
+      );
   const [collapsed, setCollapsed] = useState(false);
 
   useEffect(() => {
@@ -190,7 +242,7 @@ const AppSidebar = ({ auth: { authUser } }) => {
       </nav>
 
       {!collapsed && authUser && (
-        <Link to="/userprofile" className="app-sidebar-footer">
+        <Link to={profilePath} className="app-sidebar-footer">
           <div className="app-sidebar-avatar">
             {authUser.name
               ? authUser.name

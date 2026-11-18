@@ -125,7 +125,7 @@ const Navbar = ({
 
   /* ── Learning Dropdown ── */
   const learningDropdown = hasLearning ? (
-    <li className="dropdown">
+    <li className="dropdown nav-item-secondary">
       <span className="navbar-link" onClick={() => toggleDropdown("learning")}>
         <i className="fas fa-graduation-cap"></i> Learning ▾
       </span>
@@ -143,19 +143,19 @@ const Navbar = ({
   /* ── Auth Links ── */
   const authLinks = (
     <>
-      <li>
+      <li className="nav-item-secondary">
         <Link to="/feed" className="navbar-link" onClick={closeMobile}>
           <i className="fas fa-home"></i> Home
         </Link>
       </li>
 
-      <li>
+      <li className="nav-item-secondary">
         <Link to="/search" className="navbar-link" onClick={closeMobile}>
           <i className="fas fa-search"></i> <span className="hide-sm">Search</span>
         </Link>
       </li>
 
-      <li className="dropdown">
+      <li className="dropdown nav-item-secondary">
         <span className="navbar-link" onClick={() => toggleDropdown("opportunities")}>
           Opportunities ▾
         </span>
@@ -168,7 +168,7 @@ const Navbar = ({
         </ul>
       </li>
 
-      <li className="dropdown">
+      <li className="dropdown nav-item-secondary">
         <span className="navbar-link" onClick={() => toggleDropdown("community")}>
           Community ▾
         </span>
@@ -191,7 +191,7 @@ const Navbar = ({
 
       {learningDropdown}
 
-      <li>
+      <li className="nav-item-secondary">
         <Link to="/messenger" className="navbar-link" style={{ position: "relative" }} onClick={closeMobile}>
           <i className="fas fa-comments"></i>
           {unreadCount > 0 && (
@@ -242,7 +242,10 @@ const Navbar = ({
   );
 
   return (
-    <nav className="navbar" ref={navRef}>
+    <nav
+      className={`navbar${isAuthenticated ? " navbar--auth" : ""}`}
+      ref={navRef}
+    >
       {/* Logo */}
       <div className="nav-left">
         <img src={logo} alt="logo" className="logo-img" />

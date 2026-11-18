@@ -1,6 +1,7 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import api from "../../utils/api";
 import "./Jobs.css";
 
 const cardStyle = {
@@ -14,15 +15,34 @@ const cardStyle = {
 };
 
 const Job = () => {
-  const [ArchiveJobData, setArchiveJobData] = useState([]);
+  const [archiveJobs, setArchiveJobs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
+    let cancelled = false;
     const getData = async () => {
-      const data = await axios.get(`/api/job/get/getjob`);
-      setArchiveJobData(data.data.archive.reverse());
+      try {
+        const { data } = await api.get("/api/job/get/getjob");
+        if (!cancelled) {
+          setArchiveJobs([...(data.archive || [])].reverse());
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(
+            err?.response?.data?.msg ||
+              "Could not load archived jobs. Please try again."
+          );
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
     };
 
     getData();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   let userData = localStorage.getItem("_user_data");
@@ -43,7 +63,9 @@ const Job = () => {
     if (data.data.invalid_msg === "invalid") {
       alert("invalid");
     } else {
-      window.location.reload(false);
+      setArchiveJobs((jobs) =>
+        jobs.filter((job) => job._id !== e.target.jobid.value)
+      );
     }
   };
 
@@ -64,69 +86,95 @@ const Job = () => {
         </div>
       </div>
 
-      <div className="row" style={{ minHeight: "80vh", padding: "0 8%", margin: 0, justifyContent: "flex-start" }}>
-      {ArchiveJobData.map((ele) => (
-        <div key={ele._id} style={cardStyle}>
-          <div style={{ display: "flex", justifyContent: "space-between" }}>
-            <p style={{ margin: 0 }}>
-              <a
-                style={{ fontWeight: 900 }}
-                href={generateLink(ele.userID)}
-                target="_blank"
-                rel="noreferrer"
-              >
-                {ele.created_by_user}
-              </a>
-            </p>
-            <p style={{ margin: 0, fontSize: 10 }}>
-              created at - {ele.Job_post_date.slice(0, 10)}
-            </p>
-          </div>
-
-          <h3 style={{ margin: "8px 0" }}>{ele.Job_name}</h3>
-          <p style={{ margin: "6px 0" }}>{ele.Description}</p>
-          <p style={{ margin: "6px 0" }}>
-            Deadline - {ele.Job_deadline.slice(0, 10)}
-          </p>
-
-          <div
-            className="row"
-            style={{ display: "flex", justifyContent: "space-evenly" }}
-          >
-            <div className="col">
-              <p>
-                <a
-                  className="btn btn-primary"
-                  href={ele.Link}
-                  target="_blank"
-                  rel="noreferrer"
-                  style={{ color: "white" }}
-                >
-                  Apply here
-                </a>
-              </p>
-            </div>
-
-            <div className="col">
-              <p>
-                <form onSubmit={(e) => deleteJob(e)}>
-                  {ele.created_by_user === userName || userRole === "Admin" ? (
-                    <button
-                      type="submit"
-                      name="jobid"
-                      className="btn btn-danger"
-                      value={ele._id}
-                    >
-                      Delete
-                    </button>
-                  ) : null}
-                </form>
-              </p>
-            </div>
-          </div>
+      {loading ? (
+        <div className="jobs-empty-state">
+          <div className="loading-spinner" />
+          <p>Loading archived jobs…</p>
         </div>
-      ))}
-      </div>
+      ) : error ? (
+        <div className="jobs-empty-state">
+          <p>{error}</p>
+          <Link className="job-btn-create" to="/jobs">
+            Back to active jobs
+          </Link>
+        </div>
+      ) : archiveJobs.length === 0 ? (
+        <div className="jobs-empty-state">
+          <span className="jobs-empty-icon">🗂️</span>
+          <h2>No archived jobs yet</h2>
+          <p>
+            When an opportunity closes it moves here automatically. Active roles
+            are still on the main job board.
+          </p>
+          <Link className="job-btn-create" to="/jobs">
+            Browse active jobs
+          </Link>
+        </div>
+      ) : (
+        <div className="row" style={{ minHeight: "60vh", padding: "0 8%", margin: 0, justifyContent: "flex-start" }}>
+          {archiveJobs.map((ele) => (
+            <div key={ele._id} style={cardStyle}>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <p style={{ margin: 0 }}>
+                  <a
+                    style={{ fontWeight: 900 }}
+                    href={generateLink(ele.userID)}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    {ele.created_by_user}
+                  </a>
+                </p>
+                <p style={{ margin: 0, fontSize: 10 }}>
+                  created at - {String(ele.Job_post_date || "").slice(0, 10)}
+                </p>
+              </div>
+
+              <h3 style={{ margin: "8px 0" }}>{ele.Job_name}</h3>
+              <p style={{ margin: "6px 0" }}>{ele.Description}</p>
+              <p style={{ margin: "6px 0" }}>
+                Deadline - {String(ele.Job_deadline || "").slice(0, 10)}
+              </p>
+
+              <div
+                className="row"
+                style={{ display: "flex", justifyContent: "space-evenly" }}
+              >
+                <div className="col">
+                  <p>
+                    <a
+                      className="btn btn-primary"
+                      href={ele.Link}
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{ color: "white" }}
+                    >
+                      Apply here
+                    </a>
+                  </p>
+                </div>
+
+                <div className="col">
+                  <p>
+                    <form onSubmit={(e) => deleteJob(e)}>
+                      {ele.created_by_user === userName || userRole === "Admin" ? (
+                        <button
+                          type="submit"
+                          name="jobid"
+                          className="btn btn-danger"
+                          value={ele._id}
+                        >
+                          Delete
+                        </button>
+                      ) : null}
+                    </form>
+                  </p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

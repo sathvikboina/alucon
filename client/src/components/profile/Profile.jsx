@@ -51,6 +51,8 @@ const Profile = ({
   match,
 }) => {
   const history = useHistory();
+  const isOwnProfile =
+    Boolean(authUser && userProfile) && authUser._id === userProfile._id;
 
   useEffect(() => {
     getUserById(match.params.id);
@@ -66,22 +68,8 @@ const Profile = ({
             <button style={styles.btnBack} onClick={() => history.goBack()}>
               ← Back to Profiles
             </button>
-            {/* Own profile renders exactly like anyone else's; the only extra
-                control is Edit Profile. */}
-            {authUser && userProfile && authUser._id === userProfile._id && (
-              <Link
-                to="/edit-profile"
-                style={{
-                  ...styles.btnBack,
-                  background: "#185FA5",
-                  borderColor: "#185FA5",
-                  color: "#fff",
-                  textDecoration: "none",
-                }}
-              >
-                Edit Profile
-              </Link>
-            )}
+            {/* Own profile renders exactly like anyone else's; editing lives
+                beside the About heading inside ProfileAbout. */}
             {authUser &&
               userProfile &&
               authUser._id !== userProfile._id &&
@@ -95,7 +83,7 @@ const Profile = ({
 
           <div style={styles.profileGrid}>
             <ProfileTop profile={userProfile} />
-            <ProfileAbout profile={userProfile} />
+            <ProfileAbout profile={userProfile} canEdit={isOwnProfile} />
 
             <div style={styles.expEduGrid}>
               <div
@@ -106,18 +94,45 @@ const Profile = ({
                   padding: "1.25rem",
                 }}
               >
-                <h2
+                <div
                   style={{
-                    fontSize: "15px",
-                    fontWeight: "500",
-                    color: "#185FA5",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: "12px",
                     marginBottom: "12px",
                     borderBottom: "1px solid #E6F1FB",
                     paddingBottom: "8px",
                   }}
                 >
-                  Experience
-                </h2>
+                  <h2
+                    style={{
+                      fontSize: "15px",
+                      fontWeight: "500",
+                      color: "#185FA5",
+                      margin: 0,
+                    }}
+                  >
+                    Experience
+                  </h2>
+                  {isOwnProfile && (
+                    <Link
+                      to="/add-experience"
+                      style={{
+                        background: "#E6F1FB",
+                        border: "0.5px solid #B5D4F4",
+                        color: "#185FA5",
+                        padding: "4px 12px",
+                        borderRadius: "8px",
+                        fontSize: "12px",
+                        textDecoration: "none",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      + Add
+                    </Link>
+                  )}
+                </div>
                 {userProfile.experience.length > 0 ? (
                   userProfile.experience.map((exp) => (
                     <ProfileExperience key={exp._id} experience={exp} />
@@ -144,18 +159,45 @@ const Profile = ({
                   padding: "1.25rem",
                 }}
               >
-                <h2
+                <div
                   style={{
-                    fontSize: "15px",
-                    fontWeight: "500",
-                    color: "#185FA5",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: "12px",
                     marginBottom: "12px",
                     borderBottom: "1px solid #E6F1FB",
                     paddingBottom: "8px",
                   }}
                 >
-                  Education
-                </h2>
+                  <h2
+                    style={{
+                      fontSize: "15px",
+                      fontWeight: "500",
+                      color: "#185FA5",
+                      margin: 0,
+                    }}
+                  >
+                    Education
+                  </h2>
+                  {isOwnProfile && (
+                    <Link
+                      to="/add-education"
+                      style={{
+                        background: "#E6F1FB",
+                        border: "0.5px solid #B5D4F4",
+                        color: "#185FA5",
+                        padding: "4px 12px",
+                        borderRadius: "8px",
+                        fontSize: "12px",
+                        textDecoration: "none",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      + Add
+                    </Link>
+                  )}
+                </div>
                 {userProfile.education.length > 0 ? (
                   userProfile.education.map((edu) => (
                     <ProfileEducation key={edu._id} education={edu} />

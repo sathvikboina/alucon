@@ -4,6 +4,7 @@ require("dotenv").config();
 const express = require("express");
 const connectDB = require("./config/db");
 const cors = require("cors");
+const compression = require("compression");
 const path = require("path");
 const jwt = require("jsonwebtoken");
 const Conversation = require("./models/Conversation");
@@ -74,6 +75,7 @@ const categoriesRouter = require("./routes/achievement/categories");
 const featuredRouter = require("./routes/achievement/featured");
 // app.use(express.json({ extended: false }));
 app.use(express.json({ limit: "2mb" }));
+app.use(compression());
 app.use(express.urlencoded({ extended: true, limit: "2mb" }));
 
 if (!isServerless) {
@@ -137,6 +139,23 @@ app.use(
 	})
 );
 app.use(express.json({ extended: false }));
+
+// Public, rarely-changing reads are safe to cache at the edge. This keeps the
+// showcase and navigation counts warm between visitors instead of paying a
+// cold function + Mongo round trip every time.
+const CACHEABLE_PREFIXES = ["/api/availability", "/api/showcase"];
+app.use((req, res, next) => {
+	if (
+		req.method === "GET" &&
+		CACHEABLE_PREFIXES.some((prefix) => req.path.startsWith(prefix))
+	) {
+		res.set(
+			"Cache-Control",
+			"public, max-age=0, s-maxage=120, stale-while-revalidate=600"
+		);
+	}
+	next();
+});
 
 // define routes
 // LinkedIn OAuth is intentionally not mounted. The old callback had no state

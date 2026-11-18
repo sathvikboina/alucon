@@ -3,7 +3,6 @@ import { Route, Switch } from "react-router-dom";
 import NotFound from "../layouts/NotFound";
 import Register from "../auth/Register.jsx";
 import Alert from "../layouts/Alert.jsx";
-import Dashboard from "../dashboard/Dashboard";
 import PrivateRoute from "../routing/PrivateRoute";
 import AdminRoute from "../routing/AdminRoute";
 import AlumniRoute from "../routing/AlumniRoute";
@@ -12,6 +11,7 @@ import EditProfile from "../profile-form/EditProfile";
 import AddExperience from "../profile-form/AddExperience";
 import AddEducation from "../profile-form/AddEducation";
 import Profile from "../profile/Profile";
+import OwnProfileRedirect from "../profile/OwnProfileRedirect";
 import ForgotPassword from "../auth/ForgotPassword";
 import ResetPassword from "../auth/ResetPassword";
 import AdminDash from "../dashboard/AdminDash.jsx";
@@ -76,7 +76,7 @@ const Routes = () => {
 				<Route exact path="/resetPassword/:user_id/:reset_token" component={ResetPassword} />
 				<Route exact path="/help" component={Help} />
 
-				<PrivateRoute exact path="/userprofile" component={Dashboard} />
+				<PrivateRoute exact path="/userprofile" component={OwnProfileRedirect} />
 				<PrivateRoute exact path="/add-experience" component={AddExperience} />
 				<PrivateRoute exact path="/add-education" component={AddEducation} />
 				<PrivateRoute exact path="/feed" component={Posts} />

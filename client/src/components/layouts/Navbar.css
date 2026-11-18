@@ -407,3 +407,22 @@
     display: none;
   }
 }
+/* ===========================
+   COMPACT AUTHENTICATED NAVBAR
+   ===========================
+   Signed-in members navigate from the persistent sidebar, so the desktop bar
+   keeps only the brand, alerts and the account menu. The full menu still
+   renders as the mobile drawer below 1025px. */
+@media (min-width: 1025px) {
+  .navbar--auth .nav-item-secondary {
+    display: none;
+  }
+
+  .navbar--auth .nav-links {
+    gap: 6px;
+  }
+
+  .navbar--auth .nav-links > li {
+    margin-left: 0;
+  }
+}

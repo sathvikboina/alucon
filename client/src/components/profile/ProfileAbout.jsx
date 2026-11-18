@@ -1,5 +1,6 @@
 import React, { Fragment } from "react";
 import PropTypes from "prop-types";
+import { Link } from "react-router-dom";
 
 const s = {
   card: {
@@ -15,6 +16,32 @@ const s = {
     marginBottom: "12px",
     borderBottom: "1px solid #E6F1FB",
     paddingBottom: "8px",
+  },
+  titleRow: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: "12px",
+    marginBottom: "12px",
+    borderBottom: "1px solid #E6F1FB",
+    paddingBottom: "8px",
+  },
+  titleRowHeading: {
+    fontSize: "15px",
+    fontWeight: "500",
+    color: "#185FA5",
+    margin: 0,
+  },
+  editBtn: {
+    background: "#185FA5",
+    border: "0.5px solid #185FA5",
+    color: "#fff",
+    padding: "5px 14px",
+    borderRadius: "8px",
+    fontSize: "12.5px",
+    fontWeight: "500",
+    textDecoration: "none",
+    whiteSpace: "nowrap",
   },
   bio: {
     fontSize: "14px",
@@ -61,10 +88,19 @@ const s = {
   },
 };
 
-const ProfileAbout = ({ profile }) => {
+const ProfileAbout = ({ profile, canEdit }) => {
   return (
     <div style={s.card}>
-      <h2 style={s.sectionTitle}>About</h2>
+      {canEdit ? (
+        <div style={s.titleRow}>
+          <h2 style={s.titleRowHeading}>About</h2>
+          <Link to="/edit-profile" style={s.editBtn}>
+            Edit Profile
+          </Link>
+        </div>
+      ) : (
+        <h2 style={s.sectionTitle}>About</h2>
+      )}
 
       {profile.bio ? (
         <Fragment>
