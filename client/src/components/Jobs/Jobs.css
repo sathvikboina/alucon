@@ -422,3 +422,13 @@
 .job-fit-prep { margin: 0; padding-left: 16px; }
 .job-fit-prep li { font-size: 11.5px; color: #4b5563; line-height: 1.5; margin-bottom: 3px; }
 
+
+.job-title-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.job-title-link:hover {
+  color: #185fa5;
+  text-decoration: underline;
+}

@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import axios from "axios";
+import { Link } from "react-router-dom";
 import "./ResourceHub.css";
 
 const ResourceHub = () => {
@@ -359,7 +360,9 @@ key={res._id}
 >
 
 <h4>
+<Link to={`/resources/${res._id}`} className="resource-title-link">
 {res.title}
+</Link>
 </h4>
 
 

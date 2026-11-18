@@ -137,7 +137,12 @@ const DoubtList = () => {
 
                     <div>
                       <h4 className="doubt-question">
-                        {doubt.question}
+                        <Link
+                          to={`/doubts/${doubt._id}`}
+                          className="doubt-question-link"
+                        >
+                          {doubt.question}
+                        </Link>
                       </h4>
 
                       <p className="doubt-info">

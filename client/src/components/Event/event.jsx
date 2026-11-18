@@ -272,9 +272,12 @@ const Event = () => {
 
               {/* Title + badge */}
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
-                <div style={{ fontSize: 21, fontWeight: 600, color: "#1a2a4a", lineHeight: 1.3, paddingRight: 16 }}>
+                <Link
+                  to={`/events/${ele._id}`}
+                  style={{ fontSize: 21, fontWeight: 600, color: "#1a2a4a", lineHeight: 1.3, paddingRight: 16, textDecoration: "none" }}
+                >
                   {ele.title}
-                </div>
+                </Link>
                 <StatusBadge status={status} />
               </div>
 
@@ -377,7 +380,13 @@ const Event = () => {
             )}
 
             {/* FOOTER */}
-            <div style={{ padding: "14px 28px", background: "#f9fafb", borderTop: "1px solid #e5e7eb", display: "flex", gap: 10, alignItems: "center" }}>
+            <div style={{ padding: "14px 28px", background: "#f9fafb", borderTop: "1px solid #e5e7eb", display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+              <Link
+                to={`/events/${ele._id}`}
+                style={{ color: "#185fa5", fontSize: 13, fontWeight: 500, textDecoration: "none", marginRight: "auto" }}
+              >
+                View event details →
+              </Link>
               {(status === "live" || status === "upcoming") && (
                 <a href={ele.Link} target="_blank" rel="noreferrer">
                   <button style={btnJoin}>Join Here</button>

@@ -103,3 +103,12 @@
   background: #1a2a4a;
   color: #fff;
 }
+.doubt-question-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.doubt-question-link:hover {
+  color: #185fa5;
+  text-decoration: underline;
+}

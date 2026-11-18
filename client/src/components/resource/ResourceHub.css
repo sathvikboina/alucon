@@ -237,3 +237,12 @@
     padding: 0 5% 40px;
   }
 }
+.resource-title-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.resource-title-link:hover {
+  color: #185fa5;
+  text-decoration: underline;
+}

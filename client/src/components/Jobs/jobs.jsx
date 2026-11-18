@@ -123,7 +123,11 @@ const Job = () => {
                 </span>
               </div>
 
-              <h3 className="job-title">{ele.Job_name}</h3>
+              <h3 className="job-title">
+                <Link to={`/jobs/${ele._id}`} className="job-title-link">
+                  {ele.Job_name}
+                </Link>
+              </h3>
               <div className="job-tag-row">
                 {ele.job_type && <span className="job-tag">{ele.job_type}</span>}
                 {ele.work_mode && <span className="job-tag subtle">{ele.work_mode}</span>}

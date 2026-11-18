@@ -23,6 +23,7 @@ import Help from "../layouts/Help";
 import Messenger from "../messenger/Messenger";
 
 import Job from "../Jobs/jobs.jsx";
+import JobDetail from "../Jobs/JobDetail.jsx";
 import CreateJob from "../Jobs/createJob.jsx";
 import CompanyHub from "../company/CompanyHub";
 
@@ -40,10 +41,13 @@ import MentorMatches from "../matching/MentorMatches";
 import Doors from "../doors/Doors";
 import WarmPaths from "../warmpaths/WarmPaths";
 import ResourceHub from "../resource/ResourceHub";
+import ResourceDetail from "../resource/ResourceDetail";
+import DoubtDetail from "../doubts/DoubtDetail";
 import AISearch from "../search/AISearch";
 
 import AnalyticsDashboard from "../admin/AnalyticsDashboard.jsx";
 import Event from "../Event/event.jsx";
+import EventDetail from "../Event/EventDetail.jsx";
 import CreateEvent from "../Event/createEvent.jsx";
 import AlumniDirectory from "../directory/AlumniDirectory";
 import SupportInitiatives from "../support/SupportInitiatives";
@@ -61,6 +65,7 @@ const Routes = () => {
 				<PrivateRoute exact path="/profile/:id" component={Profile} />
 
 				<Route exact path="/jobs" component={Job} />
+				<Route exact path="/jobs/:id" component={JobDetail} />
 				<Route exact path="/company/:slug" component={CompanyHub} />
 				<PrivateRoute exact path="/internship-matches" component={InternshipMatches} />
 				<PrivateRoute exact path="/mentor-matches" component={MentorMatches} />
@@ -68,6 +73,7 @@ const Routes = () => {
 				<PrivateRoute exact path="/warm-paths" component={WarmPaths} />
 				<Route exact path="/createjob" component={CreateJob} />
 				<Route exact path="/events" component={Event} />
+				<Route exact path="/events/:id" component={EventDetail} />
 				<Route exact path="/createEvent" component={CreateEvent} />
 
 				<Route exact path="/forgotPassword" component={ForgotPassword} />
@@ -94,8 +100,10 @@ const Routes = () => {
 				{/* ✅ Story Pages */}
 				<AlumniRoute exact path="/stories/add" component={StoryForm} />
 				<Route exact path="/doubts" component={DoubtRoom} />
+				<Route exact path="/doubts/:id" component={DoubtDetail} />
 				<PrivateRoute exact path="/mentorship" component={MentorDashBoard} />
 				<Route exact path="/resources" component={ResourceHub} />
+				<Route exact path="/resources/:id" component={ResourceDetail} />
 				<Route exact path="/alumni-directory" component={AlumniDirectory} />
 				<PrivateRoute exact path="/support-initiatives" component={SupportInitiatives} />
 				<AdminRoute exact path="/admin/support-responses" component={SupportResponses} />
