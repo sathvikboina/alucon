@@ -78,9 +78,6 @@ const Job = () => {
               + Post a Job
             </Link>
           )}
-          <Link className="job-btn-archive" to="/archivejobs">
-            Past Jobs
-          </Link>
         </div>
       </div>
 

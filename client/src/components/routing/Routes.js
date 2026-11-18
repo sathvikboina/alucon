@@ -23,7 +23,6 @@ import Help from "../layouts/Help";
 import Messenger from "../messenger/Messenger";
 
 import Job from "../Jobs/jobs.jsx";
-import ArchiveJobs from "../Jobs/archiveJobs.jsx";
 import CreateJob from "../Jobs/createJob.jsx";
 import CompanyHub from "../company/CompanyHub";
 
@@ -67,7 +66,6 @@ const Routes = () => {
 				<PrivateRoute exact path="/mentor-matches" component={MentorMatches} />
 				<PrivateRoute exact path="/doors" component={Doors} />
 				<PrivateRoute exact path="/warm-paths" component={WarmPaths} />
-				<Route exact path="/archivejobs" component={ArchiveJobs} />
 				<Route exact path="/createjob" component={CreateJob} />
 				<Route exact path="/events" component={Event} />
 				<Route exact path="/createEvent" component={CreateEvent} />

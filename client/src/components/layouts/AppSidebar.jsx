@@ -31,12 +31,6 @@ const BASE_SECTIONS = [
         match: ["/jobs", "/company", "/createjob"],
       },
       {
-        to: "/archivejobs",
-        icon: "fa-history",
-        label: "Past jobs",
-        match: ["/archivejobs"],
-      },
-      {
         to: "/internship-matches",
         icon: "fa-bullseye",
         label: "Internship matches",
