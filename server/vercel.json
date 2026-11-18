@@ -5,5 +5,25 @@
       "includeFiles": "images/**"
     }
   },
-  "rewrites": [{ "source": "/(.*)", "destination": "/api/index.js" }]
+  "rewrites": [{ "source": "/(.*)", "destination": "/api/index.js" }],
+  "headers": [
+    {
+      "source": "/api/availability",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, s-maxage=120, stale-while-revalidate=600"
+        }
+      ]
+    },
+    {
+      "source": "/api/showcase/:path*",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, s-maxage=120, stale-while-revalidate=600"
+        }
+      ]
+    }
+  ]
 }
