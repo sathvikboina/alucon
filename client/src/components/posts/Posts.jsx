@@ -936,7 +936,7 @@ const Posts = ({
                 return (
                   <Link
                     key={event._id}
-                    to="/events"
+                    to={`/events/${event._id}`}
                     className="event-row"
                   >
                     <span className="date-box">
